@@ -24,7 +24,7 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             this.pumpText=_this.g.datum(data)
                 .append('text')
                 .filter(function(d) {
-                    return d.width > TEXT_WIDTH && d.time !== d.next.time;
+                    return d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time);
                 })
                 .attr('class', 'label')
                 .text(function(d) {

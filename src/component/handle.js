@@ -104,6 +104,9 @@ define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,l
             var handleDragEnd=function(){
                 var pos = d3.mouse(this);//获取鼠标位置
                 var x = pos[0] - 2;//位置往前移动，能够顺畅的拖动，避免鼠标卡掉
+                if(_this.type==END_EDIT){
+                    x=pos[0];
+                }//结束手柄拖动x不减少
                 var diffValue = oldx-x;//获取差值
 
                 if(typeof dragEnd==='function')

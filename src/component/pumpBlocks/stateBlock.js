@@ -6,23 +6,23 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     var CLASS_CLOSE_STATE = 'rect close_state';
     var CLASS_FAULT_STATE = 'rect fault_state';
     var CLASS_INDEFINITE_STATE = 'rect indefinite_state';
+
+
     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            className = CLASS_OPEN_STATE;
+            d.className = CLASS_OPEN_STATE;
         } else if (d.value == 0) {
-            className = CLASS_CLOSE_STATE;
+            d.className = CLASS_CLOSE_STATE;
 
         } else if (d.value < 0) {
-            className = CLASS_FAULT_STATE;
+            d.className = CLASS_FAULT_STATE;
         } else {
-            className = CLASS_INDEFINITE_STATE;
+            d.className = CLASS_INDEFINITE_STATE;
         }
-        return className;
+        return d.className;
     }
-    var g=null;
-    var block_xScale=null;
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
@@ -40,26 +40,30 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.blockData =null;//当前的块的状态
         // this.blockState =null;//当前的块的状态
         
-        g=line;
-        block_xScale=xScale;
+        this.block_Line=line;
+        this.block_xScale=xScale;
+
+        this.callFn=null;
     }
     //链式方法
     stateBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
-            this.block=g.datum(data)
+            var _this=this;
+            this.block=this.block_Line.datum(data)
                 .append('rect')
                 .attr('class', function(d, i) {
                     return formatClass(d);
                 })
                 .attr('x', function(d, i) {
-                    d.x = block_xScale(d.time);
+                    d.x = _this.block_xScale(d.time);
                     return d.x;
                 })
                 .attr('y', 0)
                 .attr('width', function(d, i) {
-                    d.width = 0;
+                    if(d.width==undefined)
+                        d.width = 0;
                     if (d.next) {
-                        d.width = block_xScale(d.next.time) - block_xScale(d.time);
+                        d.width = _this.block_xScale(d.next.time) - _this.block_xScale(d.time);
                     }
                     if (d.width < 0) {
                         d.width = 0;
@@ -78,7 +82,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             return this;
         },
         drawText:function(data){
-            this.blockText=new pumpText(g,block_xScale);
+            this.blockText=new pumpText(this.block_Line,this.block_xScale);
             this.blockText.draw(data);
             return this;
         },
@@ -135,41 +139,58 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         setLeft:function(left){
             if(!isNullOrUndefine(left))
                 this.leftBlock=left;
+            return this;
         },
         setRight:function(right){
             if(!isNullOrUndefine(right))
                 this.rightBlock=right;
+            return this;
         },
         changeLeft:function(diffValue,fn){
             var _this=this;
             if(_this.leftBlock){
-                var width=parseFloat(_this.leftBlock.block.attr('width'));
-                var diff=Math.abs(diffValue);//取绝对值
-                //差值超过宽度就删除当前块，并改变前一块
-                if(diff>width){
-                    _this.leftBlock.remove();//删除前一个
-                    var newDiff=diffValue-width;
-                    _this.changeLeft(newDiff);//改变其前一个
-                    //_this.leftBlock=_this.leftBlock.leftBlock;
-                }
-                else{
-                    //判断是否同一状态，是:合并
-                    if(_this.blockData.label== _this.leftBlock.blockData.label){
-
-                        var addWidth=parseFloat(_this.block.attr('width'))-diffValue;
-                        _this.leftBlock.updateWidth(addWidth);//合并到前一块
-                        _this.remove();//删除当前
-
-                        //回调函数
-                        if(typeof fn==='function')
-                            fn.call(x,y);
+                    var width=parseFloat(_this.leftBlock.block.attr('width'));
+                    var diff=Math.abs(diffValue);//取绝对值
+                    //差值超过宽度就删除当前块，并改变前一块
+                    if(diff>width){
+                        _this.leftBlock.remove();//删除前一个
+                        var newDiff=diffValue-width;
+                        _this.changeLeft(newDiff);//改变其前一个
+                        //_this.leftBlock=_this.leftBlock.leftBlock;
                     }
                     else{
-                        _this.leftBlock.updateWidth(-diffValue);
-                    }
-                }
+                        //判断是否同一状态，是:合并
+                        if(_this.blockData.label== _this.leftBlock.blockData.label){
 
-            }                
+                            var addWidth=parseFloat(_this.block.attr('width'))-diffValue;
+                            _this.leftBlock.updateWidth(addWidth);//合并到前一块
+                            _this.remove();//删除当前
+
+                            //回调函数
+                            if(typeof fn==='function')
+                                fn.call(x,y);
+                        }
+                        else{
+                            _this.leftBlock.updateWidth(-diffValue);
+                        }
+                    }
+                
+            }
+            else{//如果没有就创建  不定状态
+                if(_this.blockData.className != CLASS_INDEFINITE_STATE){
+                    var data = {
+                        height: BAR_HEIGHT,
+                        time:_this.block_xScale.invert(0),
+                        value: null,
+                        label: '不定',
+                        width:Math.abs(diffValue)
+                    };
+                    var leftBlock=new stateBlock(_this.block_Line,_this.block_xScale);
+                    leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                    _this.leftBlock=leftBlock;
+                }
+            }          
+            return this;      
         },
         changeRight:function(diffValue,fn){
             var _this=this;
@@ -198,14 +219,31 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                         _this.rightBlock.update(x);
                     }
                 }
-
-            }   
+            }
+            else{
+                var x=parseFloat(this.block.attr('x'))+parseFloat(this.block.attr('width'));
+                //如果没有就创建  不定状态
+                var data = {
+                    height: BAR_HEIGHT,
+                    time:_this.block_xScale.invert(x),
+                    value: null,
+                    label: '不定',
+                    width:Math.abs(diffValue)
+                };
+                var rightBlock=new stateBlock(_this.block_Line,_this.block_xScale);
+                rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                _this.rightBlock=rightBlock;
+            }
+            return this;   
         },
         click_Event:function(fn){//点击事件
-            var _this=this;
-            this.block.on("click", function(d, i, rects) {
-                fn.call(d, i, rects,_this);
-            })
+            if(typeof fn=='function'){
+                this.callFn=fn;
+                var _this=this;
+                this.block.on("click", function(d, i, rects) {
+                    fn.call(d, i, rects,_this);
+                })
+            }
             return this;
         },
         remove:function(){
