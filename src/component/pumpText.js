@@ -70,7 +70,9 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             return this;
         },
         remove:function(){
-            this.pumpText.remove();
+            if(this.pumpText!=null){
+                this.pumpText.remove();
+            }
             return this;
         }
     }

@@ -218,14 +218,14 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 // //获取当前那一行
                 // var g = curRect.parent()[0];//获取父级
                 // var parentWidth= curRect.parent().width();//获取父级总宽
-                var MaxX=this.block_Line.g.attr('x');
+                var MaxX=this.block_Line.lineWidth;
                 //如果没有就创建  不定状态
                 var data = {
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
                     label: '不定',
-                    width:100
+                    width:MaxX
                 };
                 var rightBlock=new stateBlock(_this.block_Line,_this.block_xScale);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);

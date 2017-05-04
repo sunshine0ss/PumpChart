@@ -16,6 +16,7 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
         this.g=null;
         this.version = '1.0';
         this.blocks=[];
+        this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;
 
         line_svg=svg;
         line_option=option;
