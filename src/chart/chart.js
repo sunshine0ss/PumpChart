@@ -205,8 +205,8 @@ define(['d3', 'jquery', 'moment', 'lodash','drawArea'], function(d3, jquery, mom
 
                         var point = {
                             time: time,
-                            value: last.value,
-                            label: last.label,
+                            value: null,
+                            label: '不定',
                             prev: last
                         }
                         last.next = point;

@@ -60,7 +60,7 @@ define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,l
             //before the drag
             var handleDragStart=function(){
                 var pos = d3.mouse(this);//获取鼠标位置
-                var x = pos[0] - 2;//位置往前移动，能够顺畅的拖动，避免鼠标卡掉
+                var x = pos[0];
 
                 oldx = parseFloat(_this.handle.attr('x'));//获取手柄原始位置
 
@@ -70,21 +70,15 @@ define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,l
             //Draging
             var handleDragged=function(){
                 var pos = d3.mouse(this);//获取鼠标位置
-                var x = pos[0] - 2;//位置往前移动，能够顺畅的拖动，避免鼠标卡掉
-                if(_this.type==END_EDIT){
-                    x=pos[0];
-                }//结束手柄拖动x不减少
+                var x = pos[0];
                 //拖动范围限制
                 if(x<_this.minX)
                     x=_this.minX;
                 if(_this.maxX!=null&&x>_this.maxX)
                     x=_this.maxX;
 
-                var prex = parseFloat(_this.handle.attr('x'))
-                var diffValue = prex-x;//获取差值
-
                 if(typeof dragged==='function')
-                    dragged.call(null,x,diffValue);//传参数回调
+                    dragged.call(null,x);//传参数回调
                 //修改手柄位置
                 _this.handle.attr('x', x);
                 _this.pos[0]=x;
@@ -103,14 +97,16 @@ define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,l
             //After the drag
             var handleDragEnd=function(){
                 var pos = d3.mouse(this);//获取鼠标位置
-                var x = pos[0] - 2;//位置往前移动，能够顺畅的拖动，避免鼠标卡掉
-                if(_this.type==END_EDIT){
-                    x=pos[0];
-                }//结束手柄拖动x不减少
-                var diffValue = oldx-x;//获取差值
+                var x = pos[0];
+                //拖动范围限制
+                if(x<_this.minX)
+                    x=_this.minX;
+                if(_this.maxX!=null&&x>_this.maxX)
+                    x=_this.maxX;
+
 
                 if(typeof dragEnd==='function')
-                    dragEnd.call(null,x,diffValue);//传参数回调
+                    dragEnd.call(null,x);//传参数回调
             };
             //bind the drag event
             var handleDrag = d3.drag()
@@ -122,8 +118,10 @@ define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,l
         },
         updatePos:function(x,y){
             if(x!=undefined){
+                //修改手柄位置
                 this.handle.attr('x', x);
-                //更新手柄提示
+                this.pos[0]=x;
+                //更新手柄显示时间
                 var textTimeX=x;
                 var textX=x;
                 if(this.type==END_EDIT){

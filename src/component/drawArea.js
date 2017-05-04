@@ -129,34 +129,71 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             //// Defines all private methods ////
             //startHandle in drag
             var startDragged=function(x){
-                // var maxX = parseFloat(_this.endHandle.handle.attr('x'));
-                // if(x<0)
-                //     x=0;
-                // if(x>maxX)
-                //     x=maxX;
-                curBlock.update(x);
+                var x2=parseFloat(curBlock.block.attr('width'))+parseFloat(curBlock.block.attr('x'));
+                var width=x2-x;
+                curBlock.update(x,null,width);
             }
             //End of the startHandle drag
-            var startDragEnd=function(x,diffValue){
-                curBlock.changeLeft(diffValue);
+            var startDragEnd=function(x){
+                curBlock.changeLeft();
                 if(curBlock.block==null){//判断当前的块是否被删除
                     curBlock=null;
                     //删除选中状态
                     _this.startHandle.removeHandle();
                     _this.endHandle.removeHandle();
                 }
+                else{
+                    if(parseFloat(curBlock.block.attr('width'))<HANDLE_WIDTH+1){//如果当前的快的宽度小于手柄宽度删除当前块
+                        var x=parseFloat(curBlock.block.attr('width'))+parseFloat(curBlock.block.attr('x'));
+                        curBlock.update(x,null,0);//修改当前快的位置和宽度
+                        curBlock.changeLeft();//修改左侧块
+                        curBlock.remove();//删除当前块
+                        curBlock=null;
+                        //删除选中状态
+                        _this.startHandle.removeHandle();
+                        _this.endHandle.removeHandle();
+                    }
+                }
             } 
             //endHandle in drag
-            var endDragged=function(x,diffValue){
-                curBlock.updateWidth(-diffValue);
+            var endDragged=function(x){
+                var x1=parseFloat(curBlock.block.attr('x'));
+                var width=x-x1;
+                curBlock.update(x1,null,width);
             }
             //End of the endHandle drag
-            var endDragEnd=function(x,diffValue){
-                curBlock.changeRight(diffValue);
-                //当前宽度+当前x位置(前一块宽度)-2(手柄宽度/2)
-                var endHandleX=parseFloat(curBlock.block.attr('width')) + parseFloat(curBlock.block.attr('x'))-HANDLE_WIDTH;
-                //重新计算结束手柄的位置
-                 _this.endHandle.updatePos(endHandleX);
+            var endDragEnd=function(){
+                curBlock.changeRight();
+                if(curBlock.block==null){//判断当前的块是否被删除
+                    curBlock=null;
+                    //删除选中状态
+                    _this.startHandle.removeHandle();
+                    _this.endHandle.removeHandle();
+                }
+                else{
+                    var curWidth=parseFloat(curBlock.block.attr('width'));
+                    var curX=parseFloat(curBlock.block.attr('x'));
+                    if(curWidth<HANDLE_WIDTH+1){//如果当前的快的宽度小于手柄宽度删除当前块
+                        curBlock.update(curX,null,0);//修改当前快的位置和宽度
+                        curBlock.changeRight();//修改右侧块
+                        curBlock.remove();//删除当前块
+                        curBlock=null;
+                        //删除选中状态
+                        _this.startHandle.removeHandle();
+                        _this.endHandle.removeHandle();
+                    }
+                    else{
+                        //当前宽度+当前x位置(前一块宽度)-2(手柄宽度/2)
+                        var endHandleX=curWidth+curX-HANDLE_WIDTH;
+                        //重新计算结束手柄的位置
+                         _this.endHandle.updatePos(endHandleX);
+                        //修改手柄的边界值
+                        var minX=_this.startHandle.pos[0];
+                        var maxX=_this.endHandle.pos[0];
+                        _this.startHandle.setMaxX(maxX);
+                        _this.endHandle.setMinX(minX);
+                    }
+                }
             }
 
             var select=function(i, rects,block){

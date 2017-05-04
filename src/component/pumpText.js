@@ -15,16 +15,25 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
         this.pumpText=null;
         this.g=line;
         this.block_xScale=xScale;
+        this.text_data=null;
     }
     //The chain method
     pumpText.prototype = {
         draw: function(data) {
             var _this=this;
-
+            this.text_data=data;
+            var isRemove=false;
             this.pumpText=_this.g.datum(data)
                 .append('text')
-                .filter(function(d) {
-                    return d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time);
+                .filter(function(d,i,ele) {
+                    if(d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time))
+                        return true;
+                    else{
+                        //不满足条件就删除text标签
+                        $(ele).remove();
+                        isRemove=true;
+                        return false;
+                    }
                 })
                 .attr('class', 'label')
                 .text(function(d) {
@@ -36,11 +45,28 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
                 .attr('y', function(d, i) {
                     return TEXT_HEIGHT;
                 });
+            if(isRemove)//判断元素是否删除
+                this.pumpText=null;//置空
             return this;
         },
-        update:function(x,y){ 
-            if(x!=undefined)
-                this.pumpText.attr('x',x + PADDING);
+        update:function(x,y,width){ 
+            this.text_data.width=width;
+            this.text_data.time=this.block_xScale.invert(x);
+
+            if(this.pumpText!=null){
+                if(!isNullOrUndefine(x)){
+                    this.pumpText.attr('x', x+ PADDING);
+                }
+                if(!isNullOrUndefine(y)){
+                    this.pumpText.attr('y', y);
+                }
+                if(!isNullOrUndefine(width)){
+                    this.pumpText.attr('width', width);
+                } 
+            }
+            else{
+                this.draw(this.text_data);
+            }
             return this;
         },
         remove:function(){

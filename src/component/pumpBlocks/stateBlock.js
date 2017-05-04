@@ -86,49 +86,59 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.blockText.draw(data);
             return this;
         },
-        update:function(x,y,fn){ //修改坐标和宽度
+        update:function(x,y,width,fn){ //修改坐标和宽度
             if(!isNullOrUndefine(x)){
-                var oldx = parseFloat(this.block.attr('x'));
-                var oldwidth = parseFloat(this.block.attr('width'));
-                var diffValue = oldx-x;
-                var rectWidth = oldwidth+ diffValue;
-                this.block.attr('x', x).attr('width',rectWidth);
+                this.block.attr('x', x);
             }
             if(!isNullOrUndefine(y)){
                 this.block.attr('y', y);
             }
+            if(!isNullOrUndefine(width)){
+                this.block.attr('width', width);
+            }
             //修改对应text的位置
             if(this.blockText!=null)
-                this.blockText.update(x,y);
-
+                this.blockText.update(x,y,width);
+            // else{//新加text
+            //     this.drawText(this.blockData);
+            // }
             //回调函数
             if(typeof fn==='function')
                 fn.call(x,y);
             return this;
         },
-        updatePos:function(x,y,fn){ //修改坐标
-            if(!isNullOrUndefine(x)){
-                var oldx = parseFloat(this.block.attr('x'));
+        // updatePos:function(x,y,fn){ //修改坐标
+        //     if(!isNullOrUndefine(x)){
+        //         var oldx = parseFloat(this.block.attr('x'));
+        //         var oldwidth = parseFloat(this.block.attr('width'));
+        //         var diffValue = oldx-x;
+        //         var rectWidth = oldwidth+ diffValue;
+        //         this.block.attr('x', x).attr('width',rectWidth);
+        //     }
+        //     if(!isNullOrUndefine(y)){
+        //         this.block.attr('y', y);
+        //     }
+        //     //修改对应text的位置
+        //     if(this.blockText!=null)
+        //         this.blockText.update(x,y);
+        //     //回调函数
+        //     if(typeof fn==='function')
+        //         fn.call(x,y);
+        //     return this;
+        // },
+        // updateWidth:function(width,fn){//修改宽度
+        //     if(!isNullOrUndefine(width)){
+        //         this.block.attr('width',width);
+        //     }
+        //     //回调函数
+        //     if(typeof fn==='function')
+        //         fn.call(x,y);
+        //     return this;
+        // },
+        addWidth:function(width,fn){//修改宽度
+            if(!isNullOrUndefine(width)){
                 var oldwidth = parseFloat(this.block.attr('width'));
-                var diffValue = oldx-x;
-                var rectWidth = oldwidth+ diffValue;
-                this.block.attr('x', x).attr('width',rectWidth);
-            }
-            if(!isNullOrUndefine(y)){
-                this.block.attr('y', y);
-            }
-            //修改对应text的位置
-            if(this.blockText!=null)
-                this.blockText.update(x,y);
-            //回调函数
-            if(typeof fn==='function')
-                fn.call(x,y);
-            return this;
-        },
-        updateWidth:function(diffValue,fn){//修改宽度
-            if(!isNullOrUndefine(diffValue)){
-                var oldwidth = parseFloat(this.block.attr('width'));
-                var rectWidth = oldwidth+ diffValue;
+                var rectWidth = oldwidth+ width;
                 this.block.attr('width',rectWidth);
             }
             //回调函数
@@ -146,89 +156,76 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 this.rightBlock=right;
             return this;
         },
-        changeLeft:function(diffValue,fn){
+        changeLeft:function(){//修改左边的块
             var _this=this;
-            if(_this.leftBlock){
-                    var width=parseFloat(_this.leftBlock.block.attr('width'));
-                    var diff=Math.abs(diffValue);//取绝对值
-                    //差值超过宽度就删除当前块，并改变前一块
-                    if(diff>width){
+            if(_this.block!=null){
+                var x2=parseFloat(_this.block.attr('x'));
+                if(_this.leftBlock){//判断左边是否有邻近块
+                    var x1=parseFloat(_this.leftBlock.block.attr('x'));
+                    var width=x2-x1;
+                    if(width<=0){//左边块被覆盖
                         _this.leftBlock.remove();//删除前一个
-                        var newDiff=diffValue-width;
-                        _this.changeLeft(newDiff);//改变其前一个
-                        //_this.leftBlock=_this.leftBlock.leftBlock;
+                        _this.changeLeft();//修改新的前一块
                     }
                     else{
-                        //判断是否同一状态，是:合并
-                        if(_this.blockData.label== _this.leftBlock.blockData.label){
-
-                            var addWidth=parseFloat(_this.block.attr('width'))-diffValue;
-                            _this.leftBlock.updateWidth(addWidth);//合并到前一块
-                            _this.remove();//删除当前
-
-                            //回调函数
-                            if(typeof fn==='function')
-                                fn.call(x,y);
-                        }
-                        else{
-                            _this.leftBlock.updateWidth(-diffValue);
-                        }
+                        _this.leftBlock.update(null,null,width);
                     }
-                
-            }
-            else{//如果没有就创建  不定状态
-                if(_this.blockData.className != CLASS_INDEFINITE_STATE){
-                    var data = {
-                        height: BAR_HEIGHT,
-                        time:_this.block_xScale.invert(0),
-                        value: null,
-                        label: '不定',
-                        width:Math.abs(diffValue)
-                    };
-                    var leftBlock=new stateBlock(_this.block_Line,_this.block_xScale);
-                    leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
-                    _this.leftBlock=leftBlock;
                 }
-            }          
+                else{//如果没有就创建  不定状态
+                    if(_this.blockData.className != CLASS_INDEFINITE_STATE){
+                        var data = {
+                            height: BAR_HEIGHT,
+                            time:_this.block_xScale.invert(0),
+                            value: null,
+                            label: '不定',
+                            width:x2
+                        };
+                        var leftBlock=new stateBlock(_this.block_Line,_this.block_xScale);
+                        leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                        _this.leftBlock=leftBlock;
+                    }
+                }  
+            }        
             return this;      
         },
-        changeRight:function(diffValue,fn){
+        changeRight:function(){//修改右边的块
             var _this=this;
+            //获取当前块的结束位置
+            var curX=parseFloat(_this.block.attr('x'));
+            var curWidth=parseFloat(_this.block.attr('width'));
+            var x1=curX+curWidth;//当前结束位置
+            //判断右边是否有邻近块
             if(_this.rightBlock){
-                var width=parseFloat(_this.rightBlock.block.attr('width'));
-                var diff=Math.abs(diffValue);
-                if(diff>width){//差值超过宽度就删除当前块，并改变前一块
-                    _this.rightBlock.remove();
-                    var newDiff=diffValue+width;
-                    _this.changeRight(newDiff);
+                //获取右边快的结束位置
+                var oldx=parseFloat(_this.rightBlock.block.attr('x'));
+                var oldwidth=parseFloat(_this.rightBlock.block.attr('width'));
+                //计算新的坐标
+                var x2=oldx+oldwidth;
+                var width=x2-x1;//计算高度
+                if(width<=0){//右边块被覆盖
+                    _this.rightBlock.remove();//删除前一个
+                    _this.changeRight();//修改新的前一块
                 }
-                else{
-                    //判断是否同一状态，是:合并
-                    if(_this.blockData.label== _this.rightBlock.blockData.label){
-                        var addWidth=parseFloat(_this.rightBlock.block.attr('width'))+diffValue;
-                        _this.updateWidth(addWidth);//合并到前一块
-                        _this.rightBlock.remove();//删除后一条
-
-                        //回调函数
-                        if(typeof fn==='function')
-                            fn.call(x,y);
-                    }
-                    else{
-                        var oldx = parseFloat(_this.rightBlock.block.attr('x'));
-                        var x = oldx - diffValue;
-                        _this.rightBlock.update(x);
-                    }
+                else{//修改位置和宽度
+                    _this.rightBlock.update(x1,null,width);
+                    // _this.rightBlock.blockText
                 }
             }
             else{
-                var x=parseFloat(this.block.attr('x'))+parseFloat(this.block.attr('width'));
+
+                // //获取当前选中的块
+                // var curRect = $(rects[i]);
+                // //获取当前那一行
+                // var g = curRect.parent()[0];//获取父级
+                // var parentWidth= curRect.parent().width();//获取父级总宽
+                var MaxX=this.block_Line.g.attr('x');
                 //如果没有就创建  不定状态
                 var data = {
                     height: BAR_HEIGHT,
-                    time:_this.block_xScale.invert(x),
+                    time:_this.block_xScale.invert(x1),
                     value: null,
                     label: '不定',
-                    width:Math.abs(diffValue)
+                    width:100
                 };
                 var rightBlock=new stateBlock(_this.block_Line,_this.block_xScale);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
@@ -247,13 +244,24 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             return this;
         },
         remove:function(){
-            this.block.remove();
+            this.block.remove();//移除当前块
             this.block=null;
             this.blockData=null;
+            //修改前后块的邻近块
             if(this.leftBlock!=null)
                 this.leftBlock.rightBlock=this.rightBlock;
             if(this.rightBlock!=null)
                 this.rightBlock.leftBlock=this.leftBlock;
+            if(this.rightBlock&&this.leftBlock){
+                    //判断是否同一状态，是:合并
+                    if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
+                        var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
+                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
+                        var width=x2-x1;//计算宽度
+                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        this.rightBlock.remove();//删除后一条
+                    }
+            }
             //删除对应text的位置
             if(this.blockText!=null)
                 this.blockText.remove();
