@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','drawArea'], function(d3, jquery, moment,lodash,drawArea) {
+﻿define(['d3', 'jquery', 'moment', 'lodash','drawArea'], function(d3, jquery, moment,lodash,drawArea) {
 
     var default_option = {
         padding: {
@@ -100,8 +100,8 @@ define(['d3', 'jquery', 'moment', 'lodash','drawArea'], function(d3, jquery, mom
 
             // Clear all svg elements.
             element.html('');
-            var area=new drawArea(option,element,describe);
-            area.draw(refreshSize).drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check();
+            var area=new drawArea(option,element,describe,refreshSize);
+            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check();
             
         }
         //// Defines all private methods ////

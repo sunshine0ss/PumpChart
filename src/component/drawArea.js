@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle) {
+define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle','legend'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle,legend) {
 
     var option=null;
     var element=null;
@@ -6,15 +6,15 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
 
     // Defines all constant values
     var ONE_SECOND = 1000;
-    var BAR_HEIGHT = 22;
-    var BAR_GAP_WIDTH = 10;
+    var BAR_HEIGHT = 22;//默认bar的高度
+    var BAR_GAP_WIDTH = 10;//默认
     var AXIS_WIDTH = 20;
-    var HANDLE_WIDTH = 4;
+    var HANDLE_WIDTH = 4;//默认手柄宽度
 
-    var _this=null;
-
+    var BTN_FLOAT='right';//默认按钮浮动位置
+    var _this = null;
     // Defines the hydochart type
-    var drawArea = function(opt,ele,desc) {
+    var drawArea = function(opt,ele,desc,refreshSize) {
         //Declaration attributes
         this.version = '1.0';
         this.svg =null;
@@ -27,15 +27,35 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
         this.currentLine=null;//当前时间的分割线
         this.hoverLine=null;//鼠标移动的提示线
         this.startHandle=null;//开始手柄
-        this.endHandle=null;
+        this.endHandle=null;//结束手柄
 
-        this.isEditing=false;
-
+        this.isEditing=false;//是否编辑中
+        this.curBlock=null;//当前选中的块
         //Make the variable function in the current scope
         option=opt;
         element=ele;
         describe=desc;
 
+
+        // Compute the size of the svg        
+        if (refreshSize || isNullOrUndefine(option.size)) {
+            var rect = element.node().getBoundingClientRect();
+            if (rect.width == 0 && rect.height == 0) {
+                rect = option.size;
+            }
+            this.params.size = {
+                width: rect.width,
+                height: rect.height
+            };
+
+                // Calculate the chart height if not be set.
+            var chartHeight = option.padding.top + option.padding.bottom +
+                describe.barCount * (BAR_HEIGHT + BAR_GAP_WIDTH) +
+                AXIS_WIDTH;
+            this.params.size.height = chartHeight;
+        } else {
+            this.params.size = option.size || {};
+        }
     }  
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
@@ -43,38 +63,22 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
     }
     //The chain method
     drawArea.prototype = {
-        draw: function(refreshSize,isShowCurrent,hasHover) {//Create a plot
+        draw: function() {//Create a plot
             // Compute the size of the svg        
-            if (refreshSize ||isNullOrUndefine(option.size)) {
-                var rect = element.node().getBoundingClientRect();
-                if (rect.width == 0 && rect.height == 0) {
-                    rect = option.size;
-                }
-                this.params.size = {
-                    width: rect.width,
-                    height: rect.height
-                };
-
-                // Calculate the chart height if not be set.
-                var chartHeight = option.padding.top + option.padding.bottom +
-                    describe.barCount * (BAR_HEIGHT + BAR_GAP_WIDTH) +
-                    AXIS_WIDTH;
-                this.params.size.height = chartHeight;
-            } else {
-                this.params.size = option.size||{};
-            }
-
+           //创建画布
             this.svg = element
                 .append('svg')
                 .attr('width', this.params.size.width)
                 .attr('height', this.params.size.height);
-
+            
+            //创建x轴的比例尺
             var xScaleWidth = this.params.size.width - option.padding.left - option.padding.right;
             this.xScale = d3.scaleTime()
                 .domain([describe.startTime, describe.endTime])
                 .nice(d3.timeHour)
                 .range([0, xScaleWidth]);
 
+            //创建y轴的比例尺
             var yScaleHeight = this.params.size.height - option.padding.top - option.padding.bottom;
             this.yScale = d3.scaleBand() 
                 .domain(describe.barNames)
@@ -106,12 +110,12 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 }
             });
             return this;
-        },
+        },//绘制绘图区
         drawAsix:function(){
             var dAxis=new axis(this.svg,option,this.params,this.xScale,this.yScale);
             dAxis.drawAxis();
             return this;
-        },
+        },//绘制坐标轴
         drawChart:function(timelines){
             var _this=this;
             _.each(timelines, function(line) {
@@ -120,35 +124,68 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 _this.lines.push(pLine);
             })
             return this;
-        },
+        },//绘制曲线
+        drawLegend: function() {
+            var _this=this;
+            var width = this.params.size.width - option.padding.right;
+
+            var click_event = function(ele) {
+                var type=$(ele).text();
+                if(_this.curBlock!=null){
+                    if(type=='新增'){
+
+
+                    }
+                    else if(type=='删除'){
+                            //删除选中状态
+                            _this.startHandle.removeHandle();
+                            _this.endHandle.removeHandle();
+                            //var width=parseFloat(_this.curBlock.block.attr('width'));
+                            _this.curBlock.updateWidth(0);
+                            _this.curBlock.changeRight();
+                            _this.curBlock.remove();
+                            _this.curBlock=null;
+                    }
+                    else if(type=='取消'){
+
+                            
+                    }
+                }
+                else
+                     alert('请先选择……','提示')
+            }
+            var chartLegend = new legend(element);
+            chartLegend.draw(width).drawCancelBtn(BTN_FLOAT, click_event).drawDeleteBtn(BTN_FLOAT, click_event).drawAddBtn(BTN_FLOAT, click_event);
+            return this;
+        }, //图例,增删改 按钮
         bind_check:function(){
             var _this=this;
-            var curBlock=null;
+            //var curBlock=null;
             var curRect=null;
 
             //// Defines all private methods ////
             //startHandle in drag
             var startDragged=function(x){
-                var x2=parseFloat(curBlock.block.attr('width'))+parseFloat(curBlock.block.attr('x'));
+                var x2=parseFloat(_this.curBlock.block.attr('width'))+parseFloat(_this.curBlock.block.attr('x'));
                 var width=x2-x;
-                curBlock.update(x,null,width);
+                _this.curBlock.update(x,null,width);
             }
             //End of the startHandle drag
             var startDragEnd=function(x){
-                curBlock.changeLeft();
-                if(curBlock.block==null){//判断当前的块是否被删除
-                    curBlock=null;
+                _this.curBlock.changeLeft();
+                if(_this.curBlock.block==null){//判断当前的块是否被删除
+                    _this.curBlock=null;
                     //删除选中状态
                     _this.startHandle.removeHandle();
                     _this.endHandle.removeHandle();
                 }
                 else{
-                    if(parseFloat(curBlock.block.attr('width'))<HANDLE_WIDTH+1){//如果当前的快的宽度小于手柄宽度删除当前块
-                        var x=parseFloat(curBlock.block.attr('width'))+parseFloat(curBlock.block.attr('x'));
-                        curBlock.update(x,null,0);//修改当前快的位置和宽度
-                        curBlock.changeLeft();//修改左侧块
-                        curBlock.remove();//删除当前块
-                        curBlock=null;
+                    if(parseFloat(_this.curBlock.block.attr('width'))<HANDLE_WIDTH+1){//如果当前的快的宽度小于手柄宽度删除当前块
+                        var x=parseFloat(_this.curBlock.block.attr('width'))+parseFloat(_this.curBlock.block.attr('x'));
+                        _this.curBlock.update(x,null,0);//修改当前快的位置和宽度
+                        _this.curBlock.changeLeft();//修改左侧块
+                        _this.curBlock.remove();//删除当前块
+                        _this.curBlock=null;
                         //删除选中状态
                         _this.startHandle.removeHandle();
                         _this.endHandle.removeHandle();
@@ -157,27 +194,27 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             } 
             //endHandle in drag
             var endDragged=function(x){
-                var x1=parseFloat(curBlock.block.attr('x'));
+                var x1=parseFloat(_this.curBlock.block.attr('x'));
                 var width=x-x1;
-                curBlock.update(x1,null,width);
+                _this.curBlock.update(x1,null,width);
             }
             //End of the endHandle drag
             var endDragEnd=function(){
-                curBlock.changeRight();
-                if(curBlock.block==null){//判断当前的块是否被删除
-                    curBlock=null;
+                _this.curBlock.changeRight();
+                if(_this.curBlock.block==null){//判断当前的块是否被删除
+                    _this.curBlock=null;
                     //删除选中状态
                     _this.startHandle.removeHandle();
                     _this.endHandle.removeHandle();
                 }
                 else{
-                    var curWidth=parseFloat(curBlock.block.attr('width'));
-                    var curX=parseFloat(curBlock.block.attr('x'));
+                    var curWidth=parseFloat(_this.curBlock.block.attr('width'));
+                    var curX=parseFloat(_this.curBlock.block.attr('x'));
                     if(curWidth<HANDLE_WIDTH+1){//如果当前的快的宽度小于手柄宽度删除当前块
-                        curBlock.update(curX,null,0);//修改当前快的位置和宽度
-                        curBlock.changeRight();//修改右侧块
-                        curBlock.remove();//删除当前块
-                        curBlock=null;
+                        _this.curBlock.update(curX,null,0);//修改当前快的位置和宽度
+                        _this.curBlock.changeRight();//修改右侧块
+                        _this.curBlock.remove();//删除当前块
+                        _this.curBlock=null;
                         //删除选中状态
                         _this.startHandle.removeHandle();
                         _this.endHandle.removeHandle();
@@ -197,7 +234,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             }
 
             var select=function(i, rects,block){
-                curBlock=block;
+                _this.curBlock=block;
                 _this.hideHoverLine();
                 _this.isEditing=true;
                 //先清除之前的手柄

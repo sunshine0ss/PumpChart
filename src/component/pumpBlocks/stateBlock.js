@@ -126,15 +126,15 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         //         fn.call(x,y);
         //     return this;
         // },
-        // updateWidth:function(width,fn){//修改宽度
-        //     if(!isNullOrUndefine(width)){
-        //         this.block.attr('width',width);
-        //     }
-        //     //回调函数
-        //     if(typeof fn==='function')
-        //         fn.call(x,y);
-        //     return this;
-        // },
+        updateWidth:function(width,fn){//修改宽度
+            if(!isNullOrUndefine(width)){
+                this.block.attr('width',width);
+            }
+            //回调函数
+            if(typeof fn==='function')
+                fn.call(x,y);
+            return this;
+        },
         addWidth:function(width,fn){//修改宽度
             if(!isNullOrUndefine(width)){
                 var oldwidth = parseFloat(this.block.attr('width'));

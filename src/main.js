@@ -1,4 +1,4 @@
-/// This is the main entry point of the site.
+﻿/// This is the main entry point of the site.
 /// Make sure this file has been refered in app.html before other js file.
 
 (function(window) {
@@ -24,6 +24,8 @@
             'handle':'component/handle',
             'timeLine': 'component/timeLine',
             'timeText': 'component/timeText',
+            'button': 'component/button',
+            'legend': 'component/legend',
             'stateBlock': 'component/pumpBlocks/stateBlock',
             'numericBlock': 'component/pumpBlocks/numericBlock',
             'undefineBlock': 'component/pumpBlocks/undefineBlock',
