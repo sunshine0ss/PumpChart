@@ -6,11 +6,6 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
     var fromTimeToLong = d3.timeParse('%Y-%m-%d %H:%M');
 
     var BAR_HEIGHT=22;
-    var line_option=null;
-    var line_xScale=null;
-    var line_yScale=null;
-    var line_svg=null;
-    var line_describe=null;
     // Defines the pumpLine type
     var pumpLine = function(svg,xScale,yScale,option,describe) {
         this.g=null;
@@ -18,24 +13,24 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
         this.blocks=[];
         this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;
 
-        line_svg=svg;
-        line_option=option;
-        line_xScale=xScale;
-        line_yScale=yScale;
-        line_describe=describe;
+        this.line_svg=svg;
+        this.line_option=option;
+        this.line_xScale=xScale;
+        this.line_yScale=yScale;
+        this.line_describe=describe;
     }
 
     //The chain method
     pumpLine.prototype = {
         drawLine:function(line){//checkBlockEvent: block选中的回调事件
             var _this=this;
-            var top = line_yScale(line.name) + line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
-                    line_describe.barCount * 0.2;
-            this.g = line_svg.append('g')
-                .attr('transform', 'translate(' + line_option.padding.left + ',' + top + ')');
+            var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
+                    this.line_describe.barCount * 0.2;
+            this.g = this.line_svg.append('g')
+                .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
             if(line.points.length>0){
                 _.each(line.points,function(data){
-                    var block=new stateBlock(_this.g,line_xScale);
+                    var block=new stateBlock(_this.g,_this.line_xScale);
                     block.draw(data).drawText(data);
                     var left=null;
                     var length=_this.blocks.length
@@ -57,6 +52,10 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
             }
             return this;
         },
+        remove:function(){
+            this.g.remove();
+            return this;
+        }
         // each: function(fn){//回调方法
         //     for(var i= 0,len=this.elements.length; i<len; i++){
         //         fn.call(this, this.elements[i]);

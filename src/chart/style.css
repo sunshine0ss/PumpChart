@@ -77,13 +77,17 @@
 
 
 
-/*custom*/
+
+/***
+Buttons & Dropdown Buttons
+***/
+
 .btn {
-    border-width: 0;
-    padding: 5px 10px;  
-    margin-right: 5px;
-    /*font-size: 14px;  */
-    outline: none !important;
+  cursor:pointer;
+  border-width: 0;
+  padding: 7px 14px;  
+  font-size: 14px;  
+  outline: none !important;
   -webkit-box-shadow: none !important;
      -moz-box-shadow: none !important;
           box-shadow: none !important;
@@ -92,6 +96,52 @@
           border-radius: 0 !important;
           text-shadow: none;
 }
+
+/* fix jumping group buttons */
+.btn-group.btn-group-solid .btn + .btn,
+.btn-group.btn-group-solid .btn + .btn-group.btn-group-solid,
+.btn-group.btn-group-solid .btn-group.btn-group-solid + .btn,
+.btn-group.btn-group-solid .btn-group.btn-group-solid + .btn-group.btn-group-solid {
+  margin-left: 0px;
+}
+
+.btn-group-vertical.btn-group-solid > .btn + .btn,
+.btn-group-vertical.btn-group-solid > .btn + .btn-group,
+.btn-group-vertical.btn-group-solid > .btn-group + .btn,
+.btn-group-vertical.btn-group-solid > .btn-group + .btn-group {
+  margin-top: 0px;
+  margin-left: 0;
+}
+
+.btn-default {
+  border-width: 1px;
+  padding: 6px 13px;
+} 
+
+.btn.red-stripe {
+  border-left: 3px solid #d84a38;
+}
+
+.btn.blue-stripe {
+  border-left: 3px solid #4d90fe;
+}
+
+.btn.purple-stripe {
+  border-left: 3px solid #852b99;
+}
+
+.btn.green-stripe {
+  border-left: 3px solid #35aa47;
+}
+
+.btn.yellow-stripe {
+  border-left: 3px solid #ffb848;
+}
+
+.btn.dark-stripe {
+  border-left: 3px solid #555555;
+}
+
 .btn.default {  
   color: #333333;
   text-shadow: none;  
@@ -111,7 +161,7 @@
 /*  Red */
 .btn.red {
   color: white;  
-  text-shadow: none;    
+  text-shadow: none;  
   background-color: #d84a38;
 }
 .btn.red:hover, 
@@ -129,7 +179,7 @@
 
 .btn.blue {
   color: white;  
-  text-shadow: none;    
+  text-shadow: none;  
   background-color: #4d90fe;
 }
 .btn.blue:hover, 
@@ -160,7 +210,7 @@
 /*  Green */
 .btn.green {
   color: white;
-  text-shadow: none;     
+  text-shadow: none;   
   background-color: #35aa47;
 }
 .btn.green:hover, 
@@ -177,7 +227,7 @@
 /*  Purple */
 .btn.purple {
   color: white; 
-  text-shadow: none;    
+  text-shadow: none;  
   background-color: #852b99;
 }
 .btn.purple:hover, 
@@ -208,7 +258,7 @@
 /*  Yellow */
 .btn.yellow {
   color: white; 
-  text-shadow: none;    
+  text-shadow: none;  
   background-color: #ffb848;
 }
 .btn.yellow:hover, 
@@ -239,7 +289,7 @@
 /*  Black */
 .btn.dark {
   color: white; 
-  text-shadow: none;    
+  text-shadow: none;  
   background-color: #555555;
 }
 .btn.dark:hover, 
@@ -251,4 +301,56 @@
   background-color: #222222 !important;
   color: #fff !important;
   outline: none !important;
+}
+
+.btn-group .btn.dark.dropdown-toggle {
+  background-color: #555555 !important;
+}
+.btn-group .btn.dark:hover, 
+.btn-group .btn.dark:focus, 
+.btn-group .btn.dark:active, 
+.btn-group .btn.dark.active, 
+.btn-group .btn.dark.disabled,
+.btn-group .btn.dark[disabled] { 
+  background-color: #222222 !important;
+  color: #fff !important;
+  outline: none !important;
+}
+
+.btn-lg {
+  padding: 10px 16px;
+  font-size: 18px;
+  line-height: 1.33;
+  vertical-align: middle;
+}
+
+.btn-lg > i {
+  font-size: 18px;
+}
+
+.btn > i {
+  font-size: 14px;
+}
+
+.btn-sm,
+.btn-xs {
+  padding: 4px 10px 5px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.btn-sm > i,
+.btn-xs > i {
+  font-size: 13px;
+} 
+
+.btn-xs {
+  padding: 1px 5px;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
 }

@@ -13,19 +13,19 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
         this.version = '1.0';
         this.timeText=null;
         //Make the variable function in the current scope
-        time_svg=svg;
-        time_xScale=xScale;
-        time_option=option;
+        this.time_svg=svg;
+        this.time_xScale=xScale;
+        this.time_option=option;
     }
     //The chain method
     timeText.prototype = {
         drawText: function(className) {
-            this.timeText=time_svg.append('text')
+            this.timeText=this.time_svg.append('text')
                 .attr('class', className)//'hover_text'
                 .text('00:00')
                 .style('opacity', 0)
                 .attr('x', -1)
-                .attr('y', time_option.padding.top + 8);
+                .attr('y', this.time_option.padding.top + 8);
             // svg.append('text')
             //     .attr('class', className)//'hover_text'
             //     .text('00:00')
@@ -35,7 +35,7 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             return this;
         },
         showText:function(x,y){
-            var time = time_xScale.invert(x - time_option.padding.left);
+            var time = this.time_xScale.invert(x - this.time_option.padding.left);
             var text = time.toLocaleTimeString('zh-CN', {
                 hour12: false
             }).substr(0, 5);

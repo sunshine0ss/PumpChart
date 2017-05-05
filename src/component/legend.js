@@ -32,22 +32,22 @@ define(['d3', 'jquery', 'moment', 'lodash','button'], function(d3, jquery, momen
         },
         drawAddBtn: function(float,fn) {
             var btn=new button(this.legend_div);
-            this.add_button=btn.add('新增',float,'green').click_Event(fn);
+            this.add_button=btn.add('新增',float,'green btn-sm').click_Event(fn);
             return this;
         },
         drawUpdateBtn:function(float,fn){ 
             var btn=new button(this.legend_div);
-            this.add_button=btn.add('编辑',float,'blue').click_Event(fn);
+            this.add_button=btn.add('编辑',float,'blue btn-sm').click_Event(fn);
             return this;
         },
         drawDeleteBtn:function(float,fn){
             var btn=new button(this.legend_div);
-            this.add_button=btn.add('删除',float,'red').click_Event(fn);
+            this.add_button=btn.add('删除',float,'red btn-sm').click_Event(fn);
             return this;
         },
         drawCancelBtn:function(float,fn){
             var btn=new button(this.legend_div);
-            this.add_button=btn.add('取消',float,'yellow').click_Event(fn);
+            this.add_button=btn.add('取消',float,'yellow btn-sm').click_Event(fn);
             return this;
         }
     }

@@ -2,11 +2,10 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
 
     var BAR_HEIGHT=22;
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state';
-    var CLASS_CLOSE_STATE = 'rect close_state';
-    var CLASS_FAULT_STATE = 'rect fault_state';
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state';
-
+    var CLASS_OPEN_STATE = 'rect open_state';//开
+    var CLASS_CLOSE_STATE = 'rect close_state';//关
+    var CLASS_FAULT_STATE = 'rect fault_state';//故障
+    var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
 
     //根据值转换样式
     function formatClass(d) {
@@ -55,7 +54,8 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     return formatClass(d);
                 })
                 .attr('x', function(d, i) {
-                    d.x = _this.block_xScale(d.time);
+                    if(d.x==undefined)
+                        d.x = _this.block_xScale(d.time);
                     return d.x;
                 })
                 .attr('y', 0)
@@ -237,9 +237,11 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(typeof fn=='function'){
                 this.callFn=fn;
                 var _this=this;
-                this.block.on("click", function(d, i, rects) {
-                    fn.call(d, i, rects,_this);
-                })
+                if(this.block!=null){
+                    this.block.on("click", function(d, i, rects) {
+                        fn.call(d, i, rects,_this);
+                    })
+                }
             }
             return this;
         },
@@ -265,21 +267,52 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             //删除对应text的位置
             if(this.blockText!=null)
                 this.blockText.remove();
-        }
-        // each: function(fn) { //回调方法
-        //     for (var i = 0, len = this.elements.length; i < len; i++) {
-        //         fn.call(this, this.elements[i]);
-        //     }
-        //     return this; //在每个方法的最后return this;
-        // },
-        // addBlock: function(prop, val) {
-        //     this.blocks.push(rects)
-        //     return this; //在每个方法的最后return this;
-        // },
-        // drag: function() {
+        },
+        insertCentre:function(){//插入新的到当前块的中间
+            if(this.blockData.className!=CLASS_FAULT_STATE){//故障不能新增
+                var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
+                var rightBlock=_.cloneDeep(this.rightBlock);//获取当前的右侧块
+                var intWidth=parseInt(totalWidth);
+                var x1=parseFloat(this.block.attr('x'));
+                var averageWidth=intWidth/3;//平均的宽度：分成三等分
+                var x2=x1+averageWidth;
+                var x3=x2+averageWidth;
 
-        //     return this;
-        // }
+                //先修改当前的块的宽度，再插入两块新的
+                this.updateWidth(averageWidth);
+                var  newData={//默认新建“开”的状态
+                    height: BAR_HEIGHT,
+                    time:this.block_xScale.invert(x2),
+                    value: 1,
+                    label:'开',
+                    width:averageWidth,
+                    x:x2
+                }
+                if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
+                    newData.label='关';
+                    newData.value=0;
+                }
+                //新建中间一段
+                var newBlock=new stateBlock(this.block_Line,this.block_xScale);
+                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+
+                this.setRight(newBlock);
+                //新建相同的一段
+                var data={
+                    height: BAR_HEIGHT,
+                    time:this.block_xScale.invert(x3),
+                    value: this.blockData.value,
+                    label:this.blockData.label,
+                    width:averageWidth,
+                    x:x3
+                }
+                var sameBlock=new stateBlock(this.block_Line,this.block_xScale);
+                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+
+                newBlock.setRight(sameBlock);
+            }
+            return this;
+        }
     }
 
     //// Exports stateBlock Component ////

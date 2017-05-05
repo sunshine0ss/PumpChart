@@ -1,25 +1,19 @@
 define(['d3','jquery','moment'], function(d3,jquery,moment) {
-    var axis_svg=null;
-    var axis_option=null;
-    var axis_params=null;
-    var axis_xScale=null;
-    var axis_yScale=null;
-
     // Defines the axis type
     var axis = function(svg,option,params,xScale,yScale) {
     	this.xAxis=null;
     	this.yAxis=null;
-        axis_svg=svg;
-        axis_option=option;
-        axis_params=params;
-        axis_xScale=xScale;
-        axis_yScale=yScale;
+        this.axis_svg=svg;
+        this.axis_option=option;
+        this.axis_params=params;
+        this.axis_xScale=xScale;
+        this.axis_yScale=yScale;
     }
     //The chain method
     axis.prototype = {
         drawAxis: function(){
-            xAxis = d3.axisBottom()
-                .scale(axis_xScale)
+            this.xAxis = d3.axisBottom()
+                .scale(this.axis_xScale)
                 .tickFormat(
                 function (d) {
                     var data = moment(d).format('HH:mm');
@@ -30,18 +24,41 @@ define(['d3','jquery','moment'], function(d3,jquery,moment) {
                         return data;
                 })
                 .ticks(24);
-            axis_svg.append('g')
+            this.axis_svg.append('g')
                 .attr('class', 'axis axis--x')
-                .attr('transform', 'translate(' + axis_option.padding.left + ',' + (axis_params.size.height - axis_option.padding.bottom) + ')')
-                .call(xAxis);
+                .attr('transform', 'translate(' + this.axis_option.padding.left + ',' + (this.axis_params.size.height - this.axis_option.padding.bottom) + ')')
+                .call(this.xAxis);
            
-            yAxis = d3.axisLeft()
-                .scale(axis_yScale);
-            axis_svg.append('g')
+            this.yAxis = d3.axisLeft()
+                .scale(this.axis_yScale);
+            this.axis_svg.append('g')
                 .attr('class', 'axis axis--y')
-                .attr('transform', 'translate(' + axis_option.padding.left + ',' + axis_option.padding.top + ')')
-                .call(yAxis);
+                .attr('transform', 'translate(' + this.axis_option.padding.left + ',' + this.axis_option.padding.top + ')')
+                .call(this.yAxis);
+
+            //前后的00:00换行显示，带上日期
+            var texts = $('.axis.axis--x').find('text'); //r texts = $('.axis.x').find('text');
+            var timeTexts = _.filter(texts, function(d) {
+                if (d.innerHTML.includes('00:00') && d.innerHTML != '00:00')
+                    return d;
+            })
+            _.each(timeTexts, function(timeText) {
+                var text = timeText.innerHTML;
+                var monthText = text.substr(0, 5);
+
+                var b = timeText.cloneNode();
+
+                $(b).attr('y', 21).html(monthText);
+                $(timeText).html('00:00')
+                var g = timeText.parentElement;
+                g.appendChild(b);
+            })
             return this; //在每个方法的最后return this;
+        },
+        remove:function(){
+            this.xAxis.remove();
+            this.yAxis.remove();
+            return this;
         },
         getxAxis:function(){
             return this.xAxis;
@@ -49,16 +66,6 @@ define(['d3','jquery','moment'], function(d3,jquery,moment) {
         getyAxis:function(){
             return this.yAxis;
         }
-        // each: function(fn){//回调方法
-        //     for(var i= 0,len=this.elements.length; i<len; i++){
-        //         fn.call(this, this.elements[i]);
-        //     }
-        //     return this; //在每个方法的最后return this;
-        // },
-        // drag:function(){
-
-        //     return this; 
-        // }
     }
     //// Exports axis Component ////
     return axis;

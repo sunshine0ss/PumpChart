@@ -20,7 +20,7 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             if(!isNullOrUndefine(classn)){
                 className+=' '+classn;
             }
-              this.button=this.button_svg
+            this.button=this.button_svg
                 .append('button')
                 .attr('class',className)
                 .text(text)
@@ -39,14 +39,17 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             return this;
         },
         update:function(x,y){ 
-            if(x!=undefined)
-                this.button.attr('x',x);
-            if(y!=undefined)
-                this.button.attr('y',y);
+            if(this.button!=null){
+                if(x!=undefined)
+                    this.button.attr('x',x);
+                if(y!=undefined)
+                    this.button.attr('y',y);
+            }
             return this;
         },
         remove:function(){
-            this.button.remove();
+            if(this.button!=null)
+                this.button.remove();
             return this;
         },
         click_Event:function(fn){//点击事件
@@ -59,6 +62,14 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             }
             return this;
         },
+        setDisabled:function(disabled){
+            if(this.button!=null){
+                if(disabled)
+                    this.button.attr("disabled",disabled);
+                else
+                    this.button.attr("disabled",null);
+            }
+        }
     }
 
     //// Exports button Component ////

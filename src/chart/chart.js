@@ -77,22 +77,6 @@
 
             this.refresh();
 
-            var texts = $('.axis.axis--x').find('text'); //r texts = $('.axis.x').find('text');
-            var timeTexts = _.filter(texts, function(d) {
-                if (d.innerHTML.includes('00:00') && d.innerHTML != '00:00')
-                    return d;
-            })
-            _.each(timeTexts, function(timeText) {
-                var text = timeText.innerHTML;
-                var monthText = text.substr(0, 5);
-
-                var b = timeText.cloneNode();
-
-                $(b).attr('y', 21).html(monthText);
-                $(timeText).html('00:00')
-                var g = timeText.parentElement;
-                g.appendChild(b);
-            })
         }
 
 
@@ -101,8 +85,7 @@
             // Clear all svg elements.
             element.html('');
             var area=new drawArea(option,element,describe,refreshSize);
-            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check();
-            
+            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check();            
         }
         //// Defines all private methods ////
 

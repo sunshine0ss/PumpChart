@@ -3,8 +3,6 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
     var TEXT_WIDTH = 12;
     var TEXT_HEIGHT = 14;
 
-    var g=null;
-    var block_xScale=null;
 
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
@@ -15,12 +13,12 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
     var text = function(line) {
         this.version = '1.0';
         this.text=null;
-        g=line;
+        this.g=line;
     }
     //The chain method
     text.prototype = {
         drawText: function(text,className,x,y) {
-            this.text=g.append('text')
+            this.text=this.g.append('text')
                             .attr('class', className||'label')
                             .text(text)
                             .attr('x', x)

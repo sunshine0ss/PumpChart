@@ -3,10 +3,6 @@ define(['d3', 'jquery', 'moment', 'lodash','timeText'], function(d3, jquery, mom
     var TEXT_WIDTH = 12;
     var TEXT_HEIGHT = 14;
 
-    var time_svg=null;
-    var time_option=null;
-    var time_params=null;
-    var time_xScale=null;
     // Defines the timeLine type
     var timeLine = function(svg,option,params,xScale,isShowText) {
         //Declaration attributes
@@ -16,27 +12,27 @@ define(['d3', 'jquery', 'moment', 'lodash','timeText'], function(d3, jquery, mom
         this.isShow=false;
         this.showText=false;
         //Make the variable function in the current scope
-        time_svg=svg;
-        time_option=option;
-        time_params=params;
-        time_xScale=xScale;
-        if (isShowText)
+        this.time_svg=svg;
+        this.time_option=option;
+        this.time_params=params;
+        this.time_xScale=xScale;
+        if (isShowText)//是否显示时间值
             this.showText=isShowText;
     }
     //The chain method
     timeLine.prototype = {
         drawLine: function(className,text_class) {
             // Create the mouse pointer line
-            this.currentLine=time_svg.append("line")
+            this.currentLine=this.time_svg.append("line")
                 .attr('class', className)
                 .classed("hide", false)
                 .attr("x1", -1)
                 .attr("x2", -1)
-                .attr("y1", time_option.padding.top)
-                .attr("y2", time_params.size.height - time_option.padding.bottom);
+                .attr("y1", this.time_option.padding.top)
+                .attr("y2", this.time_params.size.height - this.time_option.padding.bottom);
             //Show time label
             if(this.showText){
-                this.currentText=new timeText(time_svg,time_xScale,time_option);
+                this.currentText=new timeText(this.time_svg,this.time_xScale,this.time_option);
                 this.currentText.drawText(text_class);
             }
             return this;
