@@ -279,7 +279,29 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             _.each(this.lines, function(line) {
                 line.checkBlock_Event(select);
             })
-        },
+            return this;
+        },//鼠标单击，选中编辑
+        bind_dbclick_Event:function(){
+            var _this=this;
+            _.each(this.lines, function(line) {
+                var changeState=function(i, rects,block){
+                    if(_this.curBlock.block==null){
+                        //删除选中状态
+                        _this.startHandle.removeHandle();
+                        _this.endHandle.removeHandle();
+                    }  
+                    else{
+                        var curWidth=parseFloat(_this.curBlock.block.attr('width'));
+                        var curX=parseFloat(_this.curBlock.block.attr('x'));
+                        var endHandleX=curWidth+curX;
+                        //修改手柄位置
+                        _this.endHandle.updatePos(endHandleX);
+                    } 
+                }
+                line.dbclick_Event(changeState);
+            })
+            return this;
+        },//鼠标双击，更改状态
         drawCurrentLine:function(){
             //create currentline 
             this.currentLine=new timeLine(this.svg,this.option,this.params,this.xScale);
@@ -299,7 +321,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             };
             startTimer();
             return this;
-        },
+        },//绘制当前时间的提示线
         showCurrentLine:function(){
             //Gets the current time
             this.currentTime = new Date();
@@ -307,18 +329,18 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             this.currentLine.showLine(x);
 
             return this;
-        },
+        },//显示当前时间
         hideCurrentLine:function(){
             //hide currentline
             this.currentLine.hideLine();
             return this;
-        },
+        },//隐藏当前时间
         drawHoverLine:function(){
             this.hoverLine=new timeLine(this.svg,this.option,this.params,this.xScale,true);
             this.hoverLine.drawLine('hover_line','hover_text');
 
             return this;
-        },
+        },//绘制鼠标移动提示线
         showHoverLine:function(x,y){
             this.hoverLine.showLine(x);
             return this;
@@ -371,13 +393,13 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             this.element=ele;
             this.describe=desc;
             return this;
-        },
+        },//删除当前画布
         removeChart:function(){
             _.each(this.lines, function(line) {
                line.remove();
             })
             return this;
-        },
+        },//删除当前chart
         refresh:function(){
             this.svg.remove();
             this.draw();
@@ -391,7 +413,9 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 this.drawHoverLine()
             if(this.hasChecked)
                 this.bind_check();
-        }
+
+            return this;
+        }//刷新
     }  
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {

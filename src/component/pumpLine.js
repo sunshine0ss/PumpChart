@@ -22,16 +22,18 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
 
     //The chain method
     pumpLine.prototype = {
-        drawLine:function(line){//checkBlockEvent: block选中的回调事件
+        drawLine:function(line){
             var _this=this;
             var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
                     this.line_describe.barCount * 0.2;
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
             if(line.points.length>0){
+                //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=new stateBlock(_this.g,_this.line_xScale);
                     block.draw(data).drawText(data);
+                    //设置邻近块
                     var left=null;
                     var length=_this.blocks.length
                     if(length>0){
@@ -48,6 +50,14 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
                     block.click_Event(fn);
+                })     
+            }
+            return this;
+        },
+        dbclick_Event:function(fn){
+            if(typeof fn==='function'){
+                _.each(this.blocks,function(block){
+                    block.dbclick_Event(fn);
                 })     
             }
             return this;

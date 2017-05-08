@@ -23,8 +23,9 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             var _this=this;
             this.text_data=data;
             var isRemove=false;
-            this.pumpText=_this.g.datum(data)
+            this.pumpText=_this.g
                 .append('text')
+                .datum(data)
                 .filter(function(d,i,ele) {
                     if(d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time))
                         return true;
@@ -67,6 +68,13 @@ define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
             else{
                 this.draw(this.text_data);
             }
+            return this;
+        },
+        updateText:function(data){ 
+            this.pumpText.datum(data)
+                .text(function(d) {
+                    return d.label;
+                })
             return this;
         },
         remove:function(){
