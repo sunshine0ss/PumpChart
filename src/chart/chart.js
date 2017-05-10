@@ -85,7 +85,7 @@
             // Clear all svg elements.
             element.html('');
             var area=new drawArea(option,element,describe,refreshSize);
-            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick_Event();            
+            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick_Event().popover();            
         }
         //// Defines all private methods ////
 

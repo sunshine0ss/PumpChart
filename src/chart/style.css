@@ -96,6 +96,19 @@
   height: 0;
 }
 
+.popoverBtn{
+  height: 26px;
+  width: 25px;
+  margin: 0px;
+  padding: 0px;
+}
+
+.popoverBtn.red{
+  border:0px;
+  color: white;  
+  text-shadow: none;  
+  background-color: #d84a38;
+}
 /***
 Buttons & Dropdown Buttons
 ***/

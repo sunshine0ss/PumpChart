@@ -30,6 +30,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
     // Defines the stateBlock type
     var stateBlock = function(line,xScale) {
         this.version = '1.0';
+        this.blockType='state';
         this.block =null;//当前的块元素
         this.blockText=null;//当前的块的文本原元素
 
@@ -264,13 +265,17 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
         dbclick_Event:function(fn){//点击事件
             var _this=this;
             this.block.on("dblclick", function(d, i, rects) {
-                if(d.value==0){
+                if(d.value==0){//关--->开
                     d.value=1;
                     d.label='开';
                 }
-                else if(d.value==1){
+                else if(d.value==1){//开--->关
                     d.value=0;
                     d.label='关';
+                }
+                else if(d.value==undefined){//故障--->开
+                    d.value=1;
+                    d.label='开';
                 }
                 _this.updateState(d);//修改当前状态
                 //判断两边状态十分合并
@@ -288,7 +293,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
                         _this.remove();//移除当前
                     }
                 }
-                if(typeof fn=='function')
+                if(typeof fn=='function')//回调函数
                     fn.call(d, i, rects);
             })
             return this;

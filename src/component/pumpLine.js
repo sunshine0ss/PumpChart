@@ -48,8 +48,9 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
                     }
                     _this.blocks.push(block);
                 })
+                //$("[data-toggle='popover']").popover();
             }
-            $("[data-toggle='popover']").popover();
+
             return this;
         },
         checkBlock_Event:function(fn){
@@ -71,6 +72,42 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
         remove:function(){
             this.g.remove();
             return this;
+        },
+        popover:function(){
+            function ContentMethod(val) {
+                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+val+'><button class="popoverBtn red" onclick="btnClick()">关</button>'
+            }
+            $("[data-toggle='popover']").each(function(i,e) {
+                var val=e.__data__.value;//获取当前值
+                if(val==null||val==undefined)
+                    val='';
+                var element = $(e);
+                element.popover({
+                    trigger: 'click',
+                    container: "body" ,
+                    placement: 'top', 
+                    html: 'true',
+                    content: ContentMethod(val),
+                    animation: false  
+
+                }).on("click", function () {
+                    var _this = this;
+                    $(this).popover("show");
+                    // $(this).siblings("[data-toggle]").on("click", function () {
+                    //     $(_this).popover('hide');
+                    // });
+                    $(this).siblings(".popover").on("mouseleave", function () {
+                        $(_this).popover('hide');
+                    });
+                }).on("mouseleave", function () {
+                    var _this = this;
+                    setTimeout(function () {
+                        if (!$(".popover:hover").length) {
+                            $(_this).popover("hide")
+                        }
+                    }, 100);
+                });
+            });
         }
         // each: function(fn){//回调方法
         //     for(var i= 0,len=this.elements.length; i<len; i++){

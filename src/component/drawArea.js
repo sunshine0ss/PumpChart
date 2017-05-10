@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle','legend'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle,legend) {
+define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle','legend','bootstrap'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle,legend) {
     // Defines all constant values
     var ONE_SECOND = 1000;
     var BAR_HEIGHT = 22;//默认bar的高度
@@ -71,6 +71,16 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 .append('svg')
                 .attr('width', this.params.size.width)
                 .attr('height', this.params.size.height);
+
+            // $('svg').popover({  
+            //     selector: "[data-toggle=popover]",  
+            //     container: "body" ,
+            //     trigger:'click',//触发方式  
+            //     placement : 'top',    
+            //     html: 'true',   
+            //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button class="popoverBtn red" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
+            //     animation: false  
+            // })  
             
             //创建x轴的比例尺
             var xScaleWidth = this.params.size.width - this.option.padding.left - this.option.padding.right;
@@ -265,7 +275,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                     })
                     _this.gWIDTH=parentWidth;
                 }
-                
+
                 //var parentWidth= curRect.parent().width();//获取父级总宽
                 var d3g = d3.select(g);
                 
@@ -293,6 +303,20 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             })
             return this;
         },//鼠标单击，选中编辑
+        updateHandle:function(){
+            if(this.curBlock.block==null){
+                //删除选中状态
+                this.startHandle.removeHandle();
+                this.endHandle.removeHandle();
+            }  
+           else{
+                var curWidth=parseFloat(this.curBlock.block.attr('width'));
+                var curX=parseFloat(this.curBlock.block.attr('x'));
+                var endHandleX=curWidth+curX;
+                //修改手柄位置
+                this.endHandle.updatePos(endHandleX);
+            } 
+        },//更新手柄
         bind_dbclick_Event:function(){
             var _this=this;
             _.each(this.lines, function(line) {
@@ -311,6 +335,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                     } 
                 }
                 line.dbclick_Event(changeState);
+                //line.dbclick_Event(_this.updateHandle);
             })
             return this;
         },//鼠标双击，更改状态
@@ -360,6 +385,123 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
         hideHoverLine:function(){
             this.hoverLine.hideLine();
             return this;
+        },
+        popover:function(){
+            var _this=this;
+            function ContentMethod(val) {
+                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+val+' ><button id="closeBtn" class="popoverBtn red" >关</button>';
+            }
+            $("[data-toggle='popover']").each(function(i,e) {
+                var val=e.__data__.value;//获取当前值
+                if(val==null||val==undefined)
+                    val='';
+                var element = $(e);
+                element.popover({
+                    trigger: 'click',
+                    container: "body" ,
+                    placement: 'top', 
+                    html: 'true',
+                    content: ContentMethod(val),
+                    animation: false  
+
+                }).on("click", function () {
+                    var ele=this;
+                    var data=ele.__data__;
+                        $(ele).popover("show");
+                        $('#pumpvalue').val(data.value);
+
+                        $(ele).siblings("[data-toggle]").on("mouseleave", function () {
+                            $(ele).popover('hide');
+                        });
+
+                        // $(ele).siblings(".popover").on("click", function () {
+                        //     $(ele).popover('hide');
+                        // });
+
+                        //弹出框事件
+                        var changeData=function(val){
+                            if(val==undefined){
+                                data.value=val;
+                                data.label='不定';
+                            }
+                            else{
+                                val=parseInt(val);
+                                data.value=val;
+                                if(val>0){
+                                    data.label=val;
+                                }
+                                else if(val==0)
+                                    data.label='关';
+                                else if(val<0)
+                                    data.label='故障';
+                            }
+                            //修改值或状态
+                            _this.curBlock.updateState(data);
+                        }
+                        //输入框值改变事件
+                        $('#pumpvalue').on('change',function(){
+                            changeData(this.value);
+                            _this.updateHandle();//更新手柄
+
+                            // if(this.value==undefined){
+                            //     data.value=val;
+                            //     data.label='不定';
+                            // }
+                            // else{
+                            //     var val=parseInt(this.value);
+                            //     data.value=val;
+                            //     if(val>0){
+                            //         data.label=val;
+                            //     }
+                            //     else if(val==0)
+                            //         data.label='关';
+                            //     else if(val<0)
+                            //         data.label='故障';
+                            // }
+                            // //修改值或状态
+                            // _this.curBlock.updateState(data);
+                        })
+                        .on('keyup',function(){
+                            changeData(this.value);
+                            _this.updateHandle();//更新手柄
+
+                            // if(this.value==undefined){
+                            //     data.value=val;
+                            //     data.label='不定';
+                            // }
+                            // else{
+                            //     var val=parseInt(this.value);
+                            //     data.value=val;
+                            //     if(val>0){
+                            //         data.label=val;
+                            //     }
+                            //     else if(val==0)
+                            //         data.label='关';
+                            //     else if(val<0)
+                            //         data.label='故障';
+                            // }
+                            // //修改值或状态
+                            // _this.curBlock.updateState(data);
+                        })
+                        //关闭按钮点击事件
+                        $('#closeBtn').on('click',function(){
+                             data.value=0;
+                             data.label='关';
+                            _this.curBlock.updateState(data);//状态修改为关
+                            $(ele).popover('hide');//关掉弹出框
+                            _this.updateHandle();//更新手柄
+                        })
+                    })
+                    .on("mouseleave", function () {
+                        var that = this;
+                        setTimeout(function () {
+                            if (!$(".popover:hover").length) {
+                                $(that).popover("hide");
+                            }
+                        }, 100);
+                    });
+
+            });
         },
         // drawText:function(timelines){
         //     var line_svg=this.svg;
