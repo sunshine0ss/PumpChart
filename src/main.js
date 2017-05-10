@@ -9,11 +9,13 @@
         baseUrl: '/',
         paths: {
             /* 定义第三方组件库 */
-            'jquery': 'assets/vendor/jquery/dist/jquery.min',
+            'jquery':'assets/vendor/jquery-2.1.4.min',//'assets/vendor/jquery/dist/jquery.min',//
+            'jquery-migrate':'assets/vendor/jquery-migrate-1.2.1.min',//'assets/vendor/jquery/dist/jquery.min',//
             // 'inputmask': 'assets/vendor/jquery/dist/jquery.inputmask',
             'lodash': 'assets/vendor/lodash/dist/lodash.min',
             'd3': 'assets/vendor/d3/d3.min',
             'moment':"assets/vendor/moment/min/moment-with-locales.min",
+            'bootstrap':"assets/vendor/bootstrap/js/bootstrap.min",
 
 
             'drawArea': 'component/drawArea',

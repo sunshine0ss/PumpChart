@@ -253,6 +253,20 @@
         return values[values.length - 1];
     }
 
+    // $('body').find('.popovers').each(function(){
+    //     $(this).click(function(e){
+    //         $('.popover').remove();
+    //         e.preventDefault();
+    //         return false;
+    //     });
+    //     $(this).popover({
+    //         trigger : 'click'
+    //     });
+    // });
+    // $('body').click(function(){
+    //     $('.popover').remove();
+    // });
+
     //// Exports HydroChart Component ////
     return Chart;
 });

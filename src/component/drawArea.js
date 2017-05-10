@@ -30,11 +30,12 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
 
         this.isEditing=false;//是否编辑中
         this.curBlock=null;//当前选中的块
-
+        this.gWIDTH=null;
         //Make the variable function in the current scope
         this.option=opt;
         this.element=ele;
         this.describe=desc;
+
 
 
         // Compute the size of the svg        
@@ -254,7 +255,18 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 curRect = $(rects[i]);
                 //获取当前那一行
                 var g = curRect.parent()[0];//获取父级
-                var parentWidth= curRect.parent().width();//获取父级总宽
+                var parentWidth=0;
+                if(_this.gWIDTH==null){
+                    _.each(g.childNodes,function(child){
+                        if(child.tagName=="rect"){
+                            var width=parseFloat($(child).attr('width'));
+                            parentWidth+=width;
+                        }
+                    })
+                    _this.gWIDTH=parentWidth;
+                }
+                
+                //var parentWidth= curRect.parent().width();//获取父级总宽
                 var d3g = d3.select(g);
                 
                 //计算手柄的位置
@@ -264,7 +276,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 _this.startHandle=new handle( d3g ,_this.xScale);
                 _this.startHandle.drawHandle(x,y).drawHandleText(x,0).drag_Event(null,startDragged,startDragEnd);
 
-                var width = curRect.width();//获取当前块的宽度
+                var width =parseFloat(curRect.attr('width')) //curRect.width();//获取当前块的宽度
                 var endX = x + width- HANDLE_WIDTH;//当前位置加选中块的宽度，减去手柄的宽度
                 //添加结束手柄
                 _this.endHandle=new handle( d3g ,_this.xScale,'end');//时间的文本要在编辑区域内
@@ -274,7 +286,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 var minX=_this.startHandle.pos[0];
                 var maxX=_this.endHandle.pos[0];
                 _this.startHandle.setMinX(0).setMaxX(maxX);
-                _this.endHandle.setMinX(minX).setMaxX(parentWidth);
+                _this.endHandle.setMinX(minX).setMaxX(_this.gWIDTH);
             }
             _.each(this.lines, function(line) {
                 line.checkBlock_Event(select);

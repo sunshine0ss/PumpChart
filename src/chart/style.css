@@ -76,7 +76,25 @@
 }/*不定*/
 
 
+/*tooltip*/
+.tooltip{
+  position: absolute;
+  width: 120px;
+  height: auto;
+  text-align: center;
+  font-size: 14px;
+  color: white;
+  background-color: black;
+  border-width: 2px solid black;
+  border-radius: 5px;
+}
 
+.tooltip:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+}
 
 /***
 Buttons & Dropdown Buttons

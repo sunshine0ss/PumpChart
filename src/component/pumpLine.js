@@ -1,4 +1,4 @@
-define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock, moment) {
+define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock,numericBlock, moment) {
 
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');
@@ -31,7 +31,12 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
             if(line.points.length>0){
                 //循环数据并绘制块
                 _.each(line.points,function(data){
-                    var block=new stateBlock(_this.g,_this.line_xScale);
+                    var block=null;
+                    if(line.dataType=='STATE')
+                        block=new stateBlock(_this.g,_this.line_xScale);
+                    else
+                        block=new numericBlock(_this.g,_this.line_xScale);
+
                     block.draw(data).drawText(data);
                     //设置邻近块
                     var left=null;
@@ -44,6 +49,7 @@ define(['d3', 'jquery','stateBlock', 'moment', 'lodash'], function(d3, jquery,st
                     _this.blocks.push(block);
                 })
             }
+            $("[data-toggle='popover']").popover();
             return this;
         },
         checkBlock_Event:function(fn){

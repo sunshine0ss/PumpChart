@@ -8,14 +8,15 @@
     <title>CHART</title>
     <base href="/">
 
-
+    <link type="text/css" href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link type="text/css" href="../assets/vendor/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" />
     <link type="text/css" href="../chart/style.css" rel="stylesheet" />
 </head>
 <body>
 <!-- <input data-inputmask="datetime" id="date" /> -->
 
 	<!-- BEGIN MAIN CONTENT -->
-   <div id="chart" style="width:900px;height:500px;float:left;"></div>
+   <div id="chart" style="width:900px;height:500px;"></div><!-- float:left; -->
   <!-- <div id="pump" style="width:920px;height:500px;float:left;"></div> 
   <div id="hydroChart" style="width:960px;height:500px"></div> -->
        <!--
@@ -27,5 +28,10 @@
     <!-- BEGIN SCRIPT -->
     <!-- BEGIN VENDOR SCRIPT -->
     <script src="assets/vendor/requirejs/require.js" data-main="main.js"> </script>
+
+
+   <!--  <button type="button" class="btn btn-primary" id="inputBtn" style="margin-left: 200px; ">
+      文本框
+    </button> -->
 </body>
 </html>

@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, moment,lodash,pumpText) {
+define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3, jquery, moment,lodash,pumpText) {
 
     var BAR_HEIGHT=22;
     // Defines all class name
@@ -75,6 +75,23 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     d.height = BAR_HEIGHT;
                     return BAR_HEIGHT;
                 })
+
+                // .attr('data-toggle', 'popover')
+                // .attr('data-container','body')//加在指定元素后
+                // .attr('data-placement','top')//弹出框显示方位
+                // .attr('data-html',true)//弹出框显示方位
+                // //.attr('data-content', 'input')
+                // .attr('data-content', '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>')
+
+
+                // .popover({   
+                //     trigger:'click',//manual 触发方式  
+                //     placement : 'top',    
+                //     html: 'true',   
+                //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
+                //     animation: false  
+                // })   
+           
                 // .on("click", function(d, i, rects) {
                 //     this.click_Event();
                 // });
@@ -108,25 +125,6 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 fn.call(x,y);
             return this;
         },//修改坐标和宽度
-        // updatePos:function(x,y,fn){ //修改坐标
-        //     if(!isNullOrUndefine(x)){
-        //         var oldx = parseFloat(this.block.attr('x'));
-        //         var oldwidth = parseFloat(this.block.attr('width'));
-        //         var diffValue = oldx-x;
-        //         var rectWidth = oldwidth+ diffValue;
-        //         this.block.attr('x', x).attr('width',rectWidth);
-        //     }
-        //     if(!isNullOrUndefine(y)){
-        //         this.block.attr('y', y);
-        //     }
-        //     //修改对应text的位置
-        //     if(this.blockText!=null)
-        //         this.blockText.update(x,y);
-        //     //回调函数
-        //     if(typeof fn==='function')
-        //         fn.call(x,y);
-        //     return this;
-        // },
         updateWidth:function(width,fn){
             if(!isNullOrUndefine(width)){
                 this.block.attr('width',width);
@@ -248,6 +246,15 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 var _this=this;
                 if(this.block!=null){
                     this.block.on("click", function(d, i, rects) {
+
+                        // rects.popover({   
+                        //     trigger:'click',//manual 触发方式  
+                        //     placement : 'top',    
+                        //     html: 'true',   
+                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
+                        //     animation: false  
+                        // }) 
+                        
                         fn.call(d, i, rects,_this);
                     })
                 }
@@ -312,7 +319,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         insertCentre:function(){
             if(this.blockData.className!=CLASS_FAULT_STATE){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
-                var rightBlock=_.cloneDeep(this.rightBlock);//获取当前的右侧块
+                var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
                 var x1=parseFloat(this.block.attr('x'));
                 var averageWidth=intWidth/3;//平均的宽度：分成三等分
@@ -337,7 +344,6 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 var newBlock=new stateBlock(this.block_Line,this.block_xScale);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
-                this.setRight(newBlock);
                 //新建相同的一段
                 var data={
                     height: BAR_HEIGHT,
@@ -349,8 +355,10 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 }
                 var sameBlock=new stateBlock(this.block_Line,this.block_xScale);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
 
-                newBlock.setRight(sameBlock);
+                newBlock.setRight(sameBlock);//设置中间一块的右侧
+                this.setRight(newBlock);
             }
             return this;
         }//插入新的块到当前块的中间
