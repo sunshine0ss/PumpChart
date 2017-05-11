@@ -9,8 +9,8 @@
         baseUrl: '/',
         paths: {
             /* 定义第三方组件库 */
-            'jquery':'assets/vendor/jquery-2.1.4.min',//'assets/vendor/jquery/dist/jquery.min',//
-            'jquery-migrate':'assets/vendor/jquery-migrate-1.2.1.min',//'assets/vendor/jquery/dist/jquery.min',//
+            'jquery':'assets/vendor/jquery-2.1.3.min',//'assets/vendor/jquery/dist/jquery.min',//
+            'jquery-migrate':'assets/vendor/jquery-migrate-1.2.1.min',//'assets/vendor/jquery/dist/jquery.min',//解决版本差异
             // 'inputmask': 'assets/vendor/jquery/dist/jquery.inputmask',
             'lodash': 'assets/vendor/lodash/dist/lodash.min',
             'd3': 'assets/vendor/d3/d3.min',
@@ -39,7 +39,8 @@
             main: 'moment'
         }],
         shim: {
-
+            bootstrap: ['jquery'],
+            'jquery-migrate':['jquery']
         },
         map: {
             '*': {

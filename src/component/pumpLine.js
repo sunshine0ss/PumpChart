@@ -37,7 +37,7 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
                     else
                         block=new numericBlock(_this.g,_this.line_xScale);
 
-                    block.draw(data).drawText(data);
+                    block.draw(data).drawText();
                     //设置邻近块
                     var left=null;
                     var length=_this.blocks.length

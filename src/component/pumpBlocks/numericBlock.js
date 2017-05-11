@@ -7,6 +7,9 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
     var CLASS_FAULT_STATE = 'rect fault_state';//故障
     var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
 
+    var MIN_VALUE=0;
+    var MAX_VALUE=50;
+
     //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -48,6 +51,11 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
     //链式方法
     numericBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            if(data.value>MAX_VALUE){//判断是否超过最大限制
+                data.value=MAX_VALUE;
+                data.label=MAX_VALUE.toString();
+            }
+
             var _this=this;
             this.block=this.block_Line
                 .append('rect')
@@ -102,9 +110,9 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
             this.blockData=data;
             return this;
         },//绘制块
-        drawText:function(data){
+        drawText:function(){
             this.blockText=new pumpText(this.block_Line,this.block_xScale);
-            this.blockText.draw(data);
+            this.blockText.draw(this.blockData);
             return this;
         },//块对应的文本提示
         update:function(x,y,width,fn){ 

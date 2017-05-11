@@ -100,9 +100,9 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
             // this.blockState=data.label;
             return this;
         },//绘制块
-        drawText:function(data){
+        drawText:function(){
             this.blockText=new pumpText(this.block_Line,this.block_xScale);
-            this.blockText.draw(data);
+            this.blockText.draw(this.blockData);
             return this;
         },//块对应的文本提示
         update:function(x,y,width,fn){ 

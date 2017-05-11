@@ -6,6 +6,12 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
     var AXIS_WIDTH = 20;
     var HANDLE_WIDTH = 4;//默认手柄宽度
 
+
+
+    var BLOCK_MIN_VALUE=0;
+    var BLOCK_MAX_VALUE=50;
+
+
     var BTN_FLOAT='right';//默认按钮浮动位置
     // Defines the hydochart type
     var drawArea = function(opt,ele,desc,refreshSize) {
@@ -284,13 +290,13 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                 var y = parseFloat(curRect.attr('y')) - 5;//突出handle长度，比当前块高5个像素
                 //添加开始手柄
                 _this.startHandle=new handle( d3g ,_this.xScale);
-                _this.startHandle.drawHandle(x,y).drawHandleText(x,0).drag_Event(null,startDragged,startDragEnd);
+                _this.startHandle.drawHandle(x,y).drawHandleText(x,-2).drag_Event(null,startDragged,startDragEnd);//-2是 handle的文体提示与块的间隔
 
                 var width =parseFloat(curRect.attr('width')) //curRect.width();//获取当前块的宽度
                 var endX = x + width- HANDLE_WIDTH;//当前位置加选中块的宽度，减去手柄的宽度
                 //添加结束手柄
                 _this.endHandle=new handle( d3g ,_this.xScale,'end');//时间的文本要在编辑区域内
-                _this.endHandle.drawHandle(endX,y).drawHandleText(endX,0).drag_Event(null,endDragged,endDragEnd);//28是:  30(text width)- 2(handle width/2).
+                _this.endHandle.drawHandle(endX,y).drawHandleText(endX,-2).drag_Event(null,endDragged,endDragEnd);//28是:  30(text width)- 2(handle width/2).
                 
 
                 var minX=_this.startHandle.pos[0];
@@ -389,7 +395,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
         popover:function(){
             var _this=this;
             function ContentMethod(val) {
-                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+val+' ><button id="closeBtn" class="popoverBtn red" >关</button>';
+                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+val+' max='+BLOCK_MAX_VALUE+'><button id="closeBtn" class="popoverBtn red" >关</button>';
             }
             $("[data-toggle='popover']").each(function(i,e) {
                 var val=e.__data__.value;//获取当前值
@@ -440,7 +446,9 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                         }
                         //输入框值改变事件
                         $('#pumpvalue').on('change',function(){
-                            changeData(this.value);
+                            if(this.value>BLOCK_MAX_VALUE)//最大限制
+                                this.value=BLOCK_MAX_VALUE;
+                            changeData(this.value);//更新当前块
                             _this.updateHandle();//更新手柄
 
                             // if(this.value==undefined){
@@ -462,7 +470,9 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                             // _this.curBlock.updateState(data);
                         })
                         .on('keyup',function(){
-                            changeData(this.value);
+                            if(this.value>BLOCK_MAX_VALUE)//最大限制
+                                this.value=BLOCK_MAX_VALUE;
+                            changeData(this.value);//更新当前块
                             _this.updateHandle();//更新手柄
 
                             // if(this.value==undefined){
