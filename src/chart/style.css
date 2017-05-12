@@ -109,6 +109,26 @@
   text-shadow: none;  
   background-color: #d84a38;
 }
+
+.popoverBtn.green{
+  border:0px;
+  color: white;  
+  text-shadow: none;  
+  background-color: #35aa47;
+}
+
+.popoverBtn.blue{
+  border:0px;
+  color: white;  
+  text-shadow: none;  
+  background-color: #4d90fe;
+}
+.popoverBtn.yellow{
+  border:0px;
+  color: white;  
+  text-shadow: none;  
+  background-color: #ffb848;
+}
 /***
 Buttons & Dropdown Buttons
 ***/

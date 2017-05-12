@@ -84,28 +84,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
                     d.height = BAR_HEIGHT;
                     return BAR_HEIGHT;
                 })
-                .attr('data-toggle', 'popover')
-                // .attr('data-container','body')//加在指定元素后
-                // .attr('data-placement','top')//弹出框显示方位
-                // .attr('data-html',true)//弹出框显示方位
-                // //.attr('data-content', 'input')
-                // .attr('data-content', function(d,i){
-                //     return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+d.value+' ><button id="closeBtn" class="popoverBtn red" >关</button>';
-                
-                //     //return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+d.value+' onchange="inputChange()"><button id="closeBtn" class="popoverBtn red" onclick="btnClick()">关</button>'
-                // })
-
-
-            // $('#pumpvalue').on('change',function(d,i,e){
-            //     alert('2')
-
-            // })
-
-            // $('#closeBtn').on('click',function(d,i,e){
-
-                
-            //     alert('1')
-            // })
+                .attr('data-toggle', 'popover')//增加弹出属性
 
             this.blockData=data;
             return this;
@@ -160,12 +139,12 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
             if(!isNullOrUndefine(left))
                 this.leftBlock=left;
             return this;
-        },
+        },//设置左边邻近块
         setRight:function(right){
             if(!isNullOrUndefine(right))
                 this.rightBlock=right;
             return this;
-        },
+        },//设置右边邻近块
         changeLeft:function(){
             var _this=this;
             if(_this.block!=null){
@@ -178,7 +157,7 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
                         _this.changeLeft();//修改新的前一块
                     }
                     else{
-                        _this.leftBlock.update(null,null,width);
+                        _this.leftBlock.update(null,null,width);//修改左边的宽度
                     }
                 }
                 else{//如果没有就创建  不定状态
@@ -218,16 +197,9 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
                 }
                 else{//修改位置和宽度
                     _this.rightBlock.update(x1,null,width);
-                    // _this.rightBlock.blockText
                 }
             }
             else{
-
-                // //获取当前选中的块
-                // var curRect = $(rects[i]);
-                // //获取当前那一行
-                // var g = curRect.parent()[0];//获取父级
-                // var parentWidth= curRect.parent().width();//获取父级总宽
                 var MaxX=this.block_Line.lineWidth;
                 //如果没有就创建  不定状态
                 var data = {
@@ -251,20 +223,20 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
             })
 
             //判断两边状态十分合并
-                if(this.rightBlock!=null){
-                    if(this.blockData.label== this.rightBlock.blockData.label){//状态一致，合并
-                        var addWidth=parseFloat(this.rightBlock.block.attr('width'));//计算增加的宽度
-                        this.addWidth(addWidth);//合并到当前块
-                        this.rightBlock.remove();//移除右侧
-                    }
-                } 
-                if(this.leftBlock!=null){
-                    if(this.blockData.label== this.leftBlock.blockData.label){//状态一致，合并
-                        var addWidth=parseFloat(this.block.attr('width'));//计算增加的宽度
-                        this.leftBlock.addWidth(addWidth);//合并到前一块
-                        this.remove();//移除当前
-                    }
+            if (this.rightBlock != null) {
+                if (this.blockData.label == this.rightBlock.blockData.label) { //状态一致，合并
+                    var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
+                    this.addWidth(addWidth); //合并到当前块
+                    this.rightBlock.remove(); //移除右侧
                 }
+            }
+            if (this.leftBlock != null) {
+                if (this.blockData.label == this.leftBlock.blockData.label) { //状态一致，合并
+                    var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
+                    this.leftBlock.addWidth(addWidth); //合并到前一块
+                    this.remove(); //移除当前
+                }
+            }
 
             if(this.blockText){
                 this.blockText.updateText(data);
@@ -278,46 +250,6 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
                     this.block.on("click", function(d, i, rects) {
                         fn.call(d, i, rects,_this);
                     })
-
-
-                    // this.block.on("click", function (d, i, rects) {
-                    //     $(rects).popover("show");
-                    //     $(rects).siblings(".popover").on("mouseleave", function () {
-                    //         $(rects).popover('hide');
-                    //     });
-
-
-                    //     $('#pumpvalue').on('change',function(){
-                    //         var val=parseInt(this.value);
-                    //         d.value=val;
-                    //         if(val>0){
-                    //             d.label=val;
-                    //         }
-                    //         else if(val==0)
-                    //             d.label='关';
-                    //         else if(val<0)
-                    //             d.label='故障';
-
-                    //         _this.updateState(d);
-
-                    //     })
-
-                    //     $('#closeBtn').on('click',function(){
-                    //          d.value=0;
-                    //          d.label='关';
-                    //         _this.updateState(d);
-                    //     })
-
-                    //     //回调函数
-                    //     fn.call(d, i, rects,_this);
-                    // }).on("mouseleave", function () {
-                    //     var _this = this;
-                    //     setTimeout(function () {
-                    //         if (!$(".popover:hover").length) {
-                    //             $(_this).popover("hide")
-                    //         }
-                    //     }, 100);
-                    // });
                 }
             }
             return this;
@@ -325,30 +257,6 @@ define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3,
         dbclick_Event:function(fn){//点击事件
             var _this=this;
             this.block.on("dblclick", function(d, i, rects) {
-                // if(d.value==0){
-                //     d.value=1;
-                //     d.label=1;
-                // }
-                // else if(d.value==1){
-                //     d.value=0;
-                //     d.label='关';
-                // }
-                // _this.updateState(d);//修改当前状态
-                // //判断两边状态十分合并
-                // if(_this.rightBlock!=null){
-                //     if(_this.blockData.label== _this.rightBlock.blockData.label){//状态一致，合并
-                //         var addWidth=parseFloat(_this.rightBlock.block.attr('width'));//计算增加的宽度
-                //         _this.addWidth(addWidth);//合并到当前块
-                //         _this.rightBlock.remove();//移除右侧
-                //     }
-                // } 
-                // if(_this.leftBlock!=null){
-                //     if(_this.blockData.label== _this.leftBlock.blockData.label){//状态一致，合并
-                //         var addWidth=parseFloat(_this.block.attr('width'));//计算增加的宽度
-                //         _this.leftBlock.addWidth(addWidth);//合并到前一块
-                //         _this.remove();//移除当前
-                //     }
-                // }
                 if(typeof fn=='function')
                     fn.call(d, i, rects);
             })

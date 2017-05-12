@@ -11,19 +11,13 @@
         showCurrent: true,
         edit: false
     }
-    var isEditing = false;
     // Defines consts
     var MODE_DAY = 'Day';
 
     // Defines all constant values
     var ONE_SECOND = 1000;
     var MINUTES_PER_DAY = 1440;
-    var BAR_HEIGHT = 22;
-    var BAR_STROKE_WIDTH = 1;
-    var BAR_GAP_WIDTH = 10;
-    var AXIS_WIDTH = 20;
-    var TEXT_WIDTH = 12;
-    var TEXT_HEIGHT = 14;
+
     
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');
@@ -35,27 +29,10 @@
     var Chart = function(ele, opt) {
         this.version = '1.0';
 
-        var element = null, // Container element
+        var element = null,// Container element
             option = null, // Options             
             timelines = [], // The processed data
             params = {}; // The parameters for chart drawing
-
-        var svg = null,
-            xScale = null,
-            yScale = null,
-            xAxis = null,
-            yAxis = null;
-
-        var hoverLine = null,
-            hoverText = null;
-        var currentLine = null;
-
-        var timeIndicator = null;
-
-        var edit_rect_start = null;
-        var edit_rect_end = null;
-        var edit_text_start = null;
-        var edit_text_end = null;
 
         // Get the chart container
         if (isNullOrUndefine(ele)) {
@@ -74,19 +51,16 @@
         option = $.extend({}, default_option, opt);
         this.draw = function(data) {
             preprocess(data);
-
             this.refresh();
 
         }
 
-
         this.refresh = function(refreshSize) {
-
             // Clear all svg elements.
             element.html('');
             var area=new drawArea(option,element,describe,refreshSize);
-            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick_Event().popover();            
-        }
+            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();            
+        }//刷新并绘制
         //// Defines all private methods ////
 
         var describe = null;
@@ -96,7 +70,6 @@
                 console.warn("Input data is null or undfined.");
                 return null;
             }
-
             // Clear timelines
             timelines = [];
             describe = {
@@ -217,7 +190,7 @@
             describe.barNames = d3.map(timelines, function(d) {
                 return d.name
             }).keys();
-        }
+        }/*处理并准备数据*/
 
         function formatValue(value, unit, type) {
             type = type.toLowerCase();
