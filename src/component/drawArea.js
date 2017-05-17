@@ -33,7 +33,8 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
         this.endHandle=null;//结束手柄
         this.chartLegend=null;//图例
         this.dAxis=null;//坐标轴
-        this.originalData=null;//数据
+        this.originalData=null;//原始数据
+        this.updateData=null;//修改数据
 
         this.hasChecked=false;//是否有选中
         this.hasDBclick=false;//是否有双击事件
@@ -129,8 +130,9 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
         },//绘制坐标轴
         drawChart:function(timelines){
             var _this=this;
-            this.originalData=_.cloneDeep(timelines);
-            _.each(timelines, function(line) {
+            this.originalData=timelines;
+            this.updateData=_.cloneDeep(timelines);
+            _.each(this.updateData, function(line) {
                 var pLine=new pumpLine(_this.svg,_this.xScale,_this.yScale,_this.option,_this.describe);
                 pLine.drawLine(line);
                 _this.lines.push(pLine);
@@ -407,7 +409,8 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
                             if(this.value>BLOCK_MAX_VALUE)//最大限制
                                 this.value=BLOCK_MAX_VALUE;
                             changeData(this.value);//更新当前块
-                            _this.updateHandles();//更新手柄
+                            _this.removeHandles();//关闭选中状态
+                            //_this.updateHandles();//更新手柄
                         })//值改变事件
                         .on('keyup',function(){
                             if(this.value>BLOCK_MAX_VALUE)//最大限制
@@ -555,7 +558,7 @@ define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle'
             return this;
         },//刷新
         getData:function(){
-            
+            return this.updateData;
         }
     } 
 

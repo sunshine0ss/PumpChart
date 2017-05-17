@@ -6,18 +6,66 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
     var fromTimeToLong = d3.timeParse('%Y-%m-%d %H:%M');
 
     var BAR_HEIGHT=22;
+
+
+    var DEFAULT_COLOR=[0,0,121];//蓝色
+    var COLOR_STEP=5;//颜色分级步长
+    var colorGrade=[];//渐变颜色
+
+    //计算渐变色系
+    function getColorGradient() {
+        var code = DEFAULT_COLOR;
+        //当前颜色/255，计算基数
+        var curR = parseFloat(code[0] / 255).toFixed(2);
+        var curG = parseFloat(code[1] / 255).toFixed(2);
+        var curB = parseFloat(code[2] / 255).toFixed(2);
+        //计算每步需要加的数字 ——（1-基数）/步长
+        var stepR = parseFloat((1 - curR) / (COLOR_STEP + 1)).toFixed(2);
+        var stepG = parseFloat((1 - curG) / (COLOR_STEP + 1)).toFixed(2);
+        var stepB = parseFloat((1 - curB) / (COLOR_STEP + 1)).toFixed(2);
+            //渐变填充色
+        for (var i = 1; i <= COLOR_STEP; i++) {
+            var r = parseInt(code[0]);
+            var g = parseInt(code[1]);
+            var b = parseInt(code[2]);
+            if (i > 1) {
+                r = parseInt(parseFloat(stepR * i + parseFloat(curR)) * 255);
+                g = parseInt(parseFloat(stepG * i + parseFloat(curG)) * 255);
+                b = parseInt(parseFloat(stepB * i + parseFloat(curB)) * 255);
+            }
+            ColorGrade.push([r, g, b]);
+            // var td = tabtdObj.rows[rowLen - i].cells[1].childNodes[0];
+            // $(td).css("background-color", [r, g, b]);
+        }
+    }
+        
+
+    // //计算值域
+    // function getValueGrade(maxValue) {
+    //     var valueGrade=[];
+    //     var valueStep=maxValue/COLOR_STEP;
+    //     //渐变填充色
+    //     for (var i = 0; i <= COLOR_STEP; i++) {
+    //         valueGrade.push(i*valueStep);
+    //     }
+    // }
+
+
     // Defines the pumpLine type
     var pumpLine = function(svg,xScale,yScale,option,describe) {
         this.g=null;
         this.version = '1.0';
-        this.blocks=[];
-        this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;
+        this.blocks=[];//所有的块
+        this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;//计算宽
 
         this.line_svg=svg;
         this.line_option=option;
         this.line_xScale=xScale;
         this.line_yScale=yScale;
         this.line_describe=describe;
+
+        this.valueGrade=[];//值域
+
     }
 
     //The chain method
@@ -32,10 +80,10 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    if(line.dataType=='STATE')
-                        block=new stateBlock(_this.g,_this.line_xScale);
-                    else
-                        block=new numericBlock(_this.g,_this.line_xScale);
+                        if(line.type=='CSP')//定速泵
+                            block=new stateBlock(_this.g,_this.line_xScale);
+                        else if(line.type=='RSP')//定速泵
+                            block=new numericBlock(_this.g,_this.line_xScale);
 
                     block.draw(data).drawText();
                     //设置邻近块
@@ -52,6 +100,15 @@ define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], functio
             }
 
             return this;
+        },
+        getValueGrade:function(maxValue) {
+            var values=[];
+            var valueStep=maxValue/COLOR_STEP;
+            //渐变填充色
+            for (var i = 0; i <= COLOR_STEP; i++) {
+                values.push(i*valueStep);
+            }
+            this.valueGrade=values;
         },
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){

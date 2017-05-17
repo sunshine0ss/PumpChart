@@ -29,50 +29,55 @@
     var Chart = function(ele, opt) {
         this.version = '1.0';
 
-        var element = null,// Container element
-            option = null, // Options             
-            timelines = [], // The processed data
-            params = {}; // The parameters for chart drawing
+        this.element = null;// Container element
+        this.option = null;// Options             
+        this.timelines = []; // The processed data
+        //this.params = {}; // The parameters for chart drawing
+        this.describe = null;
 
+        this.area=null;
         // Get the chart container
         if (isNullOrUndefine(ele)) {
-            element = d3.select('body');
+            this.element = d3.select('body');
         } else {
             if (isString(ele)) {
-                element = d3.select(ele);
+                this.element = d3.select(ele);
             } else {
-                element = ele;
+                this.element = ele;
             }
         }
-        element.attr('class', 'hydrochart');
+        this.element.attr('class', 'hydrochart');
 
         //document.captureEvents(Event.MOUSEMOVE|Event.MOUSEDOWN | Event.MOUSEUP);
         // Get the chart option
-        option = $.extend({}, default_option, opt);
-        this.draw = function(data) {
-            preprocess(data);
-            this.refresh();
-
-        }
-
-        this.refresh = function(refreshSize) {
-            // Clear all svg elements.
-            element.html('');
-            var area=new drawArea(option,element,describe,refreshSize);
-            area.drawLegend().draw().drawChart(timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();            
-        }//刷新并绘制
+        this.option = $.extend({}, default_option, opt);
+  
         //// Defines all private methods ////
 
-        var describe = null;
 
+        function formatValue(value, unit, type) {
+            type = type.toLowerCase();
+            var text = '';
+            if (type == "csp") {
+                if (value === 0) text = '关';
+                else if (value > 0) text = '开';
+                else if (value < 0) text = '故障';
+            } else {
+                if (value === 0) text = '关';
+                else if (value < 0) text = '故障';
+                else text = value.toString() + ' ' + (unit?(unit.unitText || ""):'');
+            }
+            return text;
+        }
+        var _this=this;
         function preprocess(data) {
             if (isNullOrUndefine(data)) {
                 console.warn("Input data is null or undfined.");
                 return null;
             }
             // Clear timelines
-            timelines = [];
-            describe = {
+            _this.timelines = [];
+            _this.describe = {
                 startTime: null,
                 endTime: null,
                 barNames: null,
@@ -83,7 +88,7 @@
             for (var i in data) {
                 // Clone and protected the raw data.
                 var line = $.extend({}, data[i]);
-                timelines.push(line);
+                _this.timelines.push(line);
 
                 // Try to convert time string to Date object.
                 for (var i in line.values) {
@@ -141,7 +146,7 @@
                 // Day Mode
                 // The time of first point should 0:00 and 
                 // The time of last point should 0:00 in next day.
-                if (option.mode == MODE_DAY) {
+                if (_this.option.mode == MODE_DAY) {
                     var first = getFirst(merged_values);
                     if (first.time.getHours() !== 0 || first.time.getMinutes() !== 0) {
                         first.time.setHours(0);
@@ -176,37 +181,41 @@
 
                 for (var i in line.points) {
                     var point = line.points[i];
-                    if (describe.startTime === null || point.time <= describe.startTime) {
-                        describe.startTime = point.time;
+                    if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
+                        _this.describe.startTime = point.time;
                     }
-                    if (describe.endTime === null || point.time >= describe.endTime) {
-                        describe.endTime = point.time;
+                    if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
+                        _this.describe.endTime = point.time;
                     }
                 }
             }
 
             // To statistic the values
-            describe.barCount = timelines.length;
-            describe.barNames = d3.map(timelines, function(d) {
+            _this.describe.barCount = _this.timelines.length;
+            _this.describe.barNames = d3.map(_this.timelines, function(d) {
                 return d.name
             }).keys();
         }/*处理并准备数据*/
+        
+        this.draw = function(data) {
+            preprocess(data);
+            this.refresh();
+            return this;   
+        }//绘图
 
-        function formatValue(value, unit, type) {
-            type = type.toLowerCase();
-            var text = '';
-            if (type == "csp") {
-                if (value === 0) text = '关';
-                else if (value > 0) text = '开';
-                else if (value < 0) text = '故障';
-            } else {
-                if (value === 0) text = '关';
-                else if (value < 0) text = '故障';
-                else text = value.toString() + ' ' + (unit?(unit.unitText || ""):'');
-            }
-            return text;
+        this.refresh = function(refreshSize) {
+            // Clear all svg elements.
+            this.element.html('');
+            this.area=new drawArea(this.option,this.element,this.describe,refreshSize);
+            this.area.drawLegend().draw().drawChart(this.timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();       
+            return this;   
+        }//刷新并绘制
+
+        this.getData=function(){
+            var newData=this.area.getData();
+            preprocess(newData);
+            return this.timelines;
         }
-
     }
 
     // Check whether the obj is null or undfined.

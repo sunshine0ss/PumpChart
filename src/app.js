@@ -37,7 +37,7 @@ define(['moment','./chart/linechart','./chart/pump',
 	var objects=[{"id":17,"name":"增压1#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":1},{"time":"2017-04-18 6:00:00","value":0},{"time":"2017-04-18 14:00:00","value":1},{"time":"2017-04-18 21:00:00","value":-1}],"lineIndex":5},
 			 	{"id":13,"name":"西山1#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":0},{"time":"2017-04-18 2:00:00","value":1},{"time":"2017-04-18 6:00:00","value":0},{"time":"2017-04-18 12:00:00","value":-31},{"time":"2017-04-18 20:00:00","value":1}],"lineIndex":4},
 			 	{"id":18,"name":"增压2#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":1},{"time":"2017-04-18 3:00:00","value":1},{"time":"2017-04-18 10:00:00","value":0},{"time":"2017-04-18 15:00:00","value":-1}],"lineIndex":4},
-			 	{"id":14,"name":"西山2#","type":"RSP","dataType":"NUMBER","values":[{"time":"2017-04-18 0:00:00","value":150},{"time":"2017-04-18 5:00:00","value":-12},{"time":"2017-04-18 12:00:00","value":0},{"time":"2017-04-18 14:00:00","value":13}],"lineIndex":3},
+			 	{"id":14,"name":"西山2#","type":"RSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":150},{"time":"2017-04-18 5:00:00","value":-12},{"time":"2017-04-18 12:00:00","value":0},{"time":"2017-04-18 14:00:00","value":13}],"lineIndex":3},
 			 	{"id":19,"name":"增压3#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":0},{"time":"2017-04-18 2:00:00","value":1},{"time":"2017-04-18 6:00:00","value":0},{"time":"2017-04-18 10:00:00","value":1}],"lineIndex":3},
 			 	{"id":15,"name":"西山3#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":1},{"time":"2017-04-18 2:00:00","value":1},{"time":"2017-04-18 4:00:00","value":0},{"time":"2017-04-18 12:00:00","value":1}],"lineIndex":2},
 			 	{"id":20,"name":"增压4#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":0},{"time":"2017-04-18 5:00:00","value":1},{"time":"2017-04-18 10:00:00","value":0},{"time":"2017-04-18 13:00:00","value":1}],"lineIndex":2},
@@ -45,6 +45,10 @@ define(['moment','./chart/linechart','./chart/pump',
 			 	{"id":21,"name":"增压5#","type":"CSP","dataType":"STATE","values":[{"time":"2017-04-18 0:00:00","value":null},{"time":"2017-04-18 4:00:00","value":-1},{"time":"2017-04-18 10:00:00","value":1},{"time":"2017-04-18 18:00:00","value":0}],"lineIndex":1}];
  	var chart=new chart('#chart',option);
  	chart.draw(objects);
+
+	$("#inputBtn").on('click',function(){
+		chart.getData();
+	})   
 
 
  	// $("#inputBtn").popover({   
