@@ -1,4 +1,4 @@
-define(['d3', 'jquery','moment', 'lodash','text'], function(d3, jquery, moment,lodash,text) {
+define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,lodash,text) {
 
     var HANDLE_WIDTH = 4;//手柄宽度
     var HANDLE_HEIGHT = 30;//手柄高度

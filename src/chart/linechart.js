@@ -1,4 +1,4 @@
-define(['d3','jquery'], function(d3,jquery) {
+define(['d3','jQuery'], function(d3,jquery) {
     var linechart = function(option) {
 		var element= d3.select(option.element);
 		var margin =option.margin||{left:0,right:0,top:0,bottom:0};

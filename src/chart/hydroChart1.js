@@ -1,4 +1,4 @@
-define(['d3','jquery','moment','lodash','./linechart'], function(d3,jquery,moment,loadsh,linechart) {
+define(['d3','jQuery','moment','lodash','./linechart'], function(d3,jquery,moment,loadsh,linechart) {
 
     var default_option = {
         padding: {

@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash) {
+define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment,lodash) {
 
     var BUTTON_WIDTH = 35;//
     var BUTTON_HEIGHT = 20;//

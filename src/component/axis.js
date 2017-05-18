@@ -1,4 +1,4 @@
-define(['d3','jquery','moment'], function(d3,jquery,moment) {
+define(['d3','jQuery','moment'], function(d3,jquery,moment) {
     // Defines the axis type
     var axis = function(svg,option,params,xScale,yScale) {
     	this.xAxis=null;

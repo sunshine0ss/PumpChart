@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','pumpText','bootstrap'], function(d3, jquery, moment,lodash,pumpText) {
+define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, moment,lodash,pumpText) {
 
     var BAR_HEIGHT=22;
     // Defines all class name

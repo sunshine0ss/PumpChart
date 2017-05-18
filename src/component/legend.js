@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','button'], function(d3, jquery, moment,lodash,button) {
+define(['d3', 'jQuery', 'moment', 'lodash','button'], function(d3, jquery, moment,lodash,button) {
 
     var LEGEND_HEIGHT = 30;//默认高度
 

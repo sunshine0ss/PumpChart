@@ -1,4 +1,4 @@
-define(['d3', 'jquery','stateBlock','numericBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock,numericBlock, moment) {
+define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock,numericBlock, moment) {
 
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');

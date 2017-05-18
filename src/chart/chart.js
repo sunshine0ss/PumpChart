@@ -1,4 +1,4 @@
-﻿define(['d3', 'jquery', 'moment', 'lodash','drawArea'], function(d3, jquery, moment,lodash,drawArea) {
+﻿define(['d3', 'jQuery', 'moment', 'lodash','drawArea'], function(d3, jquery, moment,lodash,drawArea) {
 
     var default_option = {
         padding: {
@@ -250,5 +250,5 @@
     // });
 
     //// Exports HydroChart Component ////
-    return Chart;
+    return { chart: Chart };
 });

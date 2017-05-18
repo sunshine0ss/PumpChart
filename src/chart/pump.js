@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment) {
+define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment) {
 
     var default_option = {
         padding: {

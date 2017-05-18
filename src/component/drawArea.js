@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash','axis','pumpLine','timeLine','handle','legend','bootstrap'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle,legend) {
+define(['d3', 'jQuery', 'moment', 'lodash','axis','pumpLine','timeLine','handle','legend'], function(d3, jquery, moment,lodash,axis,pumpLine,timeLine,handle,legend) {
     // Defines all constant values
     var ONE_SECOND = 1000;
     var BAR_HEIGHT = 22;//默认bar的高度

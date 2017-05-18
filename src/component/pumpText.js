@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'moment', 'lodash'], function(d3, jquery, moment,lodash) {
+define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment,lodash) {
 
     var TEXT_WIDTH = 12;//
     var TEXT_HEIGHT = 14;//
