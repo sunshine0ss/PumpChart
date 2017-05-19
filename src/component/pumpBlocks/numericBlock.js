@@ -51,6 +51,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     //链式方法
     numericBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            data.blockType=this.blockType;//设置当前类型
+            data.maxValue=MAX_VALUE;//设置默认最大值
             if(data.value>MAX_VALUE){//判断是否超过最大限制
                 data.value=MAX_VALUE;
                 data.label=MAX_VALUE.toString();
@@ -145,6 +147,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 this.rightBlock=right;
             return this;
         },//设置右边邻近块
+        setMinValue:function(min){
+            if(!isNullOrUndefine(min))
+                this.blockData.minValue=min;
+            return this;
+        },//设置下限
+        setMaxValue:function(max){
+            if(!isNullOrUndefine(max))
+                this.blockData.maxValue=max;
+            return this;
+        },//设置上限
         changeLeft:function(){
             var _this=this;
             if(_this.block!=null){

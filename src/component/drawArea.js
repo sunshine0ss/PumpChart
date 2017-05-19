@@ -351,21 +351,34 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.hasPopover = true;
             var _this = this;
             //弹出框内容
-            function ContentMethod(val) {
-                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + BLOCK_MAX_VALUE + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+            function ContentMethod(data) {
+                var html='';
+                var val = data.value; //获取当前值
+                if (val == null || val == undefined)
+                    val = '';
+                if(data.blockType=='state'){
+                    html='<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                }
+                else if(data.blockType=='numeric'){
+                    html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                }
+                else if(data.blockType=='gradient'){
+                   html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                }
+                return html;
             }
             //所有设置弹出框属性的元素绑定弹出
             $("[data-toggle='popover']").each(function(i, e) {
-                var val = e.__data__.value; //获取当前值
-                if (val == null || val == undefined)
-                    val = '';
+                // var val = e.__data__.value; //获取当前值
+                // if (val == null || val == undefined)
+                //     val = '';
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
                         container: "body", //向指定元素中追加弹出框
                         placement: 'top', //弹出框定位方向（即 top|bottom|left|right|auto）
                         html: 'true', //是否解析html标签
-                        content: ContentMethod(val,e), //弹出框内容
+                        content: ContentMethod(e.__data__), //弹出框内容
                         animation: false //动画过渡效果
 
                     }).on("click", function() {
@@ -398,18 +411,18 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if (this.value > BLOCK_MAX_VALUE) //最大限制
-                                    this.value = BLOCK_MAX_VALUE;
+                                if (this.value > data.maxValue) //最大限制
+                                    this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
-                                _this.removeHandles(); //关闭选中状态
-                                //_this.updateHandles();//更新手柄
+                                //_this.removeHandles(); //关闭选中状态
+                                _this.updateHandles();//更新手柄
                             }) //值改变事件
                             .on('keyup', function() {
-                                if (this.value > BLOCK_MAX_VALUE) //最大限制
-                                    this.value = BLOCK_MAX_VALUE;
+                                if (this.value > data.maxValue) //最大限制
+                                    this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
-                                _this.removeHandles(); //关闭选中状态
-                                //_this.updateHandles();//更新手柄
+                                //_this.removeHandles(); //关闭选中状态
+                                _this.updateHandles();//更新手柄
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {

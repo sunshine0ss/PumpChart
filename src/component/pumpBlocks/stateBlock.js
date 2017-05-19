@@ -47,6 +47,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         //链式方法
     stateBlock.prototype = {
         draw: function(data) { //在绘图区绘制出块
+            data.blockType=this.blockType;
             var _this = this;
             this.block = this.block_Line
                 .append('rect')
@@ -78,7 +79,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
 
             if (data.value == undefined) { //不定状态加弹框
                 this.block.attr('data-toggle', 'popover')
-                    .attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
+                    //.attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
             }
             this.blockData = data;
             return this;

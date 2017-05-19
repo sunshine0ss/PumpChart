@@ -194,20 +194,22 @@ var objects = [{
         "value": null
     }, {
         "time": "2017-04-18 4:00:00",
-        "value": 60
+        "value": 360
     }, {
         "time": "2017-04-18 9:00:00",
         "value": 100
     }, {
         "time": "2017-04-18 14:00:00",
-        "value": 150
+        "value": 550
     }, {
         "time": "2017-04-18 18:00:00",
-        "value": 200
+        "value": 250
     }, {
         "time": "2017-04-18 22:00:00",
-        "value": 250
+        "value": 50
     }],
+    "minValue":20,
+    "maxValue":600,
     "lineIndex": 1
 }];
 var chart = new chart('#chart', option);

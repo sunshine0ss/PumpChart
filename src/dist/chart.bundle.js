@@ -554,21 +554,34 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.hasPopover = true;
             var _this = this;
             //弹出框内容
-            function ContentMethod(val) {
-                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + BLOCK_MAX_VALUE + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+            function ContentMethod(data) {
+                var html='';
+                var val = data.value; //获取当前值
+                if (val == null || val == undefined)
+                    val = '';
+                if(data.blockType=='state'){
+                    html='<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                }
+                else if(data.blockType=='numeric'){
+                    html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                }
+                else if(data.blockType=='gradient'){
+                   html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                }
+                return html;
             }
             //所有设置弹出框属性的元素绑定弹出
             $("[data-toggle='popover']").each(function(i, e) {
-                var val = e.__data__.value; //获取当前值
-                if (val == null || val == undefined)
-                    val = '';
+                // var val = e.__data__.value; //获取当前值
+                // if (val == null || val == undefined)
+                //     val = '';
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
                         container: "body", //向指定元素中追加弹出框
                         placement: 'top', //弹出框定位方向（即 top|bottom|left|right|auto）
                         html: 'true', //是否解析html标签
-                        content: ContentMethod(val,e), //弹出框内容
+                        content: ContentMethod(e.__data__), //弹出框内容
                         animation: false //动画过渡效果
 
                     }).on("click", function() {
@@ -601,18 +614,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if (this.value > BLOCK_MAX_VALUE) //最大限制
-                                    this.value = BLOCK_MAX_VALUE;
+                                if (this.value > data.maxValue) //最大限制
+                                    this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
-                                _this.removeHandles(); //关闭选中状态
-                                //_this.updateHandles();//更新手柄
+                                //_this.removeHandles(); //关闭选中状态
+                                _this.updateHandles();//更新手柄
                             }) //值改变事件
                             .on('keyup', function() {
-                                if (this.value > BLOCK_MAX_VALUE) //最大限制
-                                    this.value = BLOCK_MAX_VALUE;
+                                if (this.value > data.maxValue) //最大限制
+                                    this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
-                                _this.removeHandles(); //关闭选中状态
-                                //_this.updateHandles();//更新手柄
+                                //_this.removeHandles(); //关闭选中状态
+                                _this.updateHandles();//更新手柄
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
@@ -1432,8 +1445,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     var CLASS_FAULT_STATE = 'rect fault_state';//故障
     var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
 
-
-
     //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -1458,7 +1469,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     // Defines the gradientBlock type
     var gradientBlock = function(line,xScale) {
         this.version = '1.0';
-        this.blockType='numeric';
+        this.blockType='gradient';
 
         this.block =null;//当前的块元素
         this.blockText=null;//当前的块的文本原元素
@@ -1477,6 +1488,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     //链式方法
     gradientBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            data.blockType=this.blockType;
             var _this=this;
             this.block=this.block_Line
                 .append('rect')
@@ -1509,19 +1521,42 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if(data.colorGrade!=undefined){
                 $(this.block._groups[0]).css('fill',data.colorGrade);
             }//设置当前颜色
-            //弹出框内容
-            if (data.value == undefined) { //不定状态加弹框
-                this.block.attr('data-toggle', 'popover')
-                    .attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
-            }
-            // else{
-            //     var BLOCK_MAX_VALUE=50;
-            //     this.block.attr('data-toggle', 'popover')
-            //         .attr('data-content', '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + data.value + ' max=' + BLOCK_MAX_VALUE + '>')
-            // }
+           
             this.blockData=data;
             return this;
         },//绘制块
+        getValueGrade:function(minValue,maxValue) {
+            var values=[];
+            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
+            //渐变填充色
+            for (var i = 0; i < COLOR_STEP; i++) {
+                values.push(minValue+i*valueStep);
+            }
+            this.valueGrade=values;
+        },
+        getColorByValue(value) {
+            var _this=this;
+            //渐变填充色
+            for (var i = 0; i < _this.valueGrade.length; i++) {
+                var rgbColor=null;
+                if(i==0){
+                    if(value<=_this.valueGrade[i])
+                        rgbColor=ColorGrade[i];
+                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i>0&&i<_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i==_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i])
+                        rgbColor=ColorGrade[i+1];
+                }
+                if(rgbColor!=null)
+                    return _.clone(rgbColor);
+            }
+        },//获取对应颜色
         drawText:function(){
             this.blockText=new pumpText(this.block_Line,this.block_xScale);
             this.blockText.draw(this.blockData);
@@ -1578,6 +1613,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.rightBlock=right;
             return this;
         },//设置右边邻近块
+        setMinValue:function(min){
+            if(!isNullOrUndefine(min))
+                this.blockData.minValue=min;
+            return this;
+        },//设置下限
+        setMaxValue:function(max){
+            if(!isNullOrUndefine(max))
+                this.blockData.maxValue=max;
+            return this;
+        },//设置上限
         changeLeft:function(){
             var _this=this;
             if(_this.block!=null){
@@ -1651,7 +1696,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         updateState:function(data){
             var _this=this;
             this.blockData=data;
-            this.block.datum(data).attr('class', function(d, i) {
+            this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
 
@@ -1828,6 +1873,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     //链式方法
     numericBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            data.blockType=this.blockType;//设置当前类型
+            data.maxValue=MAX_VALUE;//设置默认最大值
             if(data.value>MAX_VALUE){//判断是否超过最大限制
                 data.value=MAX_VALUE;
                 data.label=MAX_VALUE.toString();
@@ -1922,6 +1969,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.rightBlock=right;
             return this;
         },//设置右边邻近块
+        setMinValue:function(min){
+            if(!isNullOrUndefine(min))
+                this.blockData.minValue=min;
+            return this;
+        },//设置下限
+        setMaxValue:function(max){
+            if(!isNullOrUndefine(max))
+                this.blockData.maxValue=max;
+            return this;
+        },//设置上限
         changeLeft:function(){
             var _this=this;
             if(_this.block!=null){
@@ -2168,6 +2225,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         //链式方法
     stateBlock.prototype = {
         draw: function(data) { //在绘图区绘制出块
+            data.blockType=this.blockType;
             var _this = this;
             this.block = this.block_Line
                 .append('rect')
@@ -2199,7 +2257,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             if (data.value == undefined) { //不定状态加弹框
                 this.block.attr('data-toggle', 'popover')
-                    .attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
+                    //.attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
             }
             this.blockData = data;
             return this;
@@ -2495,17 +2553,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     //计算渐变色系
     function getColorGradient() {
+        var colorLength=COLOR_STEP+1;//2:小于下限和大与上限的
         var code = DEFAULT_COLOR;
         //当前颜色/255，计算基数
         var curR = parseFloat(code[0] / 255).toFixed(2);
         var curG = parseFloat(code[1] / 255).toFixed(2);
         var curB = parseFloat(code[2] / 255).toFixed(2);
         //计算每步需要加的数字 ——（1-基数）/步长
-        var stepR = parseFloat((1 - curR) / (COLOR_STEP + 1)).toFixed(2);
-        var stepG = parseFloat((1 - curG) / (COLOR_STEP + 1)).toFixed(2);
-        var stepB = parseFloat((1 - curB) / (COLOR_STEP + 1)).toFixed(2);
-            //渐变填充色
-        for (var i = 1; i <= COLOR_STEP; i++) {
+        var stepR = parseFloat((1 - curR) / (colorLength + 1)).toFixed(2);
+        var stepG = parseFloat((1 - curG) / (colorLength + 1)).toFixed(2);
+        var stepB = parseFloat((1 - curB) / (colorLength + 1)).toFixed(2);
+        //渐变填充色
+        for (var i = 1; i <= colorLength; i++) {
             var r = parseInt(code[0]);
             var g = parseInt(code[1]);
             var b = parseInt(code[2]);
@@ -2556,6 +2615,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
             if(line.points.length>0){
+                var minValue=null;
+                var maxValue=null;
                 var type=stateBlock;
                 if(line.type=='CSP')//定速泵
                     type=stateBlock;
@@ -2564,8 +2625,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 else{//流量/压力
                     type=gradientBlock;
                     getColorGradient();
-                    var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
-                    _this.getValueGrade(maxPoint.value);
+                    // var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
+                    // _this.getValueGrade(maxPoint.value);
+                    if(line.hasOwnProperty('minValue'))
+                        minValue=line.minValue;
+                    if(line.hasOwnProperty('maxValue'))
+                        maxValue=line.maxValue;
+                    _this.getValueGrade(minValue,maxValue);
                 }
 
                 //循环数据并绘制块
@@ -2576,10 +2642,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         var colorRgb=_this.getColorByValue(data.value);
                         data.colorGrade =changeColor(colorRgb);
                     }
-                    block.draw(data).drawText();
+                    block.draw(data).drawText();//绘制快
+                    //设置最大最小限制
+                    if(minValue!=null)
+                        block.setMinValue(minValue);
+                    if(maxValue!=null)
+                        block.setMaxValue(maxValue);
                     //设置邻近块
                     var left=null;
-                    var length=_this.blocks.length
+                    var length=_this.blocks.length;
                     if(length>0){
                         left=_this.blocks[length-1];
                         block.setLeft(left);
@@ -2592,12 +2663,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             return this;
         },
-        getValueGrade:function(maxValue) {
+        getValueGrade:function(minValue,maxValue) {
             var values=[];
-            var valueStep=maxValue/COLOR_STEP;
+            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
             //渐变填充色
-            for (var i = 0; i <= COLOR_STEP; i++) {
-                values.push(i*valueStep);
+            for (var i = 0; i < COLOR_STEP; i++) {
+                values.push(minValue+i*valueStep);
             }
             this.valueGrade=values;
         },
@@ -2605,8 +2676,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var _this=this;
             //渐变填充色
             for (var i = 0; i < _this.valueGrade.length; i++) {
-                if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                    return _.clone(ColorGrade[i]);
+                var rgbColor=null;
+                if(i==0){
+                    if(value<=_this.valueGrade[i])
+                        rgbColor=ColorGrade[i];
+                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i>0&&i<_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i==_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i])
+                        rgbColor=ColorGrade[i+1];
+                }
+                if(rgbColor!=null)
+                    return _.clone(rgbColor);
             }
         },//获取对应颜色
         checkBlock_Event:function(fn){

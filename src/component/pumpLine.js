@@ -14,17 +14,18 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
 
     //计算渐变色系
     function getColorGradient() {
+        var colorLength=COLOR_STEP+1;//间隔加一是颜色的数量
         var code = DEFAULT_COLOR;
         //当前颜色/255，计算基数
         var curR = parseFloat(code[0] / 255).toFixed(2);
         var curG = parseFloat(code[1] / 255).toFixed(2);
         var curB = parseFloat(code[2] / 255).toFixed(2);
         //计算每步需要加的数字 ——（1-基数）/步长
-        var stepR = parseFloat((1 - curR) / (COLOR_STEP + 1)).toFixed(2);
-        var stepG = parseFloat((1 - curG) / (COLOR_STEP + 1)).toFixed(2);
-        var stepB = parseFloat((1 - curB) / (COLOR_STEP + 1)).toFixed(2);
-            //渐变填充色
-        for (var i = 1; i <= COLOR_STEP; i++) {
+        var stepR = parseFloat((1 - curR) / (colorLength + 1)).toFixed(2);
+        var stepG = parseFloat((1 - curG) / (colorLength + 1)).toFixed(2);
+        var stepB = parseFloat((1 - curB) / (colorLength + 1)).toFixed(2);
+        //渐变填充色
+        for (var i = 1; i <= colorLength; i++) {
             var r = parseInt(code[0]);
             var g = parseInt(code[1]);
             var b = parseInt(code[2]);
@@ -75,6 +76,8 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
             if(line.points.length>0){
+                var minValue=null;
+                var maxValue=null;
                 var type=stateBlock;
                 if(line.type=='CSP')//定速泵
                     type=stateBlock;
@@ -83,8 +86,13 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 else{//流量/压力
                     type=gradientBlock;
                     getColorGradient();
-                    var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
-                    _this.getValueGrade(maxPoint.value);
+                    // var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
+                    // _this.getValueGrade(maxPoint.value);
+                    if(line.hasOwnProperty('minValue'))
+                        minValue=line.minValue;
+                    if(line.hasOwnProperty('maxValue'))
+                        maxValue=line.maxValue;
+                    _this.getValueGrade(minValue,maxValue);
                 }
 
                 //循环数据并绘制块
@@ -95,10 +103,15 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                         var colorRgb=_this.getColorByValue(data.value);
                         data.colorGrade =changeColor(colorRgb);
                     }
-                    block.draw(data).drawText();
+                    block.draw(data).drawText();//绘制快
+                    //设置最大最小限制
+                    if(minValue!=null)
+                        block.setMinValue(minValue);
+                    if(maxValue!=null)
+                        block.setMaxValue(maxValue);
                     //设置邻近块
                     var left=null;
-                    var length=_this.blocks.length
+                    var length=_this.blocks.length;
                     if(length>0){
                         left=_this.blocks[length-1];
                         block.setLeft(left);
@@ -111,12 +124,12 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
 
             return this;
         },
-        getValueGrade:function(maxValue) {
+        getValueGrade:function(minValue,maxValue) {
             var values=[];
-            var valueStep=maxValue/COLOR_STEP;
+            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
             //渐变填充色
-            for (var i = 0; i <= COLOR_STEP; i++) {
-                values.push(i*valueStep);
+            for (var i = 0; i < COLOR_STEP; i++) {
+                values.push(minValue+i*valueStep);
             }
             this.valueGrade=values;
         },
@@ -124,8 +137,23 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             var _this=this;
             //渐变填充色
             for (var i = 0; i < _this.valueGrade.length; i++) {
-                if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                    return _.clone(ColorGrade[i]);
+                var rgbColor=null;
+                if(i==0){
+                    if(value<=_this.valueGrade[i])
+                        rgbColor=ColorGrade[i];
+                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i>0&&i<_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i==_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i])
+                        rgbColor=ColorGrade[i+1];
+                }
+                if(rgbColor!=null)
+                    return _.clone(rgbColor);
             }
         },//获取对应颜色
         checkBlock_Event:function(fn){

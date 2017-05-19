@@ -7,8 +7,6 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     var CLASS_FAULT_STATE = 'rect fault_state';//故障
     var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
 
-
-
     //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -33,7 +31,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     // Defines the gradientBlock type
     var gradientBlock = function(line,xScale) {
         this.version = '1.0';
-        this.blockType='numeric';
+        this.blockType='gradient';
 
         this.block =null;//当前的块元素
         this.blockText=null;//当前的块的文本原元素
@@ -52,6 +50,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     //链式方法
     gradientBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            data.blockType=this.blockType;
             var _this=this;
             this.block=this.block_Line
                 .append('rect')
@@ -84,19 +83,42 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(data.colorGrade!=undefined){
                 $(this.block._groups[0]).css('fill',data.colorGrade);
             }//设置当前颜色
-            //弹出框内容
-            if (data.value == undefined) { //不定状态加弹框
-                this.block.attr('data-toggle', 'popover')
-                    .attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
-            }
-            // else{
-            //     var BLOCK_MAX_VALUE=50;
-            //     this.block.attr('data-toggle', 'popover')
-            //         .attr('data-content', '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + data.value + ' max=' + BLOCK_MAX_VALUE + '>')
-            // }
+           
             this.blockData=data;
             return this;
         },//绘制块
+        getValueGrade:function(minValue,maxValue) {
+            var values=[];
+            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
+            //渐变填充色
+            for (var i = 0; i < COLOR_STEP; i++) {
+                values.push(minValue+i*valueStep);
+            }
+            this.valueGrade=values;
+        },
+        getColorByValue(value) {
+            var _this=this;
+            //渐变填充色
+            for (var i = 0; i < _this.valueGrade.length; i++) {
+                var rgbColor=null;
+                if(i==0){
+                    if(value<=_this.valueGrade[i])
+                        rgbColor=ColorGrade[i];
+                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i>0&&i<_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                        rgbColor=ColorGrade[i+1];
+                }
+                else if(i==_this.valueGrade.length-1){
+                    if(value>_this.valueGrade[i])
+                        rgbColor=ColorGrade[i+1];
+                }
+                if(rgbColor!=null)
+                    return _.clone(rgbColor);
+            }
+        },//获取对应颜色
         drawText:function(){
             this.blockText=new pumpText(this.block_Line,this.block_xScale);
             this.blockText.draw(this.blockData);
@@ -153,6 +175,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 this.rightBlock=right;
             return this;
         },//设置右边邻近块
+        setMinValue:function(min){
+            if(!isNullOrUndefine(min))
+                this.blockData.minValue=min;
+            return this;
+        },//设置下限
+        setMaxValue:function(max){
+            if(!isNullOrUndefine(max))
+                this.blockData.maxValue=max;
+            return this;
+        },//设置上限
         changeLeft:function(){
             var _this=this;
             if(_this.block!=null){
@@ -226,7 +258,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         updateState:function(data){
             var _this=this;
             this.blockData=data;
-            this.block.datum(data).attr('class', function(d, i) {
+            this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
 

@@ -30,7 +30,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     // Defines the undefineBlock type
     var undefineBlock = function(line,xScale) {
         this.version = '1.0';
-        this.blockType='state';
+        this.blockType='undefine';
         this.block =null;//当前的块元素
         this.blockText=null;//当前的块的文本原元素
 
@@ -48,6 +48,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     //链式方法
     undefineBlock.prototype = {
         draw: function(data) {//在绘图区绘制出块
+            data.blockType=this.blockType;
             var _this=this;
             this.block=this.block_Line
                 .append('rect')
