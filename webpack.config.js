@@ -29,7 +29,8 @@ module.exports = {
             'legend': path.join(__dirname, '/src/component/legend'),
             'stateBlock': path.join(__dirname, '/src/component/pumpBlocks/stateBlock'),
             'numericBlock': path.join(__dirname, '/src/component/pumpBlocks/numericBlock'),
-            'undefineBlock': path.join(__dirname, '/src/component/pumpBlocks/undefineBlock')
+            'undefineBlock': path.join(__dirname, '/src/component/pumpBlocks/undefineBlock'),
+            'gradientBlock': path.join(__dirname, '/src/component/pumpBlocks/gradientBlock')
         }
     },
     plugins: [

@@ -1,4 +1,4 @@
-define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock,numericBlock, moment) {
+define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'lodash'], function(d3, jquery,stateBlock,numericBlock,gradientBlock, moment) {
 
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');
@@ -8,9 +8,9 @@ define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], functio
     var BAR_HEIGHT=22;
 
 
-    var DEFAULT_COLOR=[0,0,121];//蓝色
+    var DEFAULT_COLOR=[0,0,255];//蓝色
     var COLOR_STEP=5;//颜色分级步长
-    var colorGrade=[];//渐变颜色
+    var ColorGrade=[];//渐变颜色
 
     //计算渐变色系
     function getColorGradient() {
@@ -34,21 +34,19 @@ define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], functio
                 b = parseInt(parseFloat(stepB * i + parseFloat(curB)) * 255);
             }
             ColorGrade.push([r, g, b]);
-            // var td = tabtdObj.rows[rowLen - i].cells[1].childNodes[0];
-            // $(td).css("background-color", [r, g, b]);
         }
+        ColorGrade=_.reverse(ColorGrade);//反转顺序：颜色先浅再深
     }
-        
-
-    // //计算值域
-    // function getValueGrade(maxValue) {
-    //     var valueGrade=[];
-    //     var valueStep=maxValue/COLOR_STEP;
-    //     //渐变填充色
-    //     for (var i = 0; i <= COLOR_STEP; i++) {
-    //         valueGrade.push(i*valueStep);
-    //     }
-    // }
+    //rgb颜色转换成16进制
+    var changeColor=function(rgbColor){
+        for (var i = 0; i < rgbColor.length; i++) {
+          rgbColor[i] = parseInt(rgbColor[i]).toString(16);
+          if (rgbColor[i].length == 1) rgbColor[i] = '0' + rgbColor[i];
+        }
+        var str = "#"+rgbColor.join('');
+        //console.log(str); 
+        return str;
+    }
 
 
     // Defines the pumpLine type
@@ -77,14 +75,26 @@ define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], functio
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
             if(line.points.length>0){
+                var type=stateBlock;
+                if(line.type=='CSP')//定速泵
+                    type=stateBlock;
+                else if(line.type=='RSP')//定速泵
+                    type=numericBlock;
+                else{//流量/压力
+                    type=gradientBlock;
+                    getColorGradient();
+                    var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
+                    _this.getValueGrade(maxPoint.value);
+                }
+
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                        if(line.type=='CSP')//定速泵
-                            block=new stateBlock(_this.g,_this.line_xScale);
-                        else if(line.type=='RSP')//定速泵
-                            block=new numericBlock(_this.g,_this.line_xScale);
-
+                    block=new type(_this.g,_this.line_xScale);
+                    if(type==gradientBlock&&data.value!=null){
+                        var colorRgb=_this.getColorByValue(data.value);
+                        data.colorGrade =changeColor(colorRgb);
+                    }
                     block.draw(data).drawText();
                     //设置邻近块
                     var left=null;
@@ -110,6 +120,14 @@ define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], functio
             }
             this.valueGrade=values;
         },
+        getColorByValue(value) {
+            var _this=this;
+            //渐变填充色
+            for (var i = 0; i < _this.valueGrade.length; i++) {
+                if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
+                    return _.clone(ColorGrade[i]);
+            }
+        },//获取对应颜色
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -129,59 +147,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock', 'moment', 'lodash'], functio
         remove:function(){
             this.g.remove();
             return this;
-        },
-        popover:function(){
-            function ContentMethod(val) {
-                return '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value='+val+'><button class="popoverBtn red" onclick="btnClick()">关</button>'
-            }
-            $("[data-toggle='popover']").each(function(i,e) {
-                var val=e.__data__.value;//获取当前值
-                if(val==null||val==undefined)
-                    val='';
-                var element = $(e);
-                element.popover({
-                    trigger: 'click',
-                    container: "body" ,
-                    placement: 'top', 
-                    html: 'true',
-                    content: ContentMethod(val),
-                    animation: false  
-
-                }).on("click", function () {
-                    var _this = this;
-                    $(this).popover("show");
-                    // $(this).siblings("[data-toggle]").on("click", function () {
-                    //     $(_this).popover('hide');
-                    // });
-                    $(this).siblings(".popover").on("mouseleave", function () {
-                        $(_this).popover('hide');
-                    });
-                }).on("mouseleave", function () {
-                    var _this = this;
-                    setTimeout(function () {
-                        if (!$(".popover:hover").length) {
-                            $(_this).popover("hide")
-                        }
-                    }, 100);
-                });
-            });
         }
-        // each: function(fn){//回调方法
-        //     for(var i= 0,len=this.elements.length; i<len; i++){
-        //         fn.call(this, this.elements[i]);
-        //     }
-        //     return this; //在每个方法的最后return this;
-        // },
-        // setStyle: function(prop, val){
-        //     this.each(function(el){
-        //         el.style[prop] = val;
-        //     });
-        //     return this; //在每个方法的最后return this;
-        // },
-        // drag:function(){
-
-        //     return this; 
-        // }
     }
 
     //// Exports pumpLine Component ////

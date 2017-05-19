@@ -184,6 +184,31 @@ var objects = [{
         "value": 0
     }],
     "lineIndex": 1
+}, {
+    "id": 23,
+    "name": "西山5#",
+    "type": "PRESSURE",
+    "dataType": "PRESSURE",
+    "values": [{
+        "time": "2017-04-18 0:00:00",
+        "value": null
+    }, {
+        "time": "2017-04-18 4:00:00",
+        "value": 60
+    }, {
+        "time": "2017-04-18 9:00:00",
+        "value": 100
+    }, {
+        "time": "2017-04-18 14:00:00",
+        "value": 150
+    }, {
+        "time": "2017-04-18 18:00:00",
+        "value": 200
+    }, {
+        "time": "2017-04-18 22:00:00",
+        "value": 250
+    }],
+    "lineIndex": 1
 }];
 var chart = new chart('#chart', option);
 chart.draw(objects);
@@ -191,6 +216,7 @@ chart.draw(objects);
 $("#inputBtn").on('click', function() {
     chart.getData();
 })
+
 
 
 // require(['moment','./chart/linechart','./chart/pump',

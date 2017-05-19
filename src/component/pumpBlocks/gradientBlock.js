@@ -7,64 +7,29 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     var CLASS_FAULT_STATE = 'rect fault_state';//故障
     var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
 
-    var DEFAULT_COLOR=[0,0,121];//蓝色
-    var COLOR_STEP=5;//颜色分级步长
-    var ColorGrade=[];
+
+
+    //根据值转换样式
+    function formatClass(d) {
+        var className = null;
+        if (d.value > 0) {
+            d.className = CLASS_OPEN_STATE;
+        } else if (d.value == 0) {
+            d.className = CLASS_CLOSE_STATE;
+
+        } else if (d.value < 0) {
+            d.className = CLASS_FAULT_STATE;
+        } else {
+            d.className = CLASS_INDEFINITE_STATE;
+        }
+        return d.className;
+    }
 
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
     }
-
-    //计算渐变色系
-    function getColorGradient() {
-        var step = COLOR_STEP;
-        var code = DEFAULT_COLOR;
-        //当前颜色/255，计算基数
-        var curR = parseFloat(code[0] / 255).toFixed(2);
-        var curG = parseFloat(code[1] / 255).toFixed(2);
-        var curB = parseFloat(code[2] / 255).toFixed(2);
-        //计算每步需要加的数字 ——（1-基数）/步长
-        var stepR = parseFloat((1 - curR) / (step + 1)).toFixed(2);
-        var stepG = parseFloat((1 - curG) / (step + 1)).toFixed(2);
-        var stepB = parseFloat((1 - curB) / (step + 1)).toFixed(2);
-            //渐变填充色
-        for (var i = 1; i <= step; i++) {
-            var r = parseInt(code[0]);
-            var g = parseInt(code[1]);
-            var b = parseInt(code[2]);
-            if (i > 1) {
-                r = parseInt(parseFloat(stepR * i + parseFloat(curR)) * 255);
-                g = parseInt(parseFloat(stepG * i + parseFloat(curG)) * 255);
-                b = parseInt(parseFloat(stepB * i + parseFloat(curB)) * 255);
-            }
-            ColorGrade.push([r, g, b]);
-            // var td = tabtdObj.rows[rowLen - i].cells[1].childNodes[0];
-            // $(td).css("background-color", [r, g, b]);
-        }
-    }
-        
-
-    //计算值域
-    function getValueGrade(maxValue) {
-        var valueGrade=[];
-        var valueStep=maxValue/step;
-        //渐变填充色
-        for (var i = 0; i <= step; i++) {
-            valueGrade.push(i*valueStep);
-        }
-    }
-
-
-    //获取对应颜色
-    function getColorByValue(value) {
-        //渐变填充色
-        for (var i = 0; i < valueGrade; i++) {
-            if(value>valueGrade[i]&&value<valueGrade[i+1])
-                return ColorGrade[i];
-        }
-    }
-
+    
     // Defines the gradientBlock type
     var gradientBlock = function(line,xScale) {
         this.version = '1.0';
@@ -91,7 +56,9 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.block=this.block_Line
                 .append('rect')
                 .datum(data)
-                .attr('class','CLASS_OPEN_STATE')
+                .attr('class', function(d, i) {
+                    return formatClass(d);
+                })
                 .attr('x', function(d, i) {
                     if(d.x==undefined)
                         d.x = _this.block_xScale(d.time);
@@ -114,9 +81,20 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     return BAR_HEIGHT;
                 })
                 .attr('data-toggle', 'popover')//增加弹出属性
-
+            if(data.colorGrade!=undefined){
+                $(this.block._groups[0]).css('fill',data.colorGrade);
+            }//设置当前颜色
+            //弹出框内容
+            if (data.value == undefined) { //不定状态加弹框
+                this.block.attr('data-toggle', 'popover')
+                    .attr('data-content', '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>')
+            }
+            // else{
+            //     var BLOCK_MAX_VALUE=50;
+            //     this.block.attr('data-toggle', 'popover')
+            //         .attr('data-content', '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + data.value + ' max=' + BLOCK_MAX_VALUE + '>')
+            // }
             this.blockData=data;
-            if(data.value)
             return this;
         },//绘制块
         drawText:function(){

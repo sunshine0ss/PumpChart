@@ -76,28 +76,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     d.height = BAR_HEIGHT;
                     return BAR_HEIGHT;
                 })
-
-                // .attr('data-toggle', 'popover')
-                // .attr('data-container','body')//加在指定元素后
-                // .attr('data-placement','top')//弹出框显示方位
-                // .attr('data-html',true)//弹出框显示方位
-                // //.attr('data-content', 'input')
-                // .attr('data-content', '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>')
-
-
-                // .popover({   
-                //     trigger:'click',//manual 触发方式  
-                //     placement : 'top',    
-                //     html: 'true',   
-                //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
-                //     animation: false  
-                // })   
-           
-                // .on("click", function(d, i, rects) {
-                //     this.click_Event();
-                // });
             this.blockData=data;
-            // this.blockState=data.label;
             return this;
         },//绘制块
         drawText:function(){
@@ -118,9 +97,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             //修改对应text的位置
             if(this.blockText!=null)
                 this.blockText.update(x,y,width);
-            // else{//新加text
-            //     this.drawText(this.blockData);
-            // }
+          
             //回调函数
             if(typeof fn==='function')
                 fn.call(x,y);
