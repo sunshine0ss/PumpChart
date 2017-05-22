@@ -22,6 +22,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         }
         return d.className;
     }
+    //rgb颜色转换成16进制
+    var changeColor=function(rgbColor){
+        for (var i = 0; i < rgbColor.length; i++) {
+          rgbColor[i] = parseInt(rgbColor[i]).toString(16);
+          if (rgbColor[i].length == 1) rgbColor[i] = '0' + rgbColor[i];
+        }
+        var str = "#"+rgbColor.join('');
+        //console.log(str); 
+        return str;
+    }
 
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
@@ -29,7 +39,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     }
     
     // Defines the gradientBlock type
-    var gradientBlock = function(line,xScale) {
+    var gradientBlock = function(line,xScale,colorGrade,valueGrade) {
         this.version = '1.0';
         this.blockType='gradient';
 
@@ -44,6 +54,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         
         this.block_Line=line;
         this.block_xScale=xScale;
+        this.block_ColorGrade=colorGrade;
+        this.block_ValueGrade=valueGrade;
 
         this.callFn=null;
     }
@@ -80,43 +92,37 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     return BAR_HEIGHT;
                 })
                 .attr('data-toggle', 'popover')//增加弹出属性
-            if(data.colorGrade!=undefined){
-                $(this.block._groups[0]).css('fill',data.colorGrade);
-            }//设置当前颜色
+            if(data.value){
+                data.colorGrade=this.getColorByValue(data.value);
+                if(data.colorGrade!=undefined){
+                    $(this.block._groups[0]).css('fill',data.colorGrade);
+                }//设置当前颜色
+            }
            
             this.blockData=data;
             return this;
         },//绘制块
-        getValueGrade:function(minValue,maxValue) {
-            var values=[];
-            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
-            //渐变填充色
-            for (var i = 0; i < COLOR_STEP; i++) {
-                values.push(minValue+i*valueStep);
-            }
-            this.valueGrade=values;
-        },
         getColorByValue(value) {
             var _this=this;
             //渐变填充色
-            for (var i = 0; i < _this.valueGrade.length; i++) {
+            for (var i = 0; i < _this.block_ValueGrade.length; i++) {
                 var rgbColor=null;
                 if(i==0){
-                    if(value<=_this.valueGrade[i])
-                        rgbColor=ColorGrade[i];
-                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                    if(value<=_this.block_ValueGrade[i])
+                        rgbColor=_this.block_ColorGrade[i];
+                    else if(value>_this.block_ValueGrade[i]&&value<=_this.block_ValueGrade[i+1])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
-                else if(i>0&&i<_this.valueGrade.length-1){
-                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                else if(i>0&&i<_this.block_ValueGrade.length-1){
+                    if(value>_this.block_ValueGrade[i]&&value<=_this.block_ValueGrade[i+1])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
-                else if(i==_this.valueGrade.length-1){
-                    if(value>_this.valueGrade[i])
-                        rgbColor=ColorGrade[i+1];
+                else if(i==_this.block_ValueGrade.length-1){
+                    if(value>_this.block_ValueGrade[i])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
                 if(rgbColor!=null)
-                    return _.clone(rgbColor);
+                    return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
         drawText:function(){
@@ -257,10 +263,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//修改右边的块
         updateState:function(data){
             var _this=this;
-            this.blockData=data;
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
+            if(data.value){
+                data.colorGrade=this.getColorByValue(data.value);
+                if(data.colorGrade!=undefined){
+                    $(_this.block._groups[0]).css('fill',data.colorGrade);
+                }//设置当前颜色
+            }
+            _this.blockData=data;
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
@@ -341,14 +353,14 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: 1,
-                    label:'开',
+                    label:'1',
                     width:averageWidth,
                     x:x2
                 }
-                if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
-                    newData.label='关';
-                    newData.value=0;
-                }
+                // if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
+                //     newData.label='关';
+                //     newData.value=0;
+                // }
                 //新建中间一段
                 var newBlock=new numericBlock(this.block_Line,this.block_xScale);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);

@@ -98,11 +98,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    block=new type(_this.g,_this.line_xScale);
-                    if(type==gradientBlock&&data.value!=null){
-                        var colorRgb=_this.getColorByValue(data.value);
-                        data.colorGrade =changeColor(colorRgb);
-                    }
+                    block=new type(_this.g,_this.line_xScale,ColorGrade,_this.valueGrade);
                     block.draw(data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)
@@ -153,7 +149,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                         rgbColor=ColorGrade[i+1];
                 }
                 if(rgbColor!=null)
-                    return _.clone(rgbColor);
+                    return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
         checkBlock_Event:function(fn){

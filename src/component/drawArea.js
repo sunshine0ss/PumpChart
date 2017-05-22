@@ -322,7 +322,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 var curX = parseFloat(this.curBlock.block.attr('x'));
                 var endHandleX = curWidth + curX;
                 //修改手柄位置
-                this.endHandle.updatePos(endHandleX);
+                if (this.endHandle != null)
+                    this.endHandle.updatePos(endHandleX);
             }
         }, //更新手柄
         removeHandles: function() {
@@ -352,18 +353,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             var _this = this;
             //弹出框内容
             function ContentMethod(data) {
-                var html='';
+                var html = '';
                 var val = data.value; //获取当前值
                 if (val == null || val == undefined)
                     val = '';
-                if(data.blockType=='state'){
-                    html='<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
-                }
-                else if(data.blockType=='numeric'){
-                    html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
-                }
-                else if(data.blockType=='gradient'){
-                   html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                if (data.blockType == 'state') {
+                    html = '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                } else if (data.blockType == 'numeric') {
+                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                } else if (data.blockType == 'gradient') {
+                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
                 }
                 return html;
             }
@@ -393,6 +392,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                         /*  弹出框事件  */
                         var changeData = function(val) {
+                            val.trim();
+                            if(_this.curBlock.blockType!='gradient'){
                                 if (val == undefined) {
                                     data.value = val;
                                     data.label = '不定';
@@ -406,23 +407,48 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                     else if (val < 0)
                                         data.label = '故障';
                                 }
-                                //修改值或状态
-                                _this.curBlock.updateState(data);
                             }
+                            else{
+                                data.label = val;
+                                val = parseInt(val);
+                                data.value = val;//获取当前值
+                            }
+                            //修改值或状态
+                            _this.curBlock.updateState(data);
+                        }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
+                                if (this.value < data.minValue) //最小限制
+                                    this.value = data.minValue;
                                 if (this.value > data.maxValue) //最大限制
                                     this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
                                 //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles();//更新手柄
+                                _this.updateHandles(); //更新手柄
                             }) //值改变事件
                             .on('keyup', function() {
+                                if (this.value < data.minValue) //最小限制
+                                    this.value = data.minValue;
                                 if (this.value > data.maxValue) //最大限制
                                     this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
                                 //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles();//更新手柄
+                                _this.updateHandles(); //更新手柄
+                                // var searchText = this.value.trim();//获取当前输入值
+                                // if (searchText != _this.previousValue) {
+                                //     if (_this.timer) clearTimeout(_this.timer)
+                                //     _this.timer = setTimeout(function () {
+                                //         if (this.value < data.minValue) //最小限制
+                                //             this.value = data.minValue;
+                                //         if (this.value > data.maxValue) //最大限制
+                                //             this.value = data.maxValue;
+                                //         changeData(this.value); //更新当前块
+                                //         //_this.removeHandles(); //关闭选中状态
+                                //         _this.updateHandles(); //更新手柄
+                                //     }, 100);
+                                //     _this.previousValue = searchText;
+                                // }//延时加载
+
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {

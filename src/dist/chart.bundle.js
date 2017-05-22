@@ -525,7 +525,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 var curX = parseFloat(this.curBlock.block.attr('x'));
                 var endHandleX = curWidth + curX;
                 //修改手柄位置
-                this.endHandle.updatePos(endHandleX);
+                if (this.endHandle != null)
+                    this.endHandle.updatePos(endHandleX);
             }
         }, //更新手柄
         removeHandles: function() {
@@ -555,18 +556,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var _this = this;
             //弹出框内容
             function ContentMethod(data) {
-                var html='';
+                var html = '';
                 var val = data.value; //获取当前值
                 if (val == null || val == undefined)
                     val = '';
-                if(data.blockType=='state'){
-                    html='<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
-                }
-                else if(data.blockType=='numeric'){
-                    html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
-                }
-                else if(data.blockType=='gradient'){
-                   html='<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                if (data.blockType == 'state') {
+                    html = '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                } else if (data.blockType == 'numeric') {
+                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                } else if (data.blockType == 'gradient') {
+                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
                 }
                 return html;
             }
@@ -596,6 +595,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                         /*  弹出框事件  */
                         var changeData = function(val) {
+                            val.trim();
+                            if(_this.curBlock.blockType!='gradient'){
                                 if (val == undefined) {
                                     data.value = val;
                                     data.label = '不定';
@@ -609,23 +610,48 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                     else if (val < 0)
                                         data.label = '故障';
                                 }
-                                //修改值或状态
-                                _this.curBlock.updateState(data);
                             }
+                            else{
+                                data.label = val;
+                                val = parseInt(val);
+                                data.value = val;//获取当前值
+                            }
+                            //修改值或状态
+                            _this.curBlock.updateState(data);
+                        }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
+                                if (this.value < data.minValue) //最小限制
+                                    this.value = data.minValue;
                                 if (this.value > data.maxValue) //最大限制
                                     this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
                                 //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles();//更新手柄
+                                _this.updateHandles(); //更新手柄
                             }) //值改变事件
                             .on('keyup', function() {
+                                if (this.value < data.minValue) //最小限制
+                                    this.value = data.minValue;
                                 if (this.value > data.maxValue) //最大限制
                                     this.value = data.maxValue;
                                 changeData(this.value); //更新当前块
                                 //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles();//更新手柄
+                                _this.updateHandles(); //更新手柄
+                                // var searchText = this.value.trim();//获取当前输入值
+                                // if (searchText != _this.previousValue) {
+                                //     if (_this.timer) clearTimeout(_this.timer)
+                                //     _this.timer = setTimeout(function () {
+                                //         if (this.value < data.minValue) //最小限制
+                                //             this.value = data.minValue;
+                                //         if (this.value > data.maxValue) //最大限制
+                                //             this.value = data.maxValue;
+                                //         changeData(this.value); //更新当前块
+                                //         //_this.removeHandles(); //关闭选中状态
+                                //         _this.updateHandles(); //更新手柄
+                                //     }, 100);
+                                //     _this.previousValue = searchText;
+                                // }//延时加载
+
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
@@ -1460,6 +1486,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }
         return d.className;
     }
+    //rgb颜色转换成16进制
+    var changeColor=function(rgbColor){
+        for (var i = 0; i < rgbColor.length; i++) {
+          rgbColor[i] = parseInt(rgbColor[i]).toString(16);
+          if (rgbColor[i].length == 1) rgbColor[i] = '0' + rgbColor[i];
+        }
+        var str = "#"+rgbColor.join('');
+        //console.log(str); 
+        return str;
+    }
 
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
@@ -1467,7 +1503,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     }
     
     // Defines the gradientBlock type
-    var gradientBlock = function(line,xScale) {
+    var gradientBlock = function(line,xScale,colorGrade,valueGrade) {
         this.version = '1.0';
         this.blockType='gradient';
 
@@ -1482,6 +1518,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         
         this.block_Line=line;
         this.block_xScale=xScale;
+        this.block_ColorGrade=colorGrade;
+        this.block_ValueGrade=valueGrade;
 
         this.callFn=null;
     }
@@ -1518,43 +1556,37 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return BAR_HEIGHT;
                 })
                 .attr('data-toggle', 'popover')//增加弹出属性
-            if(data.colorGrade!=undefined){
-                $(this.block._groups[0]).css('fill',data.colorGrade);
-            }//设置当前颜色
+            if(data.value){
+                data.colorGrade=this.getColorByValue(data.value);
+                if(data.colorGrade!=undefined){
+                    $(this.block._groups[0]).css('fill',data.colorGrade);
+                }//设置当前颜色
+            }
            
             this.blockData=data;
             return this;
         },//绘制块
-        getValueGrade:function(minValue,maxValue) {
-            var values=[];
-            var valueStep=(maxValue-minValue)/(COLOR_STEP-1);
-            //渐变填充色
-            for (var i = 0; i < COLOR_STEP; i++) {
-                values.push(minValue+i*valueStep);
-            }
-            this.valueGrade=values;
-        },
         getColorByValue(value) {
             var _this=this;
             //渐变填充色
-            for (var i = 0; i < _this.valueGrade.length; i++) {
+            for (var i = 0; i < _this.block_ValueGrade.length; i++) {
                 var rgbColor=null;
                 if(i==0){
-                    if(value<=_this.valueGrade[i])
-                        rgbColor=ColorGrade[i];
-                    else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                    if(value<=_this.block_ValueGrade[i])
+                        rgbColor=_this.block_ColorGrade[i];
+                    else if(value>_this.block_ValueGrade[i]&&value<=_this.block_ValueGrade[i+1])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
-                else if(i>0&&i<_this.valueGrade.length-1){
-                    if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                else if(i>0&&i<_this.block_ValueGrade.length-1){
+                    if(value>_this.block_ValueGrade[i]&&value<=_this.block_ValueGrade[i+1])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
-                else if(i==_this.valueGrade.length-1){
-                    if(value>_this.valueGrade[i])
-                        rgbColor=ColorGrade[i+1];
+                else if(i==_this.block_ValueGrade.length-1){
+                    if(value>_this.block_ValueGrade[i])
+                        rgbColor=_this.block_ColorGrade[i+1];
                 }
                 if(rgbColor!=null)
-                    return _.clone(rgbColor);
+                    return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
         drawText:function(){
@@ -1695,10 +1727,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         },//修改右边的块
         updateState:function(data){
             var _this=this;
-            this.blockData=data;
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
+            if(data.value){
+                data.colorGrade=this.getColorByValue(data.value);
+                if(data.colorGrade!=undefined){
+                    $(_this.block._groups[0]).css('fill',data.colorGrade);
+                }//设置当前颜色
+            }
+            _this.blockData=data;
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
@@ -1779,14 +1817,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: 1,
-                    label:'开',
+                    label:'1',
                     width:averageWidth,
                     x:x2
                 }
-                if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
-                    newData.label='关';
-                    newData.value=0;
-                }
+                // if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
+                //     newData.label='关';
+                //     newData.value=0;
+                // }
                 //新建中间一段
                 var newBlock=new numericBlock(this.block_Line,this.block_xScale);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
@@ -2553,7 +2591,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     //计算渐变色系
     function getColorGradient() {
-        var colorLength=COLOR_STEP+1;//2:小于下限和大与上限的
+        var colorLength=COLOR_STEP+1;//间隔加一是颜色的数量
         var code = DEFAULT_COLOR;
         //当前颜色/255，计算基数
         var curR = parseFloat(code[0] / 255).toFixed(2);
@@ -2637,11 +2675,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    block=new type(_this.g,_this.line_xScale);
-                    if(type==gradientBlock&&data.value!=null){
-                        var colorRgb=_this.getColorByValue(data.value);
-                        data.colorGrade =changeColor(colorRgb);
-                    }
+                    block=new type(_this.g,_this.line_xScale,ColorGrade,_this.valueGrade);
                     block.draw(data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)
@@ -2692,7 +2726,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         rgbColor=ColorGrade[i+1];
                 }
                 if(rgbColor!=null)
-                    return _.clone(rgbColor);
+                    return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
         checkBlock_Event:function(fn){
