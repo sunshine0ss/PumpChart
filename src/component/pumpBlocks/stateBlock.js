@@ -42,7 +42,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.block_Line = line;
             this.block_xScale = xScale;
 
-            this.callFn = null;
+            this.callFn = null;//点击回调
+            this.dbclick_callFn=null;//双击回调
         }
         //链式方法
     stateBlock.prototype = {
@@ -260,6 +261,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         }, //鼠标单击事件
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
+            _this.dbclick_callFn = fn;
             this.block.on("dblclick", function(d, i, rects) {
                 if (d.value == 0) { //关--->开
                     d.value = 1;
@@ -273,8 +275,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 }
                 _this.updateState(d); //修改当前状态
                
-                if (typeof fn == 'function') //回调函数
+                if (typeof fn == 'function'){ //回调函数
                     fn.call(d, i, rects);
+                }
             })
             return this;
         }, //鼠标双击事件，更改状态
@@ -328,7 +331,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     //新建中间一段
                     var newBlock = new stateBlock(this.block_Line, this.block_xScale);
                     newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-
                     //新建相同的一段
                     var data = {
                         height: BAR_HEIGHT,
@@ -340,11 +342,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
                     var sameBlock = new stateBlock(this.block_Line, this.block_xScale);
                     sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+
                     if (rightBlock != null)
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
                     this.setRight(newBlock);
+
+                    newBlock.dbclick_Event(this.dbclick_callFn);
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
+                    
                 }
                 return this;
             } //插入新的块到当前块的中间

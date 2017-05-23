@@ -462,10 +462,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 
                 /*不定 状态不能删除*/
-                if (label == '不定')
-                    _this.chartLegend.delete_button.setDisabled(true); //如果是故障状态 禁用 新增
-                else
-                    _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 新增
+                if (label == '不定'){
+                    _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
+                    _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
+                }
+                else{
+                    _this.chartLegend.add_button.setDisabled(false);//其他状态 启用 新增
+                    _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                }
 
                 //获取当前选中的块
                 curRect = $(rects[i]);
@@ -543,10 +547,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         bind_dbclick: function() {
             this.hasDBclick = true;
             var _this = this;
+            var changeState = function(i, rects, block) {
+                _this.updateHandles();
+            } //双击回调
             _.each(this.lines, function(line) {
-                var changeState = function(i, rects, block) {
-                        _this.updateHandles();
-                    } //双击回调
                 line.dbclick_Event(changeState); //绑定事件
             })
             return this;
@@ -571,9 +575,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             //所有设置弹出框属性的元素绑定弹出
             $("[data-toggle='popover']").each(function(i, e) {
-                // var val = e.__data__.value; //获取当前值
-                // if (val == null || val == undefined)
-                //     val = '';
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
@@ -596,62 +597,37 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         /*  弹出框事件  */
                         var changeData = function(val) {
                             val.trim();
-                            if(_this.curBlock.blockType!='gradient'){
-                                if (val == undefined) {
-                                    data.value = val;
-                                    data.label = '不定';
-                                } else {
-                                    val = parseInt(val);
-                                    data.value = val;
-                                    if (val > 0) {
-                                        data.label = val;
-                                    } else if (val == 0)
-                                        data.label = '关';
-                                    else if (val < 0)
-                                        data.label = '故障';
-                                }
-                            }
-                            else{
-                                data.label = val;
+                            if (val == '') {
+                                data.value = undefined;
+                                data.label = '不定';
+                            } else {
                                 val = parseInt(val);
-                                data.value = val;//获取当前值
+                                data.value = val;
+                                if (val > 0) {
+                                    data.label = val;
+                                } else if (val == 0)
+                                    data.label = '关';
+                                else if (val < 0)
+                                    data.label = '故障';
                             }
                             //修改值或状态
                             _this.curBlock.updateState(data);
                         }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if (this.value < data.minValue) //最小限制
-                                    this.value = data.minValue;
-                                if (this.value > data.maxValue) //最大限制
-                                    this.value = data.maxValue;
-                                changeData(this.value); //更新当前块
-                                //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles(); //更新手柄
+                                if(_this.curBlock.block!=null){
+                                    changeData(this.value); //更新当前块
+                                    $(this).val(data.value);//this.value =data.value;
+                                    //_this.removeHandles(); //关闭选中状态
+                                    _this.updateHandles(); //更新手柄
+                                }
                             }) //值改变事件
                             .on('keyup', function() {
-                                if (this.value < data.minValue) //最小限制
-                                    this.value = data.minValue;
-                                if (this.value > data.maxValue) //最大限制
-                                    this.value = data.maxValue;
-                                changeData(this.value); //更新当前块
-                                //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles(); //更新手柄
-                                // var searchText = this.value.trim();//获取当前输入值
-                                // if (searchText != _this.previousValue) {
-                                //     if (_this.timer) clearTimeout(_this.timer)
-                                //     _this.timer = setTimeout(function () {
-                                //         if (this.value < data.minValue) //最小限制
-                                //             this.value = data.minValue;
-                                //         if (this.value > data.maxValue) //最大限制
-                                //             this.value = data.maxValue;
-                                //         changeData(this.value); //更新当前块
-                                //         //_this.removeHandles(); //关闭选中状态
-                                //         _this.updateHandles(); //更新手柄
-                                //     }, 100);
-                                //     _this.previousValue = searchText;
-                                // }//延时加载
-
+                                if(_this.curBlock.block!=null){
+                                    changeData(this.value); //更新当前块
+                                    $(this).val(data.value);//this.value =data.value;
+                                    _this.updateHandles(); //更新手柄
+                                }
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
@@ -1727,6 +1703,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         },//修改右边的块
         updateState:function(data){
             var _this=this;
+            if (data.value < data.minValue) {//最小限制
+                data.value = data.minValue;
+                data.label=data.value.toString();
+            }
+            if (data.value > data.maxValue){ //最大限制
+                data.value = data.maxValue;
+                data.label=data.value.toString();
+            }
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
@@ -1813,20 +1797,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 //先修改当前的块的宽度，再插入两块新的
                 this.updateWidth(averageWidth);
-                var  newData={//默认新建“开”的状态
+                var newData={//默认新建“开”的状态
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
-                    value: 1,
-                    label:'1',
+                    value: undefined,
+                    label:'不定',
                     width:averageWidth,
                     x:x2
                 }
-                // if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
-                //     newData.label='关';
-                //     newData.value=0;
-                // }
                 //新建中间一段
-                var newBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var newBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
                 //新建相同的一段
@@ -1838,7 +1818,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     width:averageWidth,
                     x:x3
                 }
-                var sameBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
 
@@ -2089,10 +2069,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         },//修改右边的块
         updateState:function(data){
             var _this=this;
-            this.blockData=data;
-            this.block.datum(data).attr('class', function(d, i) {
+            if (data.value < data.minValue) //最小限制
+                data.value = data.minValue;
+            if (data.value > data.maxValue) //最大限制
+                data.value = data.maxValue;
+            this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
+            this.blockData=data;
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
@@ -2173,7 +2157,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: 1,
-                    label:'开',
+                    label:'1',
                     width:averageWidth,
                     x:x2
                 }
@@ -2258,7 +2242,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block_Line = line;
             this.block_xScale = xScale;
 
-            this.callFn = null;
+            this.callFn = null;//点击回调
+            this.dbclick_callFn=null;//双击回调
         }
         //链式方法
     stateBlock.prototype = {
@@ -2476,6 +2461,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //鼠标单击事件
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
+            _this.dbclick_callFn = fn;
             this.block.on("dblclick", function(d, i, rects) {
                 if (d.value == 0) { //关--->开
                     d.value = 1;
@@ -2489,8 +2475,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 _this.updateState(d); //修改当前状态
                
-                if (typeof fn == 'function') //回调函数
+                if (typeof fn == 'function'){ //回调函数
                     fn.call(d, i, rects);
+                }
             })
             return this;
         }, //鼠标双击事件，更改状态
@@ -2544,7 +2531,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     //新建中间一段
                     var newBlock = new stateBlock(this.block_Line, this.block_xScale);
                     newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-
                     //新建相同的一段
                     var data = {
                         height: BAR_HEIGHT,
@@ -2556,11 +2542,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     var sameBlock = new stateBlock(this.block_Line, this.block_xScale);
                     sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+
                     if (rightBlock != null)
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
                     this.setRight(newBlock);
+
+                    newBlock.dbclick_Event(this.dbclick_callFn);
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
+                    
                 }
                 return this;
             } //插入新的块到当前块的中间

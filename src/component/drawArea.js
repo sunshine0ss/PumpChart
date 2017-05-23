@@ -259,10 +259,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
 
                 /*不定 状态不能删除*/
-                if (label == '不定')
-                    _this.chartLegend.delete_button.setDisabled(true); //如果是故障状态 禁用 新增
-                else
-                    _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 新增
+                if (label == '不定'){
+                    _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
+                    _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
+                }
+                else{
+                    _this.chartLegend.add_button.setDisabled(false);//其他状态 启用 新增
+                    _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                }
 
                 //获取当前选中的块
                 curRect = $(rects[i]);
@@ -340,10 +344,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
         bind_dbclick: function() {
             this.hasDBclick = true;
             var _this = this;
+            var changeState = function(i, rects, block) {
+                _this.updateHandles();
+            } //双击回调
             _.each(this.lines, function(line) {
-                var changeState = function(i, rects, block) {
-                        _this.updateHandles();
-                    } //双击回调
                 line.dbclick_Event(changeState); //绑定事件
             })
             return this;
@@ -368,9 +372,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             }
             //所有设置弹出框属性的元素绑定弹出
             $("[data-toggle='popover']").each(function(i, e) {
-                // var val = e.__data__.value; //获取当前值
-                // if (val == null || val == undefined)
-                //     val = '';
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
@@ -393,62 +394,37 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         /*  弹出框事件  */
                         var changeData = function(val) {
                             val.trim();
-                            if(_this.curBlock.blockType!='gradient'){
-                                if (val == undefined) {
-                                    data.value = val;
-                                    data.label = '不定';
-                                } else {
-                                    val = parseInt(val);
-                                    data.value = val;
-                                    if (val > 0) {
-                                        data.label = val;
-                                    } else if (val == 0)
-                                        data.label = '关';
-                                    else if (val < 0)
-                                        data.label = '故障';
-                                }
-                            }
-                            else{
-                                data.label = val;
+                            if (val == '') {
+                                data.value = undefined;
+                                data.label = '不定';
+                            } else {
                                 val = parseInt(val);
-                                data.value = val;//获取当前值
+                                data.value = val;
+                                if (val > 0) {
+                                    data.label = val;
+                                } else if (val == 0)
+                                    data.label = '关';
+                                else if (val < 0)
+                                    data.label = '故障';
                             }
                             //修改值或状态
                             _this.curBlock.updateState(data);
                         }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if (this.value < data.minValue) //最小限制
-                                    this.value = data.minValue;
-                                if (this.value > data.maxValue) //最大限制
-                                    this.value = data.maxValue;
-                                changeData(this.value); //更新当前块
-                                //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles(); //更新手柄
+                                if(_this.curBlock.block!=null){
+                                    changeData(this.value); //更新当前块
+                                    $(this).val(data.value);//this.value =data.value;
+                                    //_this.removeHandles(); //关闭选中状态
+                                    _this.updateHandles(); //更新手柄
+                                }
                             }) //值改变事件
                             .on('keyup', function() {
-                                if (this.value < data.minValue) //最小限制
-                                    this.value = data.minValue;
-                                if (this.value > data.maxValue) //最大限制
-                                    this.value = data.maxValue;
-                                changeData(this.value); //更新当前块
-                                //_this.removeHandles(); //关闭选中状态
-                                _this.updateHandles(); //更新手柄
-                                // var searchText = this.value.trim();//获取当前输入值
-                                // if (searchText != _this.previousValue) {
-                                //     if (_this.timer) clearTimeout(_this.timer)
-                                //     _this.timer = setTimeout(function () {
-                                //         if (this.value < data.minValue) //最小限制
-                                //             this.value = data.minValue;
-                                //         if (this.value > data.maxValue) //最大限制
-                                //             this.value = data.maxValue;
-                                //         changeData(this.value); //更新当前块
-                                //         //_this.removeHandles(); //关闭选中状态
-                                //         _this.updateHandles(); //更新手柄
-                                //     }, 100);
-                                //     _this.previousValue = searchText;
-                                // }//延时加载
-
+                                if(_this.curBlock.block!=null){
+                                    changeData(this.value); //更新当前块
+                                    $(this).val(data.value);//this.value =data.value;
+                                    _this.updateHandles(); //更新手柄
+                                }
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {

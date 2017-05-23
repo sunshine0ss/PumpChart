@@ -229,10 +229,14 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//修改右边的块
         updateState:function(data){
             var _this=this;
-            this.blockData=data;
-            this.block.datum(data).attr('class', function(d, i) {
+            if (data.value < data.minValue) //最小限制
+                data.value = data.minValue;
+            if (data.value > data.maxValue) //最大限制
+                data.value = data.maxValue;
+            this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
+            this.blockData=data;
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
@@ -313,7 +317,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: 1,
-                    label:'开',
+                    label:'1',
                     width:averageWidth,
                     x:x2
                 }

@@ -263,6 +263,14 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//修改右边的块
         updateState:function(data){
             var _this=this;
+            if (data.value < data.minValue) {//最小限制
+                data.value = data.minValue;
+                data.label=data.value.toString();
+            }
+            if (data.value > data.maxValue){ //最大限制
+                data.value = data.maxValue;
+                data.label=data.value.toString();
+            }
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
@@ -349,20 +357,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
 
                 //先修改当前的块的宽度，再插入两块新的
                 this.updateWidth(averageWidth);
-                var  newData={//默认新建“开”的状态
+                var newData={//默认新建“开”的状态
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
-                    value: 1,
-                    label:'1',
+                    value: undefined,
+                    label:'不定',
                     width:averageWidth,
                     x:x2
                 }
-                // if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
-                //     newData.label='关';
-                //     newData.value=0;
-                // }
                 //新建中间一段
-                var newBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var newBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
                 //新建相同的一段
@@ -374,7 +378,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     width:averageWidth,
                     x:x3
                 }
-                var sameBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
 
