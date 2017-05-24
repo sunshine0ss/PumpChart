@@ -45,7 +45,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
         }
-        //链式方法
+    //链式方法
     stateBlock.prototype = {
         draw: function(data) { //在绘图区绘制出块
             data.blockType=this.blockType;
@@ -262,23 +262,25 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
             _this.dbclick_callFn = fn;
-            this.block.on("dblclick", function(d, i, rects) {
-                if (d.value == 0) { //关--->开
-                    d.value = 1;
-                    d.label = '开';
-                } else if (d.value == 1) { //开--->关
-                    d.value = 0;
-                    d.label = '关';
-                } else if (d.value == undefined) { //不定--->开
-                    d.value = 1;
-                    d.label = '开';
-                }
-                _this.updateState(d); //修改当前状态
-               
-                if (typeof fn == 'function'){ //回调函数
-                    fn.call(d, i, rects);
-                }
-            })
+            if(this.block!=null){
+                this.block.on("dblclick", function(d, i, rects) {
+                    if (d.value == 0) { //关--->开
+                        d.value = 1;
+                        d.label = '开';
+                    } else if (d.value == 1) { //开--->关
+                        d.value = 0;
+                        d.label = '关';
+                    } else if (d.value == undefined) { //不定--->开
+                        d.value = 1;
+                        d.label = '开';
+                    }
+                    _this.updateState(d); //修改当前状态
+                   
+                    if (typeof fn == 'function'){ //回调函数
+                        fn.call(d, i, rects);
+                    }
+                })
+            }
             return this;
         }, //鼠标双击事件，更改状态
         remove: function() {

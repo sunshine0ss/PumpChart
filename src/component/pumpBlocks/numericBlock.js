@@ -272,10 +272,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//鼠标单击事件
         dbclick_Event:function(fn){//点击事件
             var _this=this;
-            this.block.on("dblclick", function(d, i, rects) {
-                if(typeof fn=='function')
-                    fn.call(d, i, rects);
-            })
+            if(this.block!=null){
+                this.block.on("dblclick", function(d, i, rects) {
+                    if(typeof fn=='function')
+                        fn.call(d, i, rects);
+                })
+            }
             return this;
         },//鼠标双击事件，更改状态
         remove:function(){

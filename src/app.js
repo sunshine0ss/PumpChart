@@ -7,8 +7,8 @@ var option = {
         bottom: 30,
         right: 20
     },
+    showLegend:true,
     edit: true
-        //showCurrent: false
 }
 var objects = [{
     "id": 17,

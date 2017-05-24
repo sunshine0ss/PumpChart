@@ -9,6 +9,8 @@
         },
         mode: 'Day',
         showCurrent: true,
+        showHover:true,
+        showLegend:false,
         edit: false
     }
     // Defines consts
@@ -24,9 +26,8 @@
     var fromTime = d3.timeParse('%H:%M');
     var fromTimeToLong = d3.timeParse('%Y-%m-%d %H:%M');
 
-    var currentTime = null;
-    // Defines the hydochart type
-    var Chart = function(ele, opt) {
+    // Defines the chart type
+    var chart = function(ele, opt) {
         this.version = '1.0';
 
         this.element = null;// Container element
@@ -35,7 +36,6 @@
         //this.params = {}; // The parameters for chart drawing
         this.describe = null;
 
-        this.area=null;
         // Get the chart container
         if (isNullOrUndefine(ele)) {
             this.element = d3.select('body');
@@ -48,14 +48,16 @@
         }
         this.element.attr('class', 'hydrochart');
 
-        //document.captureEvents(Event.MOUSEMOVE|Event.MOUSEDOWN | Event.MOUSEUP);
         // Get the chart option
         this.option = $.extend({}, default_option, opt);
-  
-        //// Defines all private methods ////
+    }
 
+    // Check whether the obj is null or undfined.
+    var isNullOrUndefine = function(obj) {
+        return obj === undefined || obj === null;
+    }
 
-        function formatValue(value, unit, type) {
+    var formatValue = function (value, unit, type) {
             type = type.toLowerCase();
             var text = '';
             if (type == "csp") {
@@ -68,9 +70,23 @@
                 else text = value.toString() + ' ' + (unit?(unit.unitText || ""):'');
             }
             return text;
-        }
-        var _this=this;
-        function preprocess(data) {
+    }
+    // Check whether the type of the obj is string.
+    var isString = function(obj) {
+        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
+    }
+    var getFirst = function(values) {
+        return values[0];
+    }
+
+    var getLast = function(values) {
+        return values[values.length - 1];
+    }
+
+    //链式方法
+    chart.prototype = {
+        preprocess:function(data) {
+            var _this=this;
             if (isNullOrUndefine(data)) {
                 console.warn("Input data is null or undfined.");
                 return null;
@@ -195,60 +211,71 @@
             _this.describe.barNames = d3.map(_this.timelines, function(d) {
                 return d.name
             }).keys();
-        }/*处理并准备数据*/
-        
-        this.draw = function(data) {
-            preprocess(data);
-            this.refresh();
-            return this;   
-        }//绘图
-
-        this.refresh = function(refreshSize) {
+        },/*处理并准备数据*/
+        refresh : function(refreshSize) {
             // Clear all svg elements.
             this.element.html('');
             this.area=new drawArea(this.option,this.element,this.describe,refreshSize);
-            this.area.drawLegend().draw().drawChart(this.timelines).drawAsix().drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();       
-            return this;   
-        }//刷新并绘制
+            if(this.option.showLegend)//是否画编辑按钮
+                this.area.drawLegend();
+            this.area.draw().drawChart(this.timelines).drawAsix();//绘制曲线
 
-        this.getData=function(){
+            if(this.option.showCurrent)//是否显示当前提示线
+                this.area.drawCurrentLine();
+            if(this.option.showHover)//是否显示鼠标悬浮提示
+                this.area.drawHoverLine();
+            if(this.option.edit)
+                this.area.bind_check().bind_dbclick().bind_popover();
+            return this; 
+            return this;   
+        },//刷新并绘制
+        draw: function(data) {
+            this.preprocess(data);
+            this.element.html('');
+            this.area=new drawArea(this.option,this.element,this.describe);
+            if(this.option.showLegend)//是否画编辑按钮
+                this.area.drawLegend();
+            this.area.draw().drawChart(this.timelines).drawAsix();//绘制曲线
+
+            if(this.option.showCurrent)//是否显示当前提示线
+                this.area.drawCurrentLine();
+            if(this.option.showHover)//是否显示鼠标悬浮提示
+                this.area.drawHoverLine();
+            if(this.option.edit)
+                this.area.bind_check().bind_dbclick().bind_popover();
+            return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
+        },
+        drawLegend:function(){
+            this.area.drawLegend();
+            return this;
+        },
+        drawCurrentLine:function(){
+            this.area.drawCurrentLine();
+            return this;
+        },
+        drawHoverLine:function(){
+            this.area.drawHoverLine();
+            return this;
+        },
+        bind_check:function(){
+            this.area.bind_check();
+            return this;
+        },
+        bind_dbclick:function(){
+            this.area.bind_dbclick();
+            return this;
+        },
+        bind_popover:function(){
+            this.area.bind_popover();
+            return this;
+        },
+        getData:function(){
             var newData=this.area.getData();
-            preprocess(newData);
+            this.preprocess(newData);
             return this.timelines;
         }
     }
 
-    // Check whether the obj is null or undfined.
-    var isNullOrUndefine = function(obj) {
-        return obj === undefined || obj === null;
-    }
-
-    // Check whether the type of the obj is string.
-    var isString = function(obj) {
-        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
-    }
-    var getFirst = function(values) {
-        return values[0];
-    }
-
-    var getLast = function(values) {
-        return values[values.length - 1];
-    }
-
-    // $('body').find('.popovers').each(function(){
-    //     $(this).click(function(e){
-    //         $('.popover').remove();
-    //         e.preventDefault();
-    //         return false;
-    //     });
-    //     $(this).popover({
-    //         trigger : 'click'
-    //     });
-    // });
-    // $('body').click(function(){
-    //     $('.popover').remove();
-    // });
-
-    //// Exports HydroChart Component ////
-    return { chart: Chart };
+    //// Exports chart Component ////
+    return { chart: chart };
 });

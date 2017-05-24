@@ -251,21 +251,24 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 _this.hideHoverLine(); //隐藏提示线
                 _this.isEditing = true; //选中：编辑状态
                 var label = _this.curBlock.blockData.label;
-                /*故障 状态不能新增*/
-                if (label == '故障')
-                    _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
-                else
-                    _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
+
+                if(_this.chartLegend!=null){
+                    /*故障 状态不能新增*/
+                    if (label == '故障')
+                        _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
+                    else
+                        _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
 
 
-                /*不定 状态不能删除*/
-                if (label == '不定'){
-                    _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
-                    _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
-                }
-                else{
-                    _this.chartLegend.add_button.setDisabled(false);//其他状态 启用 新增
-                    _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                    /*不定 状态不能删除*/
+                    if (label == '不定'){
+                        _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
+                        _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
+                    }
+                    else{
+                        _this.chartLegend.add_button.setDisabled(false);//其他状态 启用 新增
+                        _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                    }
                 }
 
                 //获取当前选中的块
