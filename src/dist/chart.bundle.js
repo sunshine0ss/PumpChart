@@ -251,6 +251,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.element = ele;
             this.describe = desc;
 
+            this.dicState=null;
 
 
             // Compute the size of the svg        
@@ -333,6 +334,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //绘制坐标轴
         drawChart: function(timelines,stateClass) {
             var _this = this;
+            this.dicState=stateClass;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
@@ -351,7 +353,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (type == '取消') {
                     _this.refresh();
                 } else {
-                    if (_this.curBlock != null) {
+                    if (_this.curBlock != null&&_this.curBlock.block != null) {
                         if (type == '新增') {
                             _this.curBlock.insertCentre();
                             _this.bind_popover();
@@ -390,7 +392,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 //End of the startHandle drag
             var startDragEnd = function(x) {
                     _this.curBlock.changeLeft();
-                    if (_this.curBlock.block == null) { //判断当前的块是否被删除
+                    if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
                         _this.curBlock = null;
                         //删除选中状态
                         _this.removeHandles();
@@ -415,7 +417,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 //End of the endHandle drag
             var endDragEnd = function() {
                 _this.curBlock.changeRight();
-                if (_this.curBlock.block == null) { //判断当前的块是否被删除
+                if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
                     _this.curBlock = null;
                     //删除选中状态
                     _this.removeHandles();
@@ -457,14 +459,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 if(_this.chartLegend!=null){
                     /*故障 状态不能新增*/
-                    if (label == '故障')
+                    if (label == _this.dicState.CLASS_FAULT_STATE.text)
                         _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
                     else
                         _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
 
 
                     /*不定 状态不能删除*/
-                    if (label == '不定'){
+                    if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
                         _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
                     }
@@ -498,7 +500,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 
                 var minX = x;
-                if (!(x == 0 && label == '不定')) {
+                if (!(x == 0 && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加开始手柄
                     _this.startHandle = new handle(d3g, _this.xScale);
                     _this.startHandle.drawHandle(x, y).drawHandleText(x, -2).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
@@ -508,7 +510,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 var x2 = x + width;
                 var endX = x2 - HANDLE_WIDTH; //当前位置加选中块的宽度，减去手柄的宽度
 
-                if (!(x2 == _this.gWIDTH && label == '不定')) {
+                if (!(x2 == _this.gWIDTH && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加结束手柄
                     _this.endHandle = new handle(d3g, _this.xScale, 'end'); //时间的文本要在编辑区域内
                     _this.endHandle.drawHandle(endX, y).drawHandleText(endX, -2).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
@@ -602,16 +604,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             val.trim();
                             if (val == '') {
                                 data.value = undefined;
-                                data.label = '不定';
+                                data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
                             } else {
                                 val = parseInt(val);
                                 data.value = val;
                                 if (val > 0) {
                                     data.label = val;
                                 } else if (val == 0)
-                                    data.label = '关';
+                                    data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 else if (val < 0)
-                                    data.label = '故障';
+                                    data.label =  _this.dicState.CLASS_FAULT_STATE.text;
                             }
                             //修改值或状态
                             _this.curBlock.updateState(data);
@@ -635,7 +637,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
                                 data.value = 0;
-                                data.label = '关';
+                                data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 _this.curBlock.updateState(data); //状态修改为关
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
@@ -644,7 +646,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             /*  打开按钮点击事件  */
                         $('#openBtn').on('click', function() {
                             data.value = 1;
-                            data.label = '开';
+                            data.label = _this.dicState.CLASS_OPEN_STATE.text;
                             _this.curBlock.updateState(data); //状态修改为关
                             $(ele).popover('hide'); //关掉弹出框
                             _this.removeHandles(); //关闭选中状态
@@ -805,11 +807,58 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
     var ONE_SECOND = 1000;
     var MINUTES_PER_DAY = 1440;
 
-    
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');
     var fromTime = d3.timeParse('%H:%M');
     var fromTimeToLong = d3.timeParse('%Y-%m-%d %H:%M');
+
+    var dicState={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
+
+
+    // Check whether the obj is null or undfined.
+    var isNullOrUndefine = function(obj) {
+        return obj === undefined || obj === null;
+    }
+
+    var formatValue = function (value, type,format,unit) {
+            type = type.toLowerCase();
+            var text = '';
+            if (type == "csp") {
+                if (value === 0) text = dicState.CLASS_CLOSE_STATE.text;
+                else if (value > 0) text = dicState.CLASS_OPEN_STATE.text;
+                else if (value < 0) text = dicState.CLASS_FAULT_STATE.text;
+            } else {
+                if (value === 0) text = dicState.CLASS_CLOSE_STATE.text;
+                else if (value < 0) text = dicState.CLASS_FAULT_STATE.text;
+                else {
+                    if(!isNullOrUndefine(format)){//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
+                };
+            }
+            return text;
+    }
+    // Check whether the type of the obj is string.
+    var isString = function(obj) {
+        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
+    }
+    var getFirst = function(values) {
+        return values[0];
+    }
+
+    var getLast = function(values) {
+        return values[values.length - 1];
+    }
 
     // Defines the chart type
     var chart = function(ele, opt) {
@@ -836,55 +885,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         // Get the chart option
         this.option = $.extend({}, default_option, opt);
     }
-
-    // Check whether the obj is null or undfined.
-    var isNullOrUndefine = function(obj) {
-        return obj === undefined || obj === null;
-    }
-
-    var formatValue = function (value, type,format,unit) {
-            type = type.toLowerCase();
-            var text = '';
-            if (type == "csp") {
-                if (value === 0) text = '关';
-                else if (value > 0) text = '开';
-                else if (value < 0) text = '故障';
-            } else {
-                if (value === 0) text = '关';
-                else if (value < 0) text = '故障';
-                else {
-                    if(!isNullOrUndefine(format)){//判断是个格式转换
-                        if (format.indexOf('.') != -1) {
-                            var startIndex = format.indexOf('.') + 1;
-                            format = format.substring(startIndex).length;
-                            value = parseFloat(value).toFixed(format);
-                        }
-                    }
-                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
-                };
-            }
-            return text;
-    }
-    // Check whether the type of the obj is string.
-    var isString = function(obj) {
-        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
-    }
-    var getFirst = function(values) {
-        return values[0];
-    }
-
-    var getLast = function(values) {
-        return values[values.length - 1];
-    }
-
     //链式方法
     chart.prototype = {
         preprocess:function(data) {
             var _this=this;
-            if (isNullOrUndefine(data)) {
-                console.warn("Input data is null or undfined.");
-                return null;
-            }
             // Clear timelines
             _this.timelines = [];
             _this.describe = {
@@ -909,7 +913,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     if(v.value!=null)
                         v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
                     else
-                        v.label ='不定'; 
+                        v.label =dicState.CLASS_INDEFINITE_STATE.text; 
                 }
 
                 // Sort all values by time
@@ -977,7 +981,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         var point = {
                             time: time,
                             value: null,
-                            label: '不定',
+                            label: dicState.CLASS_INDEFINITE_STATE.text,
                             prev: last
                         }
                         last.next = point;
@@ -1024,18 +1028,24 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
-            this.preprocess(data);
+            if (isNullOrUndefine(data)) {
+                console.warn("Input data is null or undfined.");
+                return null;
+            }
+            if(!isNullOrUndefine(stateClass))
+                dicState=stateClass;
+            this.preprocess(data);//准备数据
             this.element.html('');
-            this.area=new drawArea(this.option,this.element,this.describe);
+            this.area=new drawArea(this.option,this.element,this.describe);//绘制绘图区
             if(this.option.showLegend)//是否画编辑按钮
                 this.area.drawLegend();
-            this.area.draw().drawChart(this.timelines,stateClass).drawAsix();//绘制曲线
+            this.area.draw().drawChart(this.timelines,dicState).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
                 this.area.drawCurrentLine();
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
-            if(this.option.edit)
+            if(this.option.edit)//是否可编辑
                 this.area.bind_check().bind_dbclick().bind_popover();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
         },
@@ -1480,25 +1490,20 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0), __webpack_require__(1), __webpack_require__(2), __webpack_require__(3),__webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function(d3, jquery, moment,lodash,pumpText) {
 
     var BAR_HEIGHT=22;
-    // Defines all class name
-    var dicClass={
-        '开':'rect open_state',
-        '关':'rect close_state',
-        '故障':'rect fault_state',
-        '不定':'rect indefinite_state'
-    }
-    //根据值转换样式
+   
+    var dicClass=null;
+     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = dicClass['开'];
+            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
         } else if (d.value == 0) {
-            d.className = dicClass['关'];
+            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = dicClass['故障'];
+            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
         } else {
-            d.className = dicClass['不定'];
+            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
         }
         return d.className;
     }
@@ -1538,7 +1543,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.block_ValueGrade=valueGrade;
 
         this.callFn=null;
-        dicClass=stateClass;
+        if(!isNullOrUndefine(stateClass))
+            dicClass=stateClass;
     }
     //链式方法
     gradientBlock.prototype = {
@@ -1884,25 +1890,20 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     var BAR_HEIGHT=22;//默认高度
     var MIN_VALUE=0;//下限
     var MAX_VALUE=50;//上限
-    // Defines all class name
-    var dicClass={
-        '开':'rect open_state',
-        '关':'rect close_state',
-        '故障':'rect fault_state',
-        '不定':'rect indefinite_state'
-    }
-    //根据值转换样式
+   
+    var dicClass=null;
+     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = dicClass['开'];
+            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
         } else if (d.value == 0) {
-            d.className = dicClass['关'];
+            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = dicClass['故障'];
+            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
         } else {
-            d.className = dicClass['不定'];
+            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
         }
         return d.className;
     }
@@ -1928,7 +1929,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.block_xScale=xScale;
 
         this.callFn=null;
-        dicClass=stateClass;
+        if(!isNullOrUndefine(stateClass))
+            dicClass=stateClass;
     }
     //链式方法
     numericBlock.prototype = {
@@ -2245,25 +2247,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0), __webpack_require__(1), __webpack_require__(2), __webpack_require__(3), __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function(d3, jquery, moment, lodash, pumpText) {
 
     var BAR_HEIGHT = 22;
-    // Defines all class name
-    var dicClass={
-        '开':'rect open_state',
-        '关':'rect close_state',
-        '故障':'rect fault_state',
-        '不定':'rect indefinite_state'
-    }
+    var dicClass=null;
      //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = dicClass['开'];
+            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
         } else if (d.value == 0) {
-            d.className = dicClass['关'];
+            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = dicClass['故障'];
+            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
         } else {
-            d.className = dicClass['不定'];
+            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
         }
         return d.className;
     }
@@ -2290,8 +2286,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
-
-            dicClass=stateClass;
+            if(!isNullOrUndefine(stateClass))
+                dicClass=stateClass;
         }
     //链式方法
     stateBlock.prototype = {
@@ -2403,7 +2399,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         _this.leftBlock.update(null, null, width);
                     }
                 } else { //如果没有就创建  不定状态
-                    if (_this.blockData.className != CLASS_INDEFINITE_STATE) {
+                    if (_this.blockData.className != dicClass['不定']) {
                         var data = {
                             height: BAR_HEIGHT,
                             time: _this.block_xScale.invert(0),

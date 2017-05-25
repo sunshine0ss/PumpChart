@@ -1,25 +1,19 @@
 define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, moment, lodash, pumpText) {
 
     var BAR_HEIGHT = 22;
-    // Defines all class name
-    var dicClass={
-        '开':'rect open_state',
-        '关':'rect close_state',
-        '故障':'rect fault_state',
-        '不定':'rect indefinite_state'
-    }
+    var dicClass=null;
      //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = dicClass['开'];
+            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
         } else if (d.value == 0) {
-            d.className = dicClass['关'];
+            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = dicClass['故障'];
+            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
         } else {
-            d.className = dicClass['不定'];
+            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
         }
         return d.className;
     }
@@ -46,8 +40,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
 
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
-
-            dicClass=stateClass;
+            if(!isNullOrUndefine(stateClass))
+                dicClass=stateClass;
         }
     //链式方法
     stateBlock.prototype = {
@@ -159,7 +153,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         _this.leftBlock.update(null, null, width);
                     }
                 } else { //如果没有就创建  不定状态
-                    if (_this.blockData.className != CLASS_INDEFINITE_STATE) {
+                    if (_this.blockData.className != dicClass['不定']) {
                         var data = {
                             height: BAR_HEIGHT,
                             time: _this.block_xScale.invert(0),

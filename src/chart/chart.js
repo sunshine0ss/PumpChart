@@ -20,11 +20,58 @@
     var ONE_SECOND = 1000;
     var MINUTES_PER_DAY = 1440;
 
-    
     // Defines the time format to convert string to datetime.
     var toTime = d3.timeParse('%Y-%m-%d %H:%M:%S');
     var fromTime = d3.timeParse('%H:%M');
     var fromTimeToLong = d3.timeParse('%Y-%m-%d %H:%M');
+
+    var dicState={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
+
+
+    // Check whether the obj is null or undfined.
+    var isNullOrUndefine = function(obj) {
+        return obj === undefined || obj === null;
+    }
+
+    var formatValue = function (value, type,format,unit) {
+            type = type.toLowerCase();
+            var text = '';
+            if (type == "csp") {
+                if (value === 0) text = dicState.CLASS_CLOSE_STATE.text;
+                else if (value > 0) text = dicState.CLASS_OPEN_STATE.text;
+                else if (value < 0) text = dicState.CLASS_FAULT_STATE.text;
+            } else {
+                if (value === 0) text = dicState.CLASS_CLOSE_STATE.text;
+                else if (value < 0) text = dicState.CLASS_FAULT_STATE.text;
+                else {
+                    if(!isNullOrUndefine(format)){//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
+                };
+            }
+            return text;
+    }
+    // Check whether the type of the obj is string.
+    var isString = function(obj) {
+        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
+    }
+    var getFirst = function(values) {
+        return values[0];
+    }
+
+    var getLast = function(values) {
+        return values[values.length - 1];
+    }
 
     // Defines the chart type
     var chart = function(ele, opt) {
@@ -51,55 +98,10 @@
         // Get the chart option
         this.option = $.extend({}, default_option, opt);
     }
-
-    // Check whether the obj is null or undfined.
-    var isNullOrUndefine = function(obj) {
-        return obj === undefined || obj === null;
-    }
-
-    var formatValue = function (value, type,format,unit) {
-            type = type.toLowerCase();
-            var text = '';
-            if (type == "csp") {
-                if (value === 0) text = '关';
-                else if (value > 0) text = '开';
-                else if (value < 0) text = '故障';
-            } else {
-                if (value === 0) text = '关';
-                else if (value < 0) text = '故障';
-                else {
-                    if(!isNullOrUndefine(format)){//判断是个格式转换
-                        if (format.indexOf('.') != -1) {
-                            var startIndex = format.indexOf('.') + 1;
-                            format = format.substring(startIndex).length;
-                            value = parseFloat(value).toFixed(format);
-                        }
-                    }
-                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
-                };
-            }
-            return text;
-    }
-    // Check whether the type of the obj is string.
-    var isString = function(obj) {
-        return isNullOrUndefine(obj) ? false : typeof obj === 'string';
-    }
-    var getFirst = function(values) {
-        return values[0];
-    }
-
-    var getLast = function(values) {
-        return values[values.length - 1];
-    }
-
     //链式方法
     chart.prototype = {
         preprocess:function(data) {
             var _this=this;
-            if (isNullOrUndefine(data)) {
-                console.warn("Input data is null or undfined.");
-                return null;
-            }
             // Clear timelines
             _this.timelines = [];
             _this.describe = {
@@ -124,7 +126,7 @@
                     if(v.value!=null)
                         v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
                     else
-                        v.label ='不定'; 
+                        v.label =dicState.CLASS_INDEFINITE_STATE.text; 
                 }
 
                 // Sort all values by time
@@ -192,7 +194,7 @@
                         var point = {
                             time: time,
                             value: null,
-                            label: '不定',
+                            label: dicState.CLASS_INDEFINITE_STATE.text,
                             prev: last
                         }
                         last.next = point;
@@ -239,18 +241,24 @@
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
-            this.preprocess(data);
+            if (isNullOrUndefine(data)) {
+                console.warn("Input data is null or undfined.");
+                return null;
+            }
+            if(!isNullOrUndefine(stateClass))
+                dicState=stateClass;
+            this.preprocess(data);//准备数据
             this.element.html('');
-            this.area=new drawArea(this.option,this.element,this.describe);
+            this.area=new drawArea(this.option,this.element,this.describe);//绘制绘图区
             if(this.option.showLegend)//是否画编辑按钮
                 this.area.drawLegend();
-            this.area.draw().drawChart(this.timelines,stateClass).drawAsix();//绘制曲线
+            this.area.draw().drawChart(this.timelines,dicState).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
                 this.area.drawCurrentLine();
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
-            if(this.option.edit)
+            if(this.option.edit)//是否可编辑
                 this.area.bind_check().bind_dbclick().bind_popover();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
         },

@@ -214,35 +214,17 @@ var objects = [{
     //"format":'0.00',
     "lineIndex": 1
 }];
-var dicClass={
-    '开':'rect close_state',//'rect open_state',
-    '关':'rect open_state',//'rect close_state',
-    '故障':'rect fault_state',
-    '不定':'rect indefinite_state'
+
+
+var dicState={
+    CLASS_OPEN_STATE:{'text':'开','class':'rect close_state'},
+    CLASS_CLOSE_STATE:{'text':'关','class':'rect open_state'},
+    CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+    CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
 }
 
 
-var objects1 = [{
-    "id": 1,
-    "name": "1#",
-    "type": "CSP",
-    "dataType": "STATE",
-    "values": [{
-        "time": "2017-04-18 0:00:00",
-        "value": 1
-    }],
-    "lineIndex": 1
-},{
-    "id": 2,
-    "name": "2#",
-    "type": "CSP",
-    "dataType": "STATE",
-    "values": [{
-        "time": "2017-04-18 0:00:00",
-        "value": 0
-    }],
-    "lineIndex": 1
-}]
 var chart = new chart('#chart', option);
-chart.draw(objects,dicClass);
+//chart.draw(objects);
+chart.draw(objects,dicState);
 

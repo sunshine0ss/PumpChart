@@ -48,6 +48,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.element = ele;
             this.describe = desc;
 
+            this.dicState=null;
 
 
             // Compute the size of the svg        
@@ -130,6 +131,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
         }, //绘制坐标轴
         drawChart: function(timelines,stateClass) {
             var _this = this;
+            this.dicState=stateClass;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
@@ -148,7 +150,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 if (type == '取消') {
                     _this.refresh();
                 } else {
-                    if (_this.curBlock != null) {
+                    if (_this.curBlock != null&&_this.curBlock.block != null) {
                         if (type == '新增') {
                             _this.curBlock.insertCentre();
                             _this.bind_popover();
@@ -187,7 +189,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 //End of the startHandle drag
             var startDragEnd = function(x) {
                     _this.curBlock.changeLeft();
-                    if (_this.curBlock.block == null) { //判断当前的块是否被删除
+                    if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
                         _this.curBlock = null;
                         //删除选中状态
                         _this.removeHandles();
@@ -212,7 +214,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 //End of the endHandle drag
             var endDragEnd = function() {
                 _this.curBlock.changeRight();
-                if (_this.curBlock.block == null) { //判断当前的块是否被删除
+                if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
                     _this.curBlock = null;
                     //删除选中状态
                     _this.removeHandles();
@@ -254,14 +256,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                 if(_this.chartLegend!=null){
                     /*故障 状态不能新增*/
-                    if (label == '故障')
+                    if (label == _this.dicState.CLASS_FAULT_STATE.text)
                         _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
                     else
                         _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
 
 
                     /*不定 状态不能删除*/
-                    if (label == '不定'){
+                    if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
                         _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
                     }
@@ -295,7 +297,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
 
                 var minX = x;
-                if (!(x == 0 && label == '不定')) {
+                if (!(x == 0 && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加开始手柄
                     _this.startHandle = new handle(d3g, _this.xScale);
                     _this.startHandle.drawHandle(x, y).drawHandleText(x, -2).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
@@ -305,7 +307,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 var x2 = x + width;
                 var endX = x2 - HANDLE_WIDTH; //当前位置加选中块的宽度，减去手柄的宽度
 
-                if (!(x2 == _this.gWIDTH && label == '不定')) {
+                if (!(x2 == _this.gWIDTH && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加结束手柄
                     _this.endHandle = new handle(d3g, _this.xScale, 'end'); //时间的文本要在编辑区域内
                     _this.endHandle.drawHandle(endX, y).drawHandleText(endX, -2).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
@@ -399,16 +401,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             val.trim();
                             if (val == '') {
                                 data.value = undefined;
-                                data.label = '不定';
+                                data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
                             } else {
                                 val = parseInt(val);
                                 data.value = val;
                                 if (val > 0) {
                                     data.label = val;
                                 } else if (val == 0)
-                                    data.label = '关';
+                                    data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 else if (val < 0)
-                                    data.label = '故障';
+                                    data.label =  _this.dicState.CLASS_FAULT_STATE.text;
                             }
                             //修改值或状态
                             _this.curBlock.updateState(data);
@@ -432,7 +434,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
                                 data.value = 0;
-                                data.label = '关';
+                                data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 _this.curBlock.updateState(data); //状态修改为关
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
@@ -441,7 +443,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             /*  打开按钮点击事件  */
                         $('#openBtn').on('click', function() {
                             data.value = 1;
-                            data.label = '开';
+                            data.label = _this.dicState.CLASS_OPEN_STATE.text;
                             _this.curBlock.updateState(data); //状态修改为关
                             $(ele).popover('hide'); //关掉弹出框
                             _this.removeHandles(); //关闭选中状态

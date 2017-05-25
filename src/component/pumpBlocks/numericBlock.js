@@ -3,25 +3,20 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     var BAR_HEIGHT=22;//默认高度
     var MIN_VALUE=0;//下限
     var MAX_VALUE=50;//上限
-    // Defines all class name
-    var dicClass={
-        '开':'rect open_state',
-        '关':'rect close_state',
-        '故障':'rect fault_state',
-        '不定':'rect indefinite_state'
-    }
-    //根据值转换样式
+   
+    var dicClass=null;
+     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = dicClass['开'];
+            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
         } else if (d.value == 0) {
-            d.className = dicClass['关'];
+            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = dicClass['故障'];
+            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
         } else {
-            d.className = dicClass['不定'];
+            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
         }
         return d.className;
     }
@@ -47,7 +42,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.block_xScale=xScale;
 
         this.callFn=null;
-        dicClass=stateClass;
+        if(!isNullOrUndefine(stateClass))
+            dicClass=stateClass;
     }
     //链式方法
     numericBlock.prototype = {
