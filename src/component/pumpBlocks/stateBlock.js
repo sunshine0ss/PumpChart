@@ -2,33 +2,35 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
 
     var BAR_HEIGHT = 22;
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state'; //开
-    var CLASS_CLOSE_STATE = 'rect close_state'; //关
-    var CLASS_FAULT_STATE = 'rect fault_state'; //故障
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state'; //不定
-
-    //根据值转换样式
+    var dicClass={
+        '开':'rect open_state',
+        '关':'rect close_state',
+        '故障':'rect fault_state',
+        '不定':'rect indefinite_state'
+    }
+     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = CLASS_OPEN_STATE;
+            d.className = dicClass['开'];
         } else if (d.value == 0) {
-            d.className = CLASS_CLOSE_STATE;
+            d.className = dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = CLASS_FAULT_STATE;
+            d.className = dicClass['故障'];
         } else {
-            d.className = CLASS_INDEFINITE_STATE;
+            d.className = dicClass['不定'];
         }
         return d.className;
     }
+
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
     }
 
     // Defines the stateBlock type
-    var stateBlock = function(line, xScale) {
+    var stateBlock = function(line, xScale,stateClass) {
             this.version = '1.0';
             this.blockType = 'state';
             this.block = null; //当前的块元素
@@ -44,6 +46,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
 
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
+
+            dicClass=stateClass;
         }
     //链式方法
     stateBlock.prototype = {

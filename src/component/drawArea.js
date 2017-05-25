@@ -128,13 +128,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.dAxis.drawAxis();
             return this;
         }, //绘制坐标轴
-        drawChart: function(timelines) {
+        drawChart: function(timelines,stateClass) {
             var _this = this;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
                 var pLine = new pumpLine(_this.svg, _this.xScale, _this.yScale, _this.option, _this.describe);
-                pLine.drawLine(line);
+                pLine.drawLine(line,stateClass);
                 _this.lines.push(pLine);
             })
             return this;

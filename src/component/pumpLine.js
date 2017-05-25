@@ -69,7 +69,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
 
     //The chain method
     pumpLine.prototype = {
-        drawLine:function(line){
+        drawLine:function(line,stateClass){
             var _this=this;
             var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
                     this.line_describe.barCount * 0.2;
@@ -98,7 +98,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    block=new type(_this.g,_this.line_xScale,ColorGrade,_this.valueGrade);
+                    block=new type(_this.g,_this.line_xScale,stateClass,ColorGrade,_this.valueGrade);
                     block.draw(data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)

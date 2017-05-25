@@ -1,27 +1,27 @@
 define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, moment,lodash,pumpText) {
 
-    var BAR_HEIGHT=22;
+    var BAR_HEIGHT=22;//默认高度
+    var MIN_VALUE=0;//下限
+    var MAX_VALUE=50;//上限
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state';//开
-    var CLASS_CLOSE_STATE = 'rect close_state';//关
-    var CLASS_FAULT_STATE = 'rect fault_state';//故障
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
-
-    var MIN_VALUE=0;
-    var MAX_VALUE=50;
-
+    var dicClass={
+        '开':'rect open_state',
+        '关':'rect close_state',
+        '故障':'rect fault_state',
+        '不定':'rect indefinite_state'
+    }
     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = CLASS_OPEN_STATE;
+            d.className = dicClass['开'];
         } else if (d.value == 0) {
-            d.className = CLASS_CLOSE_STATE;
+            d.className = dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = CLASS_FAULT_STATE;
+            d.className = dicClass['故障'];
         } else {
-            d.className = CLASS_INDEFINITE_STATE;
+            d.className = dicClass['不定'];
         }
         return d.className;
     }
@@ -30,7 +30,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         return obj === undefined || obj === null;
     }
     // Defines the numericBlock type
-    var numericBlock = function(line,xScale) {
+    var numericBlock = function(line,xScale,stateClass) {
         this.version = '1.0';
         this.blockType='numeric';
 
@@ -47,6 +47,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.block_xScale=xScale;
 
         this.callFn=null;
+        dicClass=stateClass;
     }
     //链式方法
     numericBlock.prototype = {

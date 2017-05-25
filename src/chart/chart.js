@@ -57,7 +57,7 @@
         return obj === undefined || obj === null;
     }
 
-    var formatValue = function (value, unit, type) {
+    var formatValue = function (value, type,format,unit) {
             type = type.toLowerCase();
             var text = '';
             if (type == "csp") {
@@ -67,7 +67,16 @@
             } else {
                 if (value === 0) text = '关';
                 else if (value < 0) text = '故障';
-                else text = value.toString() + ' ' + (unit?(unit.unitText || ""):'');
+                else {
+                    if(!isNullOrUndefine(format)){//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
+                };
             }
             return text;
     }
@@ -113,7 +122,7 @@
                         v.time = toTime(v.time);
                     }
                     if(v.value!=null)
-                        v.label = formatValue(parseInt(v.value.toFixed(0)), line.unit, line.type);
+                        v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
                     else
                         v.label ='不定'; 
                 }
@@ -229,13 +238,13 @@
             return this; 
             return this;   
         },//刷新并绘制
-        draw: function(data) {
+        draw: function(data,stateClass) {
             this.preprocess(data);
             this.element.html('');
             this.area=new drawArea(this.option,this.element,this.describe);
             if(this.option.showLegend)//是否画编辑按钮
                 this.area.drawLegend();
-            this.area.draw().drawChart(this.timelines).drawAsix();//绘制曲线
+            this.area.draw().drawChart(this.timelines,stateClass).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
                 this.area.drawCurrentLine();

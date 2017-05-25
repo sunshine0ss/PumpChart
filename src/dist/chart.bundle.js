@@ -331,13 +331,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.dAxis.drawAxis();
             return this;
         }, //绘制坐标轴
-        drawChart: function(timelines) {
+        drawChart: function(timelines,stateClass) {
             var _this = this;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
                 var pLine = new pumpLine(_this.svg, _this.xScale, _this.yScale, _this.option, _this.describe);
-                pLine.drawLine(line);
+                pLine.drawLine(line,stateClass);
                 _this.lines.push(pLine);
             })
             return this;
@@ -842,7 +842,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         return obj === undefined || obj === null;
     }
 
-    var formatValue = function (value, unit, type) {
+    var formatValue = function (value, type,format,unit) {
             type = type.toLowerCase();
             var text = '';
             if (type == "csp") {
@@ -852,7 +852,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             } else {
                 if (value === 0) text = '关';
                 else if (value < 0) text = '故障';
-                else text = value.toString() + ' ' + (unit?(unit.unitText || ""):'');
+                else {
+                    if(!isNullOrUndefine(format)){//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit?(unit.unitText || ""):'')
+                };
             }
             return text;
     }
@@ -898,7 +907,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         v.time = toTime(v.time);
                     }
                     if(v.value!=null)
-                        v.label = formatValue(parseInt(v.value.toFixed(0)), line.unit, line.type);
+                        v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
                     else
                         v.label ='不定'; 
                 }
@@ -1014,13 +1023,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             return this; 
             return this;   
         },//刷新并绘制
-        draw: function(data) {
+        draw: function(data,stateClass) {
             this.preprocess(data);
             this.element.html('');
             this.area=new drawArea(this.option,this.element,this.describe);
             if(this.option.showLegend)//是否画编辑按钮
                 this.area.drawLegend();
-            this.area.draw().drawChart(this.timelines).drawAsix();//绘制曲线
+            this.area.draw().drawChart(this.timelines,stateClass).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
                 this.area.drawCurrentLine();
@@ -1472,23 +1481,24 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     var BAR_HEIGHT=22;
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state';//开
-    var CLASS_CLOSE_STATE = 'rect close_state';//关
-    var CLASS_FAULT_STATE = 'rect fault_state';//故障
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
-
+    var dicClass={
+        '开':'rect open_state',
+        '关':'rect close_state',
+        '故障':'rect fault_state',
+        '不定':'rect indefinite_state'
+    }
     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = CLASS_OPEN_STATE;
+            d.className = dicClass['开'];
         } else if (d.value == 0) {
-            d.className = CLASS_CLOSE_STATE;
+            d.className = dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = CLASS_FAULT_STATE;
+            d.className = dicClass['故障'];
         } else {
-            d.className = CLASS_INDEFINITE_STATE;
+            d.className = dicClass['不定'];
         }
         return d.className;
     }
@@ -1509,7 +1519,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     }
     
     // Defines the gradientBlock type
-    var gradientBlock = function(line,xScale,colorGrade,valueGrade) {
+    var gradientBlock = function(line,xScale,stateClass,colorGrade,valueGrade) {
         this.version = '1.0';
         this.blockType='gradient';
 
@@ -1528,6 +1538,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.block_ValueGrade=valueGrade;
 
         this.callFn=null;
+        dicClass=stateClass;
     }
     //链式方法
     gradientBlock.prototype = {
@@ -1870,28 +1881,28 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0), __webpack_require__(1), __webpack_require__(2), __webpack_require__(3),__webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function(d3, jquery, moment,lodash,pumpText) {
 
-    var BAR_HEIGHT=22;
+    var BAR_HEIGHT=22;//默认高度
+    var MIN_VALUE=0;//下限
+    var MAX_VALUE=50;//上限
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state';//开
-    var CLASS_CLOSE_STATE = 'rect close_state';//关
-    var CLASS_FAULT_STATE = 'rect fault_state';//故障
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state';//不定
-
-    var MIN_VALUE=0;
-    var MAX_VALUE=50;
-
+    var dicClass={
+        '开':'rect open_state',
+        '关':'rect close_state',
+        '故障':'rect fault_state',
+        '不定':'rect indefinite_state'
+    }
     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = CLASS_OPEN_STATE;
+            d.className = dicClass['开'];
         } else if (d.value == 0) {
-            d.className = CLASS_CLOSE_STATE;
+            d.className = dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = CLASS_FAULT_STATE;
+            d.className = dicClass['故障'];
         } else {
-            d.className = CLASS_INDEFINITE_STATE;
+            d.className = dicClass['不定'];
         }
         return d.className;
     }
@@ -1900,7 +1911,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         return obj === undefined || obj === null;
     }
     // Defines the numericBlock type
-    var numericBlock = function(line,xScale) {
+    var numericBlock = function(line,xScale,stateClass) {
         this.version = '1.0';
         this.blockType='numeric';
 
@@ -1917,6 +1928,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.block_xScale=xScale;
 
         this.callFn=null;
+        dicClass=stateClass;
     }
     //链式方法
     numericBlock.prototype = {
@@ -2234,33 +2246,35 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     var BAR_HEIGHT = 22;
     // Defines all class name
-    var CLASS_OPEN_STATE = 'rect open_state'; //开
-    var CLASS_CLOSE_STATE = 'rect close_state'; //关
-    var CLASS_FAULT_STATE = 'rect fault_state'; //故障
-    var CLASS_INDEFINITE_STATE = 'rect indefinite_state'; //不定
-
-    //根据值转换样式
+    var dicClass={
+        '开':'rect open_state',
+        '关':'rect close_state',
+        '故障':'rect fault_state',
+        '不定':'rect indefinite_state'
+    }
+     //根据值转换样式
     function formatClass(d) {
         var className = null;
         if (d.value > 0) {
-            d.className = CLASS_OPEN_STATE;
+            d.className = dicClass['开'];
         } else if (d.value == 0) {
-            d.className = CLASS_CLOSE_STATE;
+            d.className = dicClass['关'];
 
         } else if (d.value < 0) {
-            d.className = CLASS_FAULT_STATE;
+            d.className = dicClass['故障'];
         } else {
-            d.className = CLASS_INDEFINITE_STATE;
+            d.className = dicClass['不定'];
         }
         return d.className;
     }
+
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
     }
 
     // Defines the stateBlock type
-    var stateBlock = function(line, xScale) {
+    var stateBlock = function(line, xScale,stateClass) {
             this.version = '1.0';
             this.blockType = 'state';
             this.block = null; //当前的块元素
@@ -2276,6 +2290,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
+
+            dicClass=stateClass;
         }
     //链式方法
     stateBlock.prototype = {
@@ -2671,7 +2687,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     //The chain method
     pumpLine.prototype = {
-        drawLine:function(line){
+        drawLine:function(line,stateClass){
             var _this=this;
             var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
                     this.line_describe.barCount * 0.2;
@@ -2700,7 +2716,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    block=new type(_this.g,_this.line_xScale,ColorGrade,_this.valueGrade);
+                    block=new type(_this.g,_this.line_xScale,stateClass,ColorGrade,_this.valueGrade);
                     block.draw(data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)
