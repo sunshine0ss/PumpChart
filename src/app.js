@@ -468,4 +468,4 @@ var objects1 = [{
 
 var chart = new chart('#chart', option);
 //chart.draw(objects);
-chart.draw(objects,dicState);
+chart.draw(objects1,dicState);

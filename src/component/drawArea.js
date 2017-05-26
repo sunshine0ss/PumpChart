@@ -380,7 +380,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
-                        container: "body", //向指定元素中追加弹出框
+                        container: '#'+_this.element.node().id, //向指定元素中追加弹出框
                         placement: 'top', //弹出框定位方向（即 top|bottom|left|right|auto）
                         html: 'true', //是否解析html标签
                         content: ContentMethod(e.__data__), //弹出框内容
@@ -417,7 +417,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if(_this.curBlock.block!=null){
+                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
                                     //_this.removeHandles(); //关闭选中状态
@@ -425,7 +425,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                 }
                             }) //值改变事件
                             .on('keyup', function() {
-                                if(_this.curBlock.block!=null){
+                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
                                     _this.updateHandles(); //更新手柄
@@ -433,21 +433,25 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
+                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 0;
                                 data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 _this.curBlock.updateState(data); //状态修改为关
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
                                 //_this.updateHandles();//更新手柄
-                            })
-                            /*  打开按钮点击事件  */
+                            }
+                        })
+                        /*  打开按钮点击事件  */
                         $('#openBtn').on('click', function() {
-                            data.value = 1;
-                            data.label = _this.dicState.CLASS_OPEN_STATE.text;
-                            _this.curBlock.updateState(data); //状态修改为关
-                            $(ele).popover('hide'); //关掉弹出框
-                            _this.removeHandles(); //关闭选中状态
-                            //_this.updateHandles();//更新手柄
+                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
+                                data.value = 1;
+                                data.label = _this.dicState.CLASS_OPEN_STATE.text;
+                                _this.curBlock.updateState(data); //状态修改为关
+                                $(ele).popover('hide'); //关掉弹出框
+                                _this.removeHandles(); //关闭选中状态
+                                //_this.updateHandles();//更新手柄
+                            }
                         })
                     }) //点击事件
                     .on("mouseleave", function() {

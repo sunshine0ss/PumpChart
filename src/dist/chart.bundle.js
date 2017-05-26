@@ -583,7 +583,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
-                        container: "body", //向指定元素中追加弹出框
+                        container: '#'+_this.element.node().id, //向指定元素中追加弹出框
                         placement: 'top', //弹出框定位方向（即 top|bottom|left|right|auto）
                         html: 'true', //是否解析html标签
                         content: ContentMethod(e.__data__), //弹出框内容
@@ -620,7 +620,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         }
                             /*  输入框值改变事件  */
                         $('#pumpvalue').on('change', function() {
-                                if(_this.curBlock.block!=null){
+                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
                                     //_this.removeHandles(); //关闭选中状态
@@ -628,7 +628,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 }
                             }) //值改变事件
                             .on('keyup', function() {
-                                if(_this.curBlock.block!=null){
+                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
                                     _this.updateHandles(); //更新手柄
@@ -636,21 +636,25 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
                         $('#closeBtn').on('click', function() {
+                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 0;
                                 data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 _this.curBlock.updateState(data); //状态修改为关
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
                                 //_this.updateHandles();//更新手柄
-                            })
-                            /*  打开按钮点击事件  */
+                            }
+                        })
+                        /*  打开按钮点击事件  */
                         $('#openBtn').on('click', function() {
-                            data.value = 1;
-                            data.label = _this.dicState.CLASS_OPEN_STATE.text;
-                            _this.curBlock.updateState(data); //状态修改为关
-                            $(ele).popover('hide'); //关掉弹出框
-                            _this.removeHandles(); //关闭选中状态
-                            //_this.updateHandles();//更新手柄
+                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
+                                data.value = 1;
+                                data.label = _this.dicState.CLASS_OPEN_STATE.text;
+                                _this.curBlock.updateState(data); //状态修改为关
+                                $(ele).popover('hide'); //关掉弹出框
+                                _this.removeHandles(); //关闭选中状态
+                                //_this.updateHandles();//更新手柄
+                            }
                         })
                     }) //点击事件
                     .on("mouseleave", function() {
@@ -802,7 +806,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
     }
     // Defines consts
     var MODE_DAY = 'Day';
-    var MODE_MONTH = 'Month';
 
     // Defines all constant values
     var ONE_SECOND = 1000;
@@ -1603,7 +1606,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if(data.value){
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
-                    $(this.block._groups[0]).css('fill',data.colorGrade);
+                    $(this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
             }
            
@@ -1785,7 +1788,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if(data.value){
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
-                    $(_this.block._groups[0]).css('fill',data.colorGrade);
+                    $(_this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
             }
             _this.blockData=data;
@@ -1854,7 +1857,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.remove();
         },//删除当前块，并合并相同状态的邻近块
         insertCentre:function(){
-            if(this.blockData.className!=CLASS_FAULT_STATE){//故障不能新增
+            if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
@@ -2209,7 +2212,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.remove();
         },//删除当前块，并合并相同状态的邻近块
         insertCentre:function(){
-            if(this.blockData.className!=CLASS_FAULT_STATE){//故障不能新增
+            if(this.blockData.className!=dicClass.CLASS_OPEN_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
@@ -2228,7 +2231,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     width:averageWidth,
                     x:x2
                 }
-                if(this.blockData.className==CLASS_OPEN_STATE){//如果当前是开的就新建关
+                if(this.blockData.className==dicClass.CLASS_OPEN_STATE.class){//如果当前是开的就新建关
                     newData.label='关';
                     newData.value=0;
                 }
@@ -2572,7 +2575,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.remove();
         }, //删除当前块，并合并相同状态的邻近块
         insertCentre: function() {
-                if (this.blockData.className != CLASS_FAULT_STATE) { //故障不能新增
+                if (this.blockData.className != dicClass.CLASS_FAULT_STATE.class) { //故障不能新增
                     var totalWidth = parseFloat(this.block.attr('width')); //获取当前快的总宽
                     var rightBlock = this.rightBlock; //获取当前的右侧块
                     var intWidth = parseInt(totalWidth);
@@ -2591,7 +2594,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         width: averageWidth,
                         x: x2
                     }
-                    if (this.blockData.className == CLASS_OPEN_STATE) { //如果当前是开的就新建关
+                    if (this.blockData.className == dicClass.CLASS_OPEN_STATE.class) { //如果当前是开的就新建关
                         newData.label = '关';
                         newData.value = 0;
                     }

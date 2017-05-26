@@ -93,7 +93,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(data.value){
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
-                    $(this.block._groups[0]).css('fill',data.colorGrade);
+                    $(this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
             }
            
@@ -275,7 +275,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(data.value){
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
-                    $(_this.block._groups[0]).css('fill',data.colorGrade);
+                    $(_this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
             }
             _this.blockData=data;
@@ -344,7 +344,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 this.blockText.remove();
         },//删除当前块，并合并相同状态的邻近块
         insertCentre:function(){
-            if(this.blockData.className!=CLASS_FAULT_STATE){//故障不能新增
+            if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);

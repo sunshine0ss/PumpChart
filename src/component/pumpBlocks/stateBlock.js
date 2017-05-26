@@ -305,7 +305,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 this.blockText.remove();
         }, //删除当前块，并合并相同状态的邻近块
         insertCentre: function() {
-                if (this.blockData.className != CLASS_FAULT_STATE) { //故障不能新增
+                if (this.blockData.className != dicClass.CLASS_FAULT_STATE.class) { //故障不能新增
                     var totalWidth = parseFloat(this.block.attr('width')); //获取当前快的总宽
                     var rightBlock = this.rightBlock; //获取当前的右侧块
                     var intWidth = parseInt(totalWidth);
@@ -324,7 +324,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         width: averageWidth,
                         x: x2
                     }
-                    if (this.blockData.className == CLASS_OPEN_STATE) { //如果当前是开的就新建关
+                    if (this.blockData.className == dicClass.CLASS_OPEN_STATE.class) { //如果当前是开的就新建关
                         newData.label = '关';
                         newData.value = 0;
                     }
