@@ -802,6 +802,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
     }
     // Defines consts
     var MODE_DAY = 'Day';
+    var MODE_MONTH = 'Month';
 
     // Defines all constant values
     var ONE_SECOND = 1000;
@@ -927,6 +928,20 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     if (sorted_values[i].value !== sorted_values[i - 1].value) {
                         merged_values.push(sorted_values[i]);
                     }
+                    else{
+                        //跨天的数据处理
+                        if (sorted_values[i].time.getDate() !== sorted_values[i - 1].time.getDate()) {
+                            // if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
+                            //     var last=merged_values.length-1;
+                            //     _.remove(merged_values,merged_values[last]);
+                            // }
+                            merged_values.push(sorted_values[i]);
+                        }  
+                    }
+                    if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
+                        var last=merged_values.length-2;
+                        _.remove(merged_values,merged_values[last]);
+                    }
                 }
 
                 // Make sure that the pump curve at least 2 points
@@ -978,6 +993,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         time.setMinutes(0);
                         time.setSeconds(0);
 
+
+                        var lastIndex=merged_values.length-1;
+                        if(merged_values[lastIndex - 1].value == merged_values[lastIndex].value){
+                            _.remove(merged_values,merged_values[lastIndex]);
+                            last=getLast(merged_values);
+                        }//删除重复数据
+
                         var point = {
                             time: time,
                             value: null,
@@ -1024,7 +1046,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 this.area.drawHoverLine();
             if(this.option.edit)
                 this.area.bind_check().bind_dbclick().bind_popover();
-            return this; 
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
