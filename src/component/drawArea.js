@@ -15,6 +15,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
     }
+       //默认样式
+    var defaultClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
 
     // Defines the hydochart type
     var drawArea = function(opt, ele, desc, refreshSize) {
@@ -48,7 +55,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.element = ele;
             this.describe = desc;
 
-            this.dicState=null;
+            this.dicState=defaultClass;
 
 
             // Compute the size of the svg        
@@ -375,8 +382,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 }
                 return html;
             }
+            var popEle="[data-toggle='popover']";
+            if(_this.element&&_this.element.nodes().length>0)
+                popEle="#"+_this.element.nodes()[0].id +" "+ popEle;
             //所有设置弹出框属性的元素绑定弹出
-            $("[data-toggle='popover']").each(function(i, e) {
+            $(popEle).each(function(i, e) {
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual

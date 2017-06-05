@@ -252,12 +252,12 @@ var objects = [{
 }];
 
 
-var dicState={
-    CLASS_OPEN_STATE:{'text':'开','class':'rect close_state'},
-    CLASS_CLOSE_STATE:{'text':'关','class':'rect open_state'},
-    CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
-    CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
-}
+// var dicState={
+//     CLASS_OPEN_STATE:{'text':'开','class':'rect close_state'},
+//     CLASS_CLOSE_STATE:{'text':'关','class':'rect open_state'},
+//     CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+//     CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+// }
 
 
 
@@ -438,7 +438,7 @@ var objects1 = [{
     "lineIndex": 1
 }, {
     "id": 23,
-    "name": "西山5#",
+    "name": "西山压力",
     "type": "PRESSURE",
     "dataType": "PRESSURE",
     "values": [{
@@ -468,4 +468,9 @@ var objects1 = [{
 
 var chart = new chart('#chart', option);
 //chart.draw(objects);
-chart.draw(objects1,dicState);
+chart.draw(objects1);
+// chart.draw(objects1,dicState);
+
+$("#inputBtn").on('click', function() {
+    chart.getData();
+})

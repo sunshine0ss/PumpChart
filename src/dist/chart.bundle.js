@@ -218,6 +218,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
     }
+       //默认样式
+    var defaultClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
 
     // Defines the hydochart type
     var drawArea = function(opt, ele, desc, refreshSize) {
@@ -251,7 +258,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.element = ele;
             this.describe = desc;
 
-            this.dicState=null;
+            this.dicState=defaultClass;
 
 
             // Compute the size of the svg        
@@ -578,8 +585,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 return html;
             }
+            var popEle="[data-toggle='popover']";
+            if(_this.element&&_this.element.nodes().length>0)
+                popEle="#"+_this.element.nodes()[0].id +" "+ popEle;
             //所有设置弹出框属性的元素绑定弹出
-            $("[data-toggle='popover']").each(function(i, e) {
+            $(popEle).each(function(i, e) {
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
@@ -1099,8 +1109,24 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         },
         getData:function(){
             var newData=this.area.getData();
-            this.preprocess(newData);
-            return this.timelines;
+            //this.preprocess(newData);
+            _.each(newData,function(data){
+                if(data.points.length>0){
+                    var newPoints=[];
+                    var sameValue=null;
+                    _.each(data.points,function(point){
+                        if(sameValue==null){
+                            sameValue=point.value;
+                            newPoints.push(point);
+                        }
+                        if(point.value!=sameValue)
+                            newPoints.push(point);
+                    })
+                    data.oldPoint=_.cloneDeep(data.points);
+                    data.points=newPoints;
+                }
+            })
+            return newData;
         }
     }
 
@@ -1514,8 +1540,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0), __webpack_require__(1), __webpack_require__(2), __webpack_require__(3),__webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function(d3, jquery, moment,lodash,pumpText) {
 
     var BAR_HEIGHT=22;
-   
-    var dicClass=null;
+    //默认样式
+    var dicClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
      //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -1568,7 +1599,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
         this.callFn=null;
         if(!isNullOrUndefine(stateClass))
-            dicClass=stateClass;
+            dicClass=_.cloneDeep(stateClass);
     }
     //链式方法
     gradientBlock.prototype = {
@@ -1718,7 +1749,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                 }
                 else{//如果没有就创建  不定状态
-                    if(_this.blockData.className != CLASS_INDEFINITE_STATE){
+                    if(_this.blockData.className != dicClass.CLASS_INDEFINITE_STATE.class){
                         var data = {
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
@@ -1726,7 +1757,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             label: '不定',
                             width:x2
                         };
-                        var leftBlock=new numericBlock(_this.block_Line,_this.block_xScale);
+                        var leftBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
                         leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
                         _this.leftBlock=leftBlock;
                     }
@@ -1766,7 +1797,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     label: '不定',
                     width:MaxX
                 };
-                var rightBlock=new numericBlock(_this.block_Line,_this.block_xScale);
+                var rightBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
                 _this.rightBlock=rightBlock;
             }
@@ -1877,7 +1908,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     x:x2
                 }
                 //新建中间一段
-                var newBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
+                var newBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
                 //新建相同的一段
@@ -1889,7 +1920,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     width:averageWidth,
                     x:x3
                 }
-                var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,this.block_ColorGrade,this.block_ValueGrade);
+                var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
 
@@ -1914,8 +1945,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     var BAR_HEIGHT=22;//默认高度
     var MIN_VALUE=0;//下限
     var MAX_VALUE=50;//上限
-   
-    var dicClass=null;
+    
+    //默认样式
+    var dicClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
      //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -1954,7 +1991,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
         this.callFn=null;
         if(!isNullOrUndefine(stateClass))
-            dicClass=stateClass;
+            dicClass=_.cloneDeep(stateClass);
     }
     //链式方法
     numericBlock.prototype = {
@@ -2000,7 +2037,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         },//绘制块
         drawText:function(){
-            this.blockText=new pumpText(this.block_Line,this.block_xScale);
+            this.blockText=new pumpText(this.block_Line,this.block_xScale,dicClass);
             this.blockText.draw(this.blockData);
             return this;
         },//块对应的文本提示
@@ -2089,7 +2126,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             label: '不定',
                             width:x2
                         };
-                        var leftBlock=new numericBlock(_this.block_Line,_this.block_xScale);
+                        var leftBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
                         leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
                         _this.leftBlock=leftBlock;
                     }
@@ -2129,7 +2166,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     label: '不定',
                     width:MaxX
                 };
-                var rightBlock=new numericBlock(_this.block_Line,_this.block_xScale);
+                var rightBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
                 _this.rightBlock=rightBlock;
             }
@@ -2144,6 +2181,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
+            data.label=data.value.toString();
             this.blockData=data;
 
             //判断两边状态十分合并
@@ -2236,7 +2274,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     newData.value=0;
                 }
                 //新建中间一段
-                var newBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var newBlock=new numericBlock(this.block_Line,this.block_xScale,dicClass);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
                 //新建相同的一段
@@ -2248,7 +2286,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     width:averageWidth,
                     x:x3
                 }
-                var sameBlock=new numericBlock(this.block_Line,this.block_xScale);
+                var sameBlock=new numericBlock(this.block_Line,this.block_xScale,dicClass);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
 
@@ -2270,8 +2308,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0), __webpack_require__(1), __webpack_require__(2), __webpack_require__(3), __webpack_require__(4)], __WEBPACK_AMD_DEFINE_RESULT__ = function(d3, jquery, moment, lodash, pumpText) {
 
-    var BAR_HEIGHT = 22;
-    var dicClass=null;
+    var BAR_HEIGHT = 22;   
+
+    //默认样式
+    var dicClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
      //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -2311,7 +2356,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
             if(!isNullOrUndefine(stateClass))
-                dicClass=stateClass;
+                dicClass=_.cloneDeep(stateClass);
         }
     //链式方法
     stateBlock.prototype = {
@@ -2423,7 +2468,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         _this.leftBlock.update(null, null, width);
                     }
                 } else { //如果没有就创建  不定状态
-                    if (_this.blockData.className != dicClass['不定']) {
+                    if (_this.blockData.className != dicClass.CLASS_INDEFINITE_STATE.class) {
                         var data = {
                             height: BAR_HEIGHT,
                             time: _this.block_xScale.invert(0),
@@ -2431,7 +2476,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             label: '不定',
                             width: x2
                         };
-                        var leftBlock = new stateBlock(_this.block_Line, _this.block_xScale);
+                        var leftBlock = new stateBlock(_this.block_Line, _this.block_xScale,dicClass);
                         leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
                         _this.leftBlock = leftBlock;
                     }
@@ -2476,7 +2521,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     label: '不定',
                     width: MaxX
                 };
-                var rightBlock = new stateBlock(_this.block_Line, _this.block_xScale);
+                var rightBlock = new stateBlock(_this.block_Line, _this.block_xScale,dicClass);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
                 _this.rightBlock = rightBlock;
             }
@@ -2599,7 +2644,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         newData.value = 0;
                     }
                     //新建中间一段
-                    var newBlock = new stateBlock(this.block_Line, this.block_xScale);
+                    var newBlock = new stateBlock(this.block_Line, this.block_xScale,dicClass);
                     newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
                     //新建相同的一段
                     var data = {
@@ -2610,7 +2655,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         width: averageWidth,
                         x: x3
                     }
-                    var sameBlock = new stateBlock(this.block_Line, this.block_xScale);
+                    var sameBlock = new stateBlock(this.block_Line, this.block_xScale,dicClass);
                     sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
 
                     if (rightBlock != null)

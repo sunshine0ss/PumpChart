@@ -308,8 +308,24 @@
         },
         getData:function(){
             var newData=this.area.getData();
-            this.preprocess(newData);
-            return this.timelines;
+            //this.preprocess(newData);
+            _.each(newData,function(data){
+                if(data.points.length>0){
+                    var newPoints=[];
+                    var sameValue=null;
+                    _.each(data.points,function(point){
+                        if(sameValue==null){
+                            sameValue=point.value;
+                            newPoints.push(point);
+                        }
+                        if(point.value!=sameValue)
+                            newPoints.push(point);
+                    })
+                    data.oldPoint=_.cloneDeep(data.points);
+                    data.points=newPoints;
+                }
+            })
+            return newData;
         }
     }
 

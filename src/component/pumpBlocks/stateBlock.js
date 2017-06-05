@@ -1,7 +1,14 @@
 define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, moment, lodash, pumpText) {
 
-    var BAR_HEIGHT = 22;
-    var dicClass=null;
+    var BAR_HEIGHT = 22;   
+
+    //默认样式
+    var dicClass={
+        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
+        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
+        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+    }
      //根据值转换样式
     function formatClass(d) {
         var className = null;
@@ -41,7 +48,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.callFn = null;//点击回调
             this.dbclick_callFn=null;//双击回调
             if(!isNullOrUndefine(stateClass))
-                dicClass=stateClass;
+                dicClass=_.cloneDeep(stateClass);
         }
     //链式方法
     stateBlock.prototype = {
@@ -153,7 +160,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         _this.leftBlock.update(null, null, width);
                     }
                 } else { //如果没有就创建  不定状态
-                    if (_this.blockData.className != dicClass['不定']) {
+                    if (_this.blockData.className != dicClass.CLASS_INDEFINITE_STATE.class) {
                         var data = {
                             height: BAR_HEIGHT,
                             time: _this.block_xScale.invert(0),
@@ -161,7 +168,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                             label: '不定',
                             width: x2
                         };
-                        var leftBlock = new stateBlock(_this.block_Line, _this.block_xScale);
+                        var leftBlock = new stateBlock(_this.block_Line, _this.block_xScale,dicClass);
                         leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
                         _this.leftBlock = leftBlock;
                     }
@@ -206,7 +213,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     label: '不定',
                     width: MaxX
                 };
-                var rightBlock = new stateBlock(_this.block_Line, _this.block_xScale);
+                var rightBlock = new stateBlock(_this.block_Line, _this.block_xScale,dicClass);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
                 _this.rightBlock = rightBlock;
             }
@@ -329,7 +336,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         newData.value = 0;
                     }
                     //新建中间一段
-                    var newBlock = new stateBlock(this.block_Line, this.block_xScale);
+                    var newBlock = new stateBlock(this.block_Line, this.block_xScale,dicClass);
                     newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
                     //新建相同的一段
                     var data = {
@@ -340,7 +347,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         width: averageWidth,
                         x: x3
                     }
-                    var sameBlock = new stateBlock(this.block_Line, this.block_xScale);
+                    var sameBlock = new stateBlock(this.block_Line, this.block_xScale,dicClass);
                     sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
 
                     if (rightBlock != null)
