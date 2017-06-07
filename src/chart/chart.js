@@ -318,10 +318,12 @@
                             sameValue=point.value;
                             newPoints.push(point);
                         }
-                        if(point.value!=sameValue)
+                        if(point.value!=sameValue){
+                            sameValue=point.value;
                             newPoints.push(point);
+                        }
                     })
-                    data.oldPoint=_.cloneDeep(data.points);
+                    //data.oldPoint=_.cloneDeep(data.points);
                     data.points=newPoints;
                 }
             })

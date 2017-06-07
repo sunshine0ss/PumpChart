@@ -47,18 +47,21 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.block_Line=line;
         this.block_xScale=xScale;
 
+        this.line_data=null;
+
         this.callFn=null;
         if(!isNullOrUndefine(stateClass))
             dicClass=_.cloneDeep(stateClass);
     }
     //链式方法
     numericBlock.prototype = {
-        draw: function(data) {//在绘图区绘制出块
+        draw: function(data,line) {//在绘图区绘制出块
+            this.line_data=line;//赋值行的数据
             data.blockType=this.blockType;//设置当前类型
             data.maxValue=MAX_VALUE;//设置默认最大值
             if(data.value>MAX_VALUE){//判断是否超过最大限制
                 data.value=MAX_VALUE;
-                data.label=MAX_VALUE.toString();
+                data.label=MAX_VALUE.toString().trim();
             }
 
             var _this=this;
@@ -176,7 +179,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     }
                 }
                 else{//如果没有就创建  不定状态
-                    if(_this.blockData.className != CLASS_INDEFINITE_STATE){
+                    if(_this.blockData.className != dicClass.CLASS_INDEFINITE_STATE.class){
                         var data = {
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
@@ -239,19 +242,19 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
-            data.label=data.value.toString();
+            data.label=data.value.toString().trim();
             this.blockData=data;
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
-                if (this.blockData.label == this.rightBlock.blockData.label) { //状态一致，合并
+                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
                     this.addWidth(addWidth); //合并到当前块
                     this.rightBlock.remove(); //移除右侧
                 }
             }
             if (this.leftBlock != null) {
-                if (this.blockData.label == this.leftBlock.blockData.label) { //状态一致，合并
+                if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
                     this.remove(); //移除当前
@@ -333,7 +336,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 }
                 //新建中间一段
                 var newBlock=new numericBlock(this.block_Line,this.block_xScale,dicClass);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData,this.line_data).drawText(newData).click_Event(this.callFn).setLeft(this);
+                if(this.line_data!=null){
+                    this.line_data.points.push(newData);
+                }//添加到数据集合中
 
                 //新建相同的一段
                 var data={
@@ -345,11 +351,21 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     x:x3
                 }
                 var sameBlock=new numericBlock(this.block_Line,this.block_xScale,dicClass);
-                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                sameBlock.draw(data,this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
+                this.line_data.points.push(data);//添加到数据集合中
 
                 newBlock.setRight(sameBlock);//设置中间一块的右侧
                 this.setRight(newBlock);
+
+
+                if(this.line_data.points.length>1){
+                    // Sort all values by time
+                    var sorted_values = this.line_data.points.sort(function(a, b) {
+                        return a.time - b.time;
+                    });
+                    this.line_data.points=sorted_values;
+                }
             }
             return this;
         }//插入新的块到当前块的中间

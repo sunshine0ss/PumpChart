@@ -416,7 +416,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                 val = parseInt(val);
                                 data.value = val;
                                 if (val > 0) {
-                                    data.label = val;
+                                    data.label = val.toString().trim();
                                 } else if (val == 0)
                                     data.label = _this.dicState.CLASS_CLOSE_STATE.text;
                                 else if (val < 0)

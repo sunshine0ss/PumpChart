@@ -58,13 +58,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.block_ColorGrade=colorGrade;
         this.block_ValueGrade=valueGrade;
 
+        this.line_data=null;
+
         this.callFn=null;
         if(!isNullOrUndefine(stateClass))
             dicClass=_.cloneDeep(stateClass);
     }
     //链式方法
     gradientBlock.prototype = {
-        draw: function(data) {//在绘图区绘制出块
+        draw: function(data,line) {//在绘图区绘制出块
+            this.line_data=line;//赋值行的数据
             data.blockType=this.blockType;
             var _this=this;
             this.block=this.block_Line
@@ -268,11 +271,11 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             var _this=this;
             if (data.value < data.minValue) {//最小限制
                 data.value = data.minValue;
-                data.label=data.value.toString();
+                data.label=data.value.toString().trim();
             }
             if (data.value > data.maxValue){ //最大限制
                 data.value = data.maxValue;
-                data.label=data.value.toString();
+                data.label=data.value.toString().trim();
             }
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
@@ -287,14 +290,14 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
 
             //判断两边状态十分合并
             if (this.rightBlock != null) {
-                if (this.blockData.label == this.rightBlock.blockData.label) { //状态一致，合并
+                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
                     this.addWidth(addWidth); //合并到当前块
                     this.rightBlock.remove(); //移除右侧
                 }
             }
             if (this.leftBlock != null) {
-                if (this.blockData.label == this.leftBlock.blockData.label) { //状态一致，合并
+                if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
                     this.remove(); //移除当前
@@ -370,8 +373,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 }
                 //新建中间一段
                 var newBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-
+                newBlock.draw(newData,this.line_data).drawText(newData).click_Event(this.callFn).setLeft(this);
+                if(this.line_data!=null){
+                    this.line_data.points.push(newData);
+                }//添加到数据集合中
                 //新建相同的一段
                 var data={
                     height: BAR_HEIGHT,
@@ -382,11 +387,20 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     x:x3
                 }
                 var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                sameBlock.draw(data,this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
+                this.line_data.points.push(data);//添加到数据集合中
 
                 newBlock.setRight(sameBlock);//设置中间一块的右侧
                 this.setRight(newBlock);
+
+                if(this.line_data.points.length>1){
+                    // Sort all values by time
+                    var sorted_values = this.line_data.points.sort(function(a, b) {
+                        return a.time - b.time;
+                    });
+                    this.line_data.points=sorted_values;
+                }
             }
             return this;
         }//插入新的块到当前块的中间

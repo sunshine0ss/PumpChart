@@ -63,6 +63,8 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         this.line_yScale=yScale;
         this.line_describe=describe;
 
+        this.line_data=null;
+
         this.valueGrade=[];//值域
 
     }
@@ -71,6 +73,8 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
     pumpLine.prototype = {
         drawLine:function(line,stateClass){
             var _this=this;
+            this.line_data=line;
+            //计算top
             var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
                     this.line_describe.barCount * 0.2;
             this.g = this.line_svg.append('g')
@@ -99,7 +103,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 _.each(line.points,function(data){
                     var block=null;
                     block=new type(_this.g,_this.line_xScale,stateClass,ColorGrade,_this.valueGrade);
-                    block.draw(data).drawText();//绘制快
+                    block.draw(data,_this.line_data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)
                         block.setMinValue(minValue);
