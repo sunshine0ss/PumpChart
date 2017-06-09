@@ -153,7 +153,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: '不定',
+                            label: dicClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
                         var leftBlock=new undefineBlock(_this.block_Line,_this.block_xScale);
@@ -200,7 +200,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label: dicClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
                 var rightBlock=new undefineBlock(_this.block_Line,_this.block_xScale);
@@ -243,15 +243,15 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.block.on("dblclick", function(d, i, rects) {
                 if(d.value==0){//关--->开
                     d.value=1;
-                    d.label='开';
+                    d.label=dicClass.CLASS_OPEN_STATE.text;
                 }
                 else if(d.value==1){//开--->关
                     d.value=0;
-                    d.label='关';
+                    d.label=dicClass.CLASS_CLOSE_STATE.text;
                 }
-                else if(d.value==undefined){//故障--->开
+                else if(isNullOrUndefine(d.value)){//故障--->开
                     d.value=1;
-                    d.label='开';
+                    d.label=dicClass.CLASS_OPEN_STATE.text;
                 }
                 _this.updateState(d);//修改当前状态
                 //判断两边状态十分合并
@@ -287,9 +287,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     //判断是否同一状态，是:合并
                     if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
                         var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
-                        var width=x2-x1;//计算宽度
-                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                        if(x2<curx2){//判断是否修改左侧宽度
+                            var width = curx2 - x1; //计算宽度
+                            this.leftBlock.update(x1, null, width); //合并到前一块
+                        }
                         this.rightBlock.remove();//删除后一条
                     }
             }
@@ -312,7 +315,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: 1,
-                    label:'开',
+                    label:dicClass.CLASS_OPEN_STATE.text,
                     width:averageWidth,
                     x:x2
                 }

@@ -184,7 +184,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: '不定',
+                            label: dicClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
                         var leftBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
@@ -224,7 +224,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label: dicClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
                 var rightBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
@@ -242,7 +242,6 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
-            data.label=data.value.toString().trim();
             this.blockData=data;
 
             //判断两边状态十分合并
@@ -300,9 +299,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     //判断是否同一状态，是:合并
                     if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
                         var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
-                        var width=x2-x1;//计算宽度
-                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                        if(x2<curx2){//判断是否修改左侧宽度
+                            var width = curx2 - x1; //计算宽度
+                            this.leftBlock.update(x1, null, width); //合并到前一块
+                        }
                         this.rightBlock.remove();//删除后一条
                     }
             }
@@ -311,7 +313,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 this.blockText.remove();
         },//删除当前块，并合并相同状态的邻近块
         insertCentre:function(){
-            if(this.blockData.className!=dicClass.CLASS_OPEN_STATE.class){//故障不能新增
+            if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
@@ -331,7 +333,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     x:x2
                 }
                 if(this.blockData.className==dicClass.CLASS_OPEN_STATE.class){//如果当前是开的就新建关
-                    newData.label='关';
+                    newData.label=dicClass.CLASS_CLOSE_STATE.text;
                     newData.value=0;
                 }
                 //新建中间一段

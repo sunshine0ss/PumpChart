@@ -218,7 +218,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: '不定',
+                            label: dicClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
                         var leftBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
@@ -258,7 +258,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label: dicClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
                 var rightBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
@@ -271,11 +271,9 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             var _this=this;
             if (data.value < data.minValue) {//最小限制
                 data.value = data.minValue;
-                data.label=data.value.toString().trim();
             }
             if (data.value > data.maxValue){ //最大限制
                 data.value = data.maxValue;
-                data.label=data.value.toString().trim();
             }
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
@@ -341,9 +339,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     //判断是否同一状态，是:合并
                     if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
                         var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
-                        var width=x2-x1;//计算宽度
-                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                        if(x2<curx2){//判断是否修改左侧宽度
+                            var width = curx2 - x1; //计算宽度
+                            this.leftBlock.update(x1, null, width); //合并到前一块
+                        }
                         this.rightBlock.remove();//删除后一条
                     }
             }
@@ -363,11 +364,11 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
 
                 //先修改当前的块的宽度，再插入两块新的
                 this.updateWidth(averageWidth);
-                var newData={//默认新建“开”的状态
+                var newData={//默认新建“不定”的状态
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: undefined,
-                    label:'不定',
+                    label:dicClass.CLASS_INDEFINITE_STATE.text,
                     width:averageWidth,
                     x:x2
                 }

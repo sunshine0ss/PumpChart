@@ -138,7 +138,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
         }, //绘制坐标轴
         drawChart: function(timelines,stateClass) {
             var _this = this;
-            this.dicState=stateClass;
+            if(stateClass)
+                this.dicState=stateClass;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
@@ -263,14 +264,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                 if(_this.chartLegend!=null){
                     /*故障 状态不能新增*/
-                    if (label == _this.dicState.CLASS_FAULT_STATE.text)
+                    if (label == _this.dicState.CLASS_FAULT_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
-                    else
-                        _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
-
-
+                        _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                    }
                     /*不定 状态不能删除*/
-                    if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
+                    else if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
                         _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
                     }

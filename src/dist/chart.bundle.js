@@ -341,7 +341,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //绘制坐标轴
         drawChart: function(timelines,stateClass) {
             var _this = this;
-            this.dicState=stateClass;
+            if(stateClass)
+                this.dicState=stateClass;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
@@ -466,14 +467,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 if(_this.chartLegend!=null){
                     /*故障 状态不能新增*/
-                    if (label == _this.dicState.CLASS_FAULT_STATE.text)
+                    if (label == _this.dicState.CLASS_FAULT_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
-                    else
-                        _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
-
-
+                        _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
+                    }
                     /*不定 状态不能删除*/
-                    if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
+                    else if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
                         _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
                         _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
                     }
@@ -1759,7 +1758,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: '不定',
+                            label: dicClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
                         var leftBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
@@ -1799,7 +1798,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label: dicClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
                 var rightBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
@@ -1812,11 +1811,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var _this=this;
             if (data.value < data.minValue) {//最小限制
                 data.value = data.minValue;
-                data.label=data.value.toString().trim();
             }
             if (data.value > data.maxValue){ //最大限制
                 data.value = data.maxValue;
-                data.label=data.value.toString().trim();
             }
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
@@ -1882,9 +1879,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     //判断是否同一状态，是:合并
                     if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
                         var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
-                        var width=x2-x1;//计算宽度
-                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                        if(x2<curx2){//判断是否修改左侧宽度
+                            var width = curx2 - x1; //计算宽度
+                            this.leftBlock.update(x1, null, width); //合并到前一块
+                        }
                         this.rightBlock.remove();//删除后一条
                     }
             }
@@ -1904,11 +1904,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 //先修改当前的块的宽度，再插入两块新的
                 this.updateWidth(averageWidth);
-                var newData={//默认新建“开”的状态
+                var newData={//默认新建“不定”的状态
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: undefined,
-                    label:'不定',
+                    label:dicClass.CLASS_INDEFINITE_STATE.text,
                     width:averageWidth,
                     x:x2
                 }
@@ -2142,7 +2142,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: '不定',
+                            label: dicClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
                         var leftBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
@@ -2182,7 +2182,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label: dicClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
                 var rightBlock=new numericBlock(_this.block_Line,_this.block_xScale,dicClass);
@@ -2200,7 +2200,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block.attr('class', function(d, i) {
                 return formatClass(d);
             })
-            data.label=data.value.toString().trim();
             this.blockData=data;
 
             //判断两边状态十分合并
@@ -2258,9 +2257,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     //判断是否同一状态，是:合并
                     if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
                         var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.rightBlock.block.attr('x'))+parseFloat(this.rightBlock.block.attr('width'));//计算结束坐标
-                        var width=x2-x1;//计算宽度
-                        this.leftBlock.update(x1,null,width);//合并到前一块
+                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                        if(x2<curx2){//判断是否修改左侧宽度
+                            var width = curx2 - x1; //计算宽度
+                            this.leftBlock.update(x1, null, width); //合并到前一块
+                        }
                         this.rightBlock.remove();//删除后一条
                     }
             }
@@ -2269,7 +2271,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.remove();
         },//删除当前块，并合并相同状态的邻近块
         insertCentre:function(){
-            if(this.blockData.className!=dicClass.CLASS_OPEN_STATE.class){//故障不能新增
+            if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
@@ -2289,7 +2291,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     x:x2
                 }
                 if(this.blockData.className==dicClass.CLASS_OPEN_STATE.class){//如果当前是开的就新建关
-                    newData.label='关';
+                    newData.label=dicClass.CLASS_CLOSE_STATE.text;
                     newData.value=0;
                 }
                 //新建中间一段
@@ -2614,13 +2616,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.block.on("dblclick", function(d, i, rects) {
                     if (d.value == 0) { //关--->开
                         d.value = 1;
-                        d.label = '开';
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
                     } else if (d.value == 1) { //开--->关
                         d.value = 0;
-                        d.label = '关';
-                    } else if (d.value == undefined) { //不定--->开
+                        d.label = dicClass.CLASS_CLOSE_STATE.text;
+                    } else if (isNullOrUndefine(d.value)) { //不定--->开
                         d.value = 1;
-                        d.label = '开';
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
                     }
                     _this.updateState(d); //修改当前状态
                    
@@ -2644,9 +2646,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 //判断是否同一状态，是:合并
                 if (this.leftBlock.blockData.label.trim() == this.rightBlock.blockData.label.trim()) {
                     var x1 = parseFloat(this.leftBlock.block.attr('x')); //获取开始坐标
-                    var x2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
-                    var width = x2 - x1; //计算宽度
-                    this.leftBlock.update(x1, null, width); //合并到前一块
+                    var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                    var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                    if(x2<curx2){//判断是否修改左侧宽度
+                        var width = curx2 - x1; //计算宽度
+                        this.leftBlock.update(x1, null, width); //合并到前一块
+                    }
                     this.rightBlock.remove(); //删除后一条
                 }
             }
@@ -2670,12 +2675,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         height: BAR_HEIGHT,
                         time: this.block_xScale.invert(x2),
                         value: 1,
-                        label: '开',
+                        label: dicClass.CLASS_OPEN_STATE.text,
                         width: averageWidth,
                         x: x2
                     }
                     if (this.blockData.className == dicClass.CLASS_OPEN_STATE.class) { //如果当前是开的就新建关
-                        newData.label = '关';
+                        newData.label = dicClass.CLASS_CLOSE_STATE.text;
                         newData.value = 0;
                     }
                     //新建中间一段
