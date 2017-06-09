@@ -2555,7 +2555,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     height: BAR_HEIGHT,
                     time: _this.block_xScale.invert(x1),
                     value: null,
-                    label: '不定',
+                    label:dicClass.CLASS_INDEFINITE_STATE.text,
                     width: MaxX
                 };
                 var rightBlock = new stateBlock(_this.block_Line, _this.block_xScale,dicClass);
