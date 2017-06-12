@@ -1608,6 +1608,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     gradientBlock.prototype = {
         draw: function(data,line) {//在绘图区绘制出块
             this.line_data=line;//赋值行的数据
+            if(!isNullOrUndefine(data.value))
+                data.label=data.value.toString().trim();
             data.blockType=this.blockType;
             var _this=this;
             this.block=this.block_Line
@@ -1638,7 +1640,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return BAR_HEIGHT;
                 })
                 .attr('data-toggle', 'popover')//增加弹出属性
-            if(data.value){
+            if(!isNullOrUndefine(data.value)){
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
                     $(this.block.node()).css('fill',data.colorGrade);
@@ -1648,7 +1650,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.blockData=data;
             return this;
         },//绘制块
-        getColorByValue(value) {
+        getColorByValue:function(value) {
             var _this=this;
             //渐变填充色
             for (var i = 0; i < _this.block_ValueGrade.length; i++) {
@@ -1818,11 +1820,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block.attr('class', function(d, i) {//.datum(data)
                 return formatClass(d);
             })
-            if(data.value){
+            if(!isNullOrUndefine(data.value)){//修改填充颜色
+                data.label=data.value.toString().trim();
+                
                 data.colorGrade=this.getColorByValue(data.value);
                 if(data.colorGrade!=undefined){
                     $(_this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
+            }
+            else{//清除填充颜色
+                $(_this.block.node()).css('fill','');
             }
             _this.blockData=data;
 
@@ -2868,7 +2875,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             this.valueGrade=values;
         },
-        getColorByValue(value) {
+        getColorByValue:function(value) {
             var _this=this;
             //渐变填充色
             for (var i = 0; i < _this.valueGrade.length; i++) {

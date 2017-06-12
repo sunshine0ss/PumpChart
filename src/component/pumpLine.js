@@ -133,7 +133,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             }
             this.valueGrade=values;
         },
-        getColorByValue(value) {
+        getColorByValue:function(value) {
             var _this=this;
             //渐变填充色
             for (var i = 0; i < _this.valueGrade.length; i++) {
