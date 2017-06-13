@@ -239,6 +239,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
+                    
+                    if(this.line_data!=null){
+                        _.remove(this.line_data.points,this.blockData);
+                    }//从数据集合删除
                     this.remove(); //移除当前
                 }
             }
@@ -292,6 +296,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             return this;
         }, //鼠标双击事件，更改状态
         remove: function() {
+            if(this.line_data!=null){
+                _.remove(this.line_data.points,this.blockData);
+            }//从数据集合删除
             this.block.remove(); //移除当前块
             this.block = null;
             this.blockData = null;

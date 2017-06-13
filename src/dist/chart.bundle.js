@@ -458,11 +458,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
 
             var select = function(i, rects, block) {
-                _this.curBlock = block;
                 _this.removeHandles(); //清除手柄
 
                 _this.hideHoverLine(); //隐藏提示线
                 _this.isEditing = true; //选中：编辑状态
+                _this.curBlock = block;
                 var label = _this.curBlock.blockData.label;
 
                 if(_this.chartLegend!=null){
@@ -554,6 +554,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.endHandle.removeHandle();
             this.startHandle = null;
             this.endHandle = null;
+
+            this.curBlock =null;
         }, //清除手柄
         bind_dbclick: function() {
             this.hasDBclick = true;
@@ -576,11 +578,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (val == null || val == undefined)
                     val = '';
                 if (data.blockType == 'state') {
-                    html = '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                    html = '<button class="popoverBtn green openBtn" >开</button><button class="popoverBtn red closeBtn" >关</button>';
                 } else if (data.blockType == 'numeric') {
-                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                    html = '<input type="number" class="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button  class="popoverBtn red closeBtn" >关</button>';
                 } else if (data.blockType == 'gradient') {
-                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                    html = '<input type="number" class="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
                 }
                 return html;
             }
@@ -602,7 +604,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         var ele = this;
                         var data = ele.__data__;
                         $(ele).popover("show"); //显示弹出框
-                        $('#pumpvalue').val(data.value); //更新弹出框的input的值
+
+                        var popId=$(ele).attr('aria-describedby');
+
+                        var inputEle=$('.pumpvalue').last();
+                        inputEle.val(data.value); //更新弹出框的input的值
 
                         $(ele).siblings("[data-toggle]").on("mouseleave", function() {
                             $(ele).popover('hide');
@@ -627,8 +633,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             //修改值或状态
                             _this.curBlock.updateState(data);
                         }
-                            /*  输入框值改变事件  */
-                        $('#pumpvalue').on('change', function() {
+                        /*  输入框值改变事件  */
+                        $('#'+popId+' .pumpvalue').on('change', function() {
                                 if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
@@ -644,7 +650,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 }
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
-                        $('#closeBtn').on('click', function() {
+                        $('#'+popId+' .closeBtn').on('click', function() {
                             if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 0;
                                 data.label = _this.dicState.CLASS_CLOSE_STATE.text;
@@ -655,7 +661,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             }
                         })
                         /*  打开按钮点击事件  */
-                        $('#openBtn').on('click', function() {
+                        $('#'+popId+' .openBtn').on('click', function() {
                             if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 1;
                                 data.label = _this.dicState.CLASS_OPEN_STATE.text;
@@ -1874,6 +1880,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         },//鼠标双击事件，更改状态
         remove:function(){
+            if(this.line_data!=null){
+                _.remove(this.line_data.points,this.blockData);
+            }//从数据集合删除
             this.block.remove();//移除当前块
             this.block=null;
             this.blockData=null;
@@ -2251,7 +2260,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             return this;
         },//鼠标双击事件，更改状态
-        remove:function(){
+        remove:function(){            
+            if(this.line_data!=null){
+                _.remove(this.line_data.points,this.blockData);
+            }//从数据集合删除
             this.block.remove();//移除当前块
             this.block=null;
             this.blockData=null;
@@ -2588,6 +2600,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
+                    
+                    if(this.line_data!=null){
+                        _.remove(this.line_data.points,this.blockData);
+                    }//从数据集合删除
                     this.remove(); //移除当前
                 }
             }
@@ -2641,6 +2657,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         }, //鼠标双击事件，更改状态
         remove: function() {
+            if(this.line_data!=null){
+                _.remove(this.line_data.points,this.blockData);
+            }//从数据集合删除
             this.block.remove(); //移除当前块
             this.block = null;
             this.blockData = null;

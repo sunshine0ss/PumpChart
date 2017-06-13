@@ -255,11 +255,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             }
 
             var select = function(i, rects, block) {
-                _this.curBlock = block;
                 _this.removeHandles(); //清除手柄
 
                 _this.hideHoverLine(); //隐藏提示线
                 _this.isEditing = true; //选中：编辑状态
+                _this.curBlock = block;
                 var label = _this.curBlock.blockData.label;
 
                 if(_this.chartLegend!=null){
@@ -351,6 +351,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 this.endHandle.removeHandle();
             this.startHandle = null;
             this.endHandle = null;
+
+            this.curBlock =null;
         }, //清除手柄
         bind_dbclick: function() {
             this.hasDBclick = true;
@@ -373,11 +375,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 if (val == null || val == undefined)
                     val = '';
                 if (data.blockType == 'state') {
-                    html = '<button id="openBtn" class="popoverBtn green" >开</button><button id="closeBtn" class="popoverBtn red" >关</button>';
+                    html = '<button class="popoverBtn green openBtn" >开</button><button class="popoverBtn red closeBtn" >关</button>';
                 } else if (data.blockType == 'numeric') {
-                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button id="closeBtn" class="popoverBtn red" >关</button>';
+                    html = '<input type="number" class="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '><button  class="popoverBtn red closeBtn" >关</button>';
                 } else if (data.blockType == 'gradient') {
-                    html = '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
+                    html = '<input type="number" class="pumpvalue" name="pumpvalue" style="width: 50px" value=' + val + ' max=' + data.maxValue + '>';
                 }
                 return html;
             }
@@ -399,7 +401,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         var ele = this;
                         var data = ele.__data__;
                         $(ele).popover("show"); //显示弹出框
-                        $('#pumpvalue').val(data.value); //更新弹出框的input的值
+
+                        var popId=$(ele).attr('aria-describedby');
+
+                        var inputEle=$('.pumpvalue').last();
+                        inputEle.val(data.value); //更新弹出框的input的值
 
                         $(ele).siblings("[data-toggle]").on("mouseleave", function() {
                             $(ele).popover('hide');
@@ -424,8 +430,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             //修改值或状态
                             _this.curBlock.updateState(data);
                         }
-                            /*  输入框值改变事件  */
-                        $('#pumpvalue').on('change', function() {
+                        /*  输入框值改变事件  */
+                        $('#'+popId+' .pumpvalue').on('change', function() {
                                 if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                     changeData(this.value); //更新当前块
                                     $(this).val(data.value);//this.value =data.value;
@@ -441,7 +447,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                 }
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
-                        $('#closeBtn').on('click', function() {
+                        $('#'+popId+' .closeBtn').on('click', function() {
                             if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 0;
                                 data.label = _this.dicState.CLASS_CLOSE_STATE.text;
@@ -452,7 +458,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }
                         })
                         /*  打开按钮点击事件  */
-                        $('#openBtn').on('click', function() {
+                        $('#'+popId+' .openBtn').on('click', function() {
                             if(_this.curBlock!=null&&_this.curBlock.block!=null){
                                 data.value = 1;
                                 data.label = _this.dicState.CLASS_OPEN_STATE.text;

@@ -286,7 +286,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             }
             return this;
         },//鼠标双击事件，更改状态
-        remove:function(){
+        remove:function(){            
+            if(this.line_data!=null){
+                _.remove(this.line_data.points,this.blockData);
+            }//从数据集合删除
             this.block.remove();//移除当前块
             this.block=null;
             this.blockData=null;
