@@ -165,7 +165,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     this.pumpText.attr('x', x+ PADDING);
                 }
                 if(!isNullOrUndefine(y)){
-                    this.pumpText.attr('y', y);
+                    this.pumpText.attr('y', y+TEXT_HEIGHT);
                 }
                 if(!isNullOrUndefine(width)){
                     this.pumpText.attr('width', width);
@@ -248,6 +248,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             this.hasChecked = false; //是否有选中
             this.hasDBclick = false; //是否有双击事件
+            this.hasDrag = false;
             this.hasPopover = false; //是否有弹出事件
 
             this.isEditing = false; //是否编辑中
@@ -502,14 +503,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 //计算手柄的位置
                 var x = parseFloat(curRect.attr('x'));
-                var y = parseFloat(curRect.attr('y')) - 5; //突出handle长度，比当前块高5个像素
+                var y = parseFloat(curRect.attr('y')); 
 
 
                 var minX = x;
                 if (!(x == 0 && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加开始手柄
                     _this.startHandle = new handle(d3g, _this.xScale);
-                    _this.startHandle.drawHandle(x, y).drawHandleText(x, -2).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
+                    _this.startHandle.drawHandle(x, y).drawHandleText(x, y).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
                 }
                 var width = parseFloat(curRect.attr('width')) //curRect.width();//获取当前块的宽度
 
@@ -519,7 +520,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (!(x2 == _this.gWIDTH && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加结束手柄
                     _this.endHandle = new handle(d3g, _this.xScale, 'end'); //时间的文本要在编辑区域内
-                    _this.endHandle.drawHandle(endX, y).drawHandleText(endX, -2).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
+                    _this.endHandle.drawHandle(endX, y).drawHandleText(endX, y).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
                 }
                 //设置手柄的可移动范围
                 if (_this.startHandle != null)
@@ -538,10 +539,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             } else {
                 var curWidth = parseFloat(this.curBlock.block.attr('width'));
                 var curX = parseFloat(this.curBlock.block.attr('x'));
+                var curY=parseFloat(this.curBlock.block.attr('y'));
                 var endHandleX = curWidth + curX;
                 //修改手柄位置
+                if (this.startHandle != null)
+                    this.startHandle.updatePos(curX,curY);
                 if (this.endHandle != null)
-                    this.endHandle.updatePos(endHandleX);
+                    this.endHandle.updatePos(endHandleX,curY);
             }
         }, //更新手柄
         removeHandles: function() {
@@ -568,6 +572,30 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             })
             return this;
         }, //鼠标双击，更改状态
+        bind_drag:function(){
+            this.hasDrag = true;
+            var _this = this;
+            var drag = function(x,y) {
+                if(_this.hoverLine.isShow){
+                    _this.hideHoverLine(); //隐藏提示线
+                    _this.isEditing = true; //选中：编辑状态
+                }
+                if(_this.curBlock!=null)
+                    _this.updateHandles();
+            } //拖动中回调
+
+            var dragEnd = function(x,y) {
+                 _.each(this.lines, function(line) {
+                    if(line.inBox(x,y)){
+
+                    }
+                })
+            } //拖动结束回调
+            _.each(this.lines, function(line) {
+                line.drag_Event(drag,dragEnd); //绑定事件
+            })
+            return this;
+        },//拖拽事件
         bind_popover: function() {
             this.hasPopover = true;
             var _this = this;
@@ -817,7 +845,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         showCurrent: true,
         showHover:true,
         showLegend:false,
-        edit: false
+        edit: false,
+        drag:false
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -1086,6 +1115,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
                 this.area.bind_check().bind_dbclick().bind_popover();
+            if(this.option.drag)//是否可拖拽
+                this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
         },
         drawLegend:function(){
@@ -1108,6 +1139,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.area.bind_dbclick();
             return this;
         },
+        bind_drag:function(){
+            this.area.bind_drag();
+            return this;
+        },//拖拽事件
         bind_popover:function(){
             this.area.bind_popover();
             return this;
@@ -1313,6 +1348,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
     var HANDLE_WIDTH = 4;//手柄宽度
     var HANDLE_HEIGHT = 30;//手柄高度
+    var HANDLE_PADDING=-5;
+    var TEXT_PADDING=-2;
    // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
@@ -1344,11 +1381,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.handle = this.d3g.append('rect')
                 .attr('class', className||'edit_rect')
                 .attr('x', x)
-                .attr('y', y)
+                .attr('y', y+HANDLE_PADDING)//突出handle长度，比当前块高5个像素
                 .attr('width', HANDLE_WIDTH)
                 .attr('height', HANDLE_HEIGHT);
             this.pos[0]=x;
-            this.pos[1]=y;
+            this.pos[1]=y+HANDLE_PADDING;
             return this; //在每个方法的最后return this;
         },
         drawHandleText: function(x,y) {
@@ -1362,7 +1399,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var hText=moment(this.handle_xScale.invert(textTimeX)).format('HH:mm');
             //add the handle text
             this.handleText =new text(this.d3g);
-            this.handleText.drawText(hText,'edit_text',textX,y);
+            this.handleText.drawText(hText,'edit_text',textX,y+TEXT_PADDING);
             return this; //在每个方法的最后return this;
         },
         drag_Event: function(dragStart,dragged,dragEnd) {
@@ -1389,20 +1426,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     dragged.call(null,x);//传参数回调
                 
                 _this.updatePos(x);
-                // //修改手柄位置
-                // _this.handle.attr('x', x);
-                // _this.pos[0]=x;
-
-                // //更新手柄提示
-                // var textTimeX=x;
-                // var textX=x+HANDLE_WIDTH;
-                // if(_this.type==END_EDIT){
-                //     textX=x-_this.distance-HANDLE_WIDTH;//结束手柄的提示位置在手柄之前
-                //     textTimeX+=HANDLE_WIDTH;//时间显示为手柄结束位置的时间
-                // }
-                // var htext=moment(_this.handle_xScale.invert(textTimeX)).format('HH:mm');
-
-                // _this.handleText.update(htext,textX);//修改手柄提示的坐标
             };
             //After the drag
             var handleDragEnd=function(){
@@ -1437,16 +1460,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.pos[0]=x;
                 //修改手柄位置
                 this.handle.attr('x', x);
+                var textY=null;
+                if(y!=undefined){
+
+                    this.pos[1]=y;
+                    this.handle.attr('y', y+HANDLE_PADDING);
+                    textY=y+TEXT_PADDING;
+                }
                 var htext=moment(this.handle_xScale.invert(textTimeX)).format('HH:mm');//显示时间
-                this.handleText.update(htext,textX);//修改手柄提示的坐标
-
+                this.handleText.update(htext,textX,textY);//修改手柄提示的坐标
             }
-            if(y!=undefined){
-                this.handle.attr('y', y);
-            }
-        },
-        updateTextPos:function(){
-
         },
         removeHandle:function(){
             this.handle.remove();
@@ -1859,26 +1882,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.updateText(data);
             }
         },//修改当前快的状态
-        click_Event:function(fn){//点击事件
-            if(typeof fn=='function'){
-                this.callFn=fn;
-                var _this=this;
-                if(this.block!=null){
-                    this.block.on("click", function(d, i, rects) {
-                        fn.call(d, i, rects,_this);
-                    })
-                }
-            }
-            return this;
-        },//鼠标单击事件
-        dbclick_Event:function(fn){//点击事件
-            var _this=this;
-            this.block.on("dblclick", function(d, i, rects) {
-                if(typeof fn=='function')
-                    fn.call(d, i, rects);
-            })
-            return this;
-        },//鼠标双击事件，更改状态
         remove:function(){
             if(this.line_data!=null){
                 _.remove(this.line_data.points,this.blockData);
@@ -1960,7 +1963,53 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
             }
             return this;
-        }//插入新的块到当前块的中间
+        },//插入新的块到当前块的中间
+        click_Event:function(fn){//点击事件
+            if(typeof fn=='function'){
+                this.callFn=fn;
+                var _this=this;
+                if(this.block!=null){
+                    this.block.on("click", function(d, i, rects) {
+                        fn.call(d, i, rects,_this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标单击事件
+        dbclick_Event:function(fn){//点击事件
+            var _this=this;
+            this.block.on("dblclick", function(d, i, rects) {
+                if(typeof fn=='function')
+                    fn.call(d, i, rects);
+            })
+            return this;
+        },//鼠标双击事件，更改状态
+        drag_Event: function(fn) { 
+            var _this=this;
+            //定义拖拽行为
+            function dragmove(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                d3.select(this)
+                    .attr("x", function() {
+                        return d.x = newX;
+                    })
+                    .attr("y", function() {
+                        return d.y = newY
+                    });
+                //修改文字位置
+                _this.blockText.update(newX,newY);
+
+                if (typeof fn == 'function'){ //回调函数
+                    fn.call(newX,newY);
+                }
+            }
+
+            var drag = d3.drag()
+                .on("drag", dragmove);
+            this.block.call(drag);
+            return this;
+        } //鼠标拖拽事件
     }
 
     //// Exports gradientBlock Component ////
@@ -2238,28 +2287,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.updateText(data);
             }
         },//修改当前快的状态
-        click_Event:function(fn){//点击事件
-            if(typeof fn=='function'){
-                this.callFn=fn;
-                var _this=this;
-                if(this.block!=null){
-                    this.block.on("click", function(d, i, rects) {
-                        fn.call(d, i, rects,_this);
-                    })
-                }
-            }
-            return this;
-        },//鼠标单击事件
-        dbclick_Event:function(fn){//点击事件
-            var _this=this;
-            if(this.block!=null){
-                this.block.on("dblclick", function(d, i, rects) {
-                    if(typeof fn=='function')
-                        fn.call(d, i, rects);
-                })
-            }
-            return this;
-        },//鼠标双击事件，更改状态
         remove:function(){            
             if(this.line_data!=null){
                 _.remove(this.line_data.points,this.blockData);
@@ -2347,7 +2374,55 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
             }
             return this;
-        }//插入新的块到当前块的中间
+        },//插入新的块到当前块的中间
+        click_Event:function(fn){//点击事件
+            if(typeof fn=='function'){
+                this.callFn=fn;
+                var _this=this;
+                if(this.block!=null){
+                    this.block.on("click", function(d, i, rects) {
+                        fn.call(d, i, rects,_this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标单击事件
+        dbclick_Event:function(fn){//点击事件
+            var _this=this;
+            if(this.block!=null){
+                this.block.on("dblclick", function(d, i, rects) {
+                    if(typeof fn=='function')
+                        fn.call(d, i, rects);
+                })
+            }
+            return this;
+        },//鼠标双击事件，更改状态
+        drag_Event: function(fn) {
+            var _this=this;
+            //定义拖拽行为
+            function dragmove(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                d3.select(this)
+                    .attr("x", function() {
+                        return d.x = newX;
+                    })
+                    .attr("y", function() {
+                        return d.y = newY
+                    });
+                //修改文字位置
+                _this.blockText.update(newX,newY);
+
+                if (typeof fn == 'function'){ //回调函数
+                    fn.call(newX,newY);
+                }
+            }
+
+            var drag = d3.drag()
+                .on("drag", dragmove);
+            this.block.call(drag);
+            return this;
+        } //鼠标拖拽事件
     }
 
     //// Exports numericBlock Component ////
@@ -2445,7 +2520,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 .attr('height', function(d, i) {
                     d.height = BAR_HEIGHT;
                     return BAR_HEIGHT;
-                })
+                });
 
             if (data.value == undefined) { //不定状态加弹框
                 this.block.attr('data-toggle', 'popover')
@@ -2611,51 +2686,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockText.updateText(data);
             }
         }, //修改当前快的状态
-        click_Event: function(fn) { //点击事件
-            if (typeof fn == 'function') {
-                this.callFn = fn;
-                var _this = this;
-                if (this.block != null) {
-                    this.block.on("click", function(d, i, rects) {
-
-                        // rects.popover({   
-                        //     trigger:'click',//manual 触发方式  
-                        //     placement : 'top',    
-                        //     html: 'true',   
-                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
-                        //     animation: false  
-                        // }) 
-
-                        fn.call(d, i, rects, _this);
-                    })
-                }
-            }
-            return this;
-        }, //鼠标单击事件
-        dbclick_Event: function(fn) { //点击事件
-            var _this = this;
-            _this.dbclick_callFn = fn;
-            if(this.block!=null){
-                this.block.on("dblclick", function(d, i, rects) {
-                    if (d.value == 0) { //关--->开
-                        d.value = 1;
-                        d.label = dicClass.CLASS_OPEN_STATE.text;
-                    } else if (d.value == 1) { //开--->关
-                        d.value = 0;
-                        d.label = dicClass.CLASS_CLOSE_STATE.text;
-                    } else if (isNullOrUndefine(d.value)) { //不定--->开
-                        d.value = 1;
-                        d.label = dicClass.CLASS_OPEN_STATE.text;
-                    }
-                    _this.updateState(d); //修改当前状态
-                   
-                    if (typeof fn == 'function'){ //回调函数
-                        fn.call(d, i, rects);
-                    }
-                })
-            }
-            return this;
-        }, //鼠标双击事件，更改状态
         remove: function() {
             if(this.line_data!=null){
                 _.remove(this.line_data.points,this.blockData);
@@ -2747,7 +2777,86 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                 }
                 return this;
-            } //插入新的块到当前块的中间
+        }, //插入新的块到当前块的中间
+        click_Event: function(fn) { //点击事件
+            if (typeof fn == 'function') {
+                this.callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("click", function(d, i, rects) {
+
+                        // rects.popover({   
+                        //     trigger:'click',//manual 触发方式  
+                        //     placement : 'top',    
+                        //     html: 'true',   
+                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
+                        //     animation: false  
+                        // }) 
+
+                        fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        }, //鼠标单击事件
+        dbclick_Event: function(fn) { //点击事件
+            var _this = this;
+            _this.dbclick_callFn = fn;
+            if(this.block!=null){
+                this.block.on("dblclick", function(d, i, rects) {
+                    if (d.value == 0) { //关--->开
+                        d.value = 1;
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
+                    } else if (d.value == 1) { //开--->关
+                        d.value = 0;
+                        d.label = dicClass.CLASS_CLOSE_STATE.text;
+                    } else if (isNullOrUndefine(d.value)) { //不定--->开
+                        d.value = 1;
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
+                    }
+                    _this.updateState(d); //修改当前状态
+                   
+                    if (typeof fn == 'function'){ //回调函数
+                        fn.call(d, i, rects);
+                    }
+                })
+            }
+            return this;
+        }, //鼠标双击事件，更改状态
+        drag_Event: function(dragFn,dragEndFn) {
+            var _this=this;
+            //定义拖拽行为
+            function dragmove(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                d3.select(this)
+                    .attr("x", function() {
+                        return d.x = newX;
+                    })
+                    .attr("y", function() {
+                        return d.y = newY
+                    });
+                //修改文字位置
+                _this.blockText.update(newX,newY);
+
+                if (typeof dragFn == 'function'){ //回调函数
+                    dragFn.call(newX,newY);
+                }
+            }
+            //定义拖拽结束行为
+            function dragEnd(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                if (typeof dragEndFn == 'function'){ //回调函数
+                    dragEndFn.call(newX,newY);
+                }
+            }
+            var drag = d3.drag()
+                .on("drag", dragmove)
+                .on("end", dragEnd);
+            this.block.call(drag);
+            return this;
+        } //鼠标拖拽事件
     }
 
     //// Exports stateBlock Component ////
@@ -2818,6 +2927,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.blocks=[];//所有的块
         this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;//计算宽
 
+        this.pos={};
+
         this.line_svg=svg;
         this.line_option=option;
         this.line_xScale=xScale;
@@ -2840,6 +2951,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     this.line_describe.barCount * 0.2;
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
+            this.pos.x1=this.line_option.padding.left;
+            this.pos.y1=top;
+            this.pos.x2=this.pos.x1+this.lineWidth;
+            this.pos.y2=top+BAR_HEIGHT;
+            
+
             if(line.points.length>0){
                 var minValue=null;
                 var maxValue=null;
@@ -2917,6 +3034,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
+        remove:function(){
+            this.g.remove();
+            return this;
+        },
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -2924,7 +3045,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 })     
             }
             return this;
-        },
+        },//选中事件
         dbclick_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -2932,10 +3053,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 })     
             }
             return this;
-        },
-        remove:function(){
-            this.g.remove();
+        },//双击事件
+        drag_Event:function(dragFn,dragEndFn){
+            _.each(this.blocks,function(block){
+                block.drag_Event(dragFn,dragEndFn);
+            }) 
             return this;
+        },//拖拽事件
+        inBox:function(x,y){
+            return x >=this.pos.x1 &&
+                    x <= this.pos.x2 &&
+                    y >= this.pos.y1 &&
+                    y <= this.pos.y2;
         }
     }
 

@@ -57,6 +57,8 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         this.blocks=[];//所有的块
         this.lineWidth=parseFloat(svg.attr('width'))-option.padding.left-option.padding.right;//计算宽
 
+        this.pos={};
+
         this.line_svg=svg;
         this.line_option=option;
         this.line_xScale=xScale;
@@ -79,6 +81,12 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                     this.line_describe.barCount * 0.2;
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
+            this.pos.x1=this.line_option.padding.left;
+            this.pos.y1=top;
+            this.pos.x2=this.pos.x1+this.lineWidth;
+            this.pos.y2=top+BAR_HEIGHT;
+            
+
             if(line.points.length>0){
                 var minValue=null;
                 var maxValue=null;
@@ -156,6 +164,10 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                     return changeColor(_.clone(rgbColor));
             }
         },//获取对应颜色
+        remove:function(){
+            this.g.remove();
+            return this;
+        },
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -163,7 +175,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 })     
             }
             return this;
-        },
+        },//选中事件
         dbclick_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -171,10 +183,18 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 })     
             }
             return this;
-        },
-        remove:function(){
-            this.g.remove();
+        },//双击事件
+        drag_Event:function(dragFn,dragEndFn){
+            _.each(this.blocks,function(block){
+                block.drag_Event(dragFn,dragEndFn);
+            }) 
             return this;
+        },//拖拽事件
+        inBox:function(x,y){
+            return x >=this.pos.x1 &&
+                    x <= this.pos.x2 &&
+                    y >= this.pos.y1 &&
+                    y <= this.pos.y2;
         }
     }
 

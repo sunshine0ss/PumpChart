@@ -59,7 +59,7 @@ define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
                     this.pumpText.attr('x', x+ PADDING);
                 }
                 if(!isNullOrUndefine(y)){
-                    this.pumpText.attr('y', y);
+                    this.pumpText.attr('y', y+TEXT_HEIGHT);
                 }
                 if(!isNullOrUndefine(width)){
                     this.pumpText.attr('width', width);

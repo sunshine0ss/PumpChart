@@ -8,7 +8,8 @@ var option = {
         right: 20
     },
     showLegend:true,
-    edit: true
+    edit: true,
+    drag:true
 }
 
 var objects = [{

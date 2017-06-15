@@ -84,7 +84,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 .attr('height', function(d, i) {
                     d.height = BAR_HEIGHT;
                     return BAR_HEIGHT;
-                })
+                });
 
             if (data.value == undefined) { //不定状态加弹框
                 this.block.attr('data-toggle', 'popover')
@@ -250,51 +250,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 this.blockText.updateText(data);
             }
         }, //修改当前快的状态
-        click_Event: function(fn) { //点击事件
-            if (typeof fn == 'function') {
-                this.callFn = fn;
-                var _this = this;
-                if (this.block != null) {
-                    this.block.on("click", function(d, i, rects) {
-
-                        // rects.popover({   
-                        //     trigger:'click',//manual 触发方式  
-                        //     placement : 'top',    
-                        //     html: 'true',   
-                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
-                        //     animation: false  
-                        // }) 
-
-                        fn.call(d, i, rects, _this);
-                    })
-                }
-            }
-            return this;
-        }, //鼠标单击事件
-        dbclick_Event: function(fn) { //点击事件
-            var _this = this;
-            _this.dbclick_callFn = fn;
-            if(this.block!=null){
-                this.block.on("dblclick", function(d, i, rects) {
-                    if (d.value == 0) { //关--->开
-                        d.value = 1;
-                        d.label = dicClass.CLASS_OPEN_STATE.text;
-                    } else if (d.value == 1) { //开--->关
-                        d.value = 0;
-                        d.label = dicClass.CLASS_CLOSE_STATE.text;
-                    } else if (isNullOrUndefine(d.value)) { //不定--->开
-                        d.value = 1;
-                        d.label = dicClass.CLASS_OPEN_STATE.text;
-                    }
-                    _this.updateState(d); //修改当前状态
-                   
-                    if (typeof fn == 'function'){ //回调函数
-                        fn.call(d, i, rects);
-                    }
-                })
-            }
-            return this;
-        }, //鼠标双击事件，更改状态
         remove: function() {
             if(this.line_data!=null){
                 _.remove(this.line_data.points,this.blockData);
@@ -386,7 +341,86 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
                 }
                 return this;
-            } //插入新的块到当前块的中间
+        }, //插入新的块到当前块的中间
+        click_Event: function(fn) { //点击事件
+            if (typeof fn == 'function') {
+                this.callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("click", function(d, i, rects) {
+
+                        // rects.popover({   
+                        //     trigger:'click',//manual 触发方式  
+                        //     placement : 'top',    
+                        //     html: 'true',   
+                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
+                        //     animation: false  
+                        // }) 
+
+                        fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        }, //鼠标单击事件
+        dbclick_Event: function(fn) { //点击事件
+            var _this = this;
+            _this.dbclick_callFn = fn;
+            if(this.block!=null){
+                this.block.on("dblclick", function(d, i, rects) {
+                    if (d.value == 0) { //关--->开
+                        d.value = 1;
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
+                    } else if (d.value == 1) { //开--->关
+                        d.value = 0;
+                        d.label = dicClass.CLASS_CLOSE_STATE.text;
+                    } else if (isNullOrUndefine(d.value)) { //不定--->开
+                        d.value = 1;
+                        d.label = dicClass.CLASS_OPEN_STATE.text;
+                    }
+                    _this.updateState(d); //修改当前状态
+                   
+                    if (typeof fn == 'function'){ //回调函数
+                        fn.call(d, i, rects);
+                    }
+                })
+            }
+            return this;
+        }, //鼠标双击事件，更改状态
+        drag_Event: function(dragFn,dragEndFn) {
+            var _this=this;
+            //定义拖拽行为
+            function dragmove(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                d3.select(this)
+                    .attr("x", function() {
+                        return d.x = newX;
+                    })
+                    .attr("y", function() {
+                        return d.y = newY
+                    });
+                //修改文字位置
+                _this.blockText.update(newX,newY);
+
+                if (typeof dragFn == 'function'){ //回调函数
+                    dragFn.call(newX,newY);
+                }
+            }
+            //定义拖拽结束行为
+            function dragEnd(d) {
+                var newX=d3.event.x;
+                var newY=d3.event.y;
+                if (typeof dragEndFn == 'function'){ //回调函数
+                    dragEndFn.call(newX,newY);
+                }
+            }
+            var drag = d3.drag()
+                .on("drag", dragmove)
+                .on("end", dragEnd);
+            this.block.call(drag);
+            return this;
+        } //鼠标拖拽事件
     }
 
     //// Exports stateBlock Component ////

@@ -2,6 +2,8 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
 
     var HANDLE_WIDTH = 4;//手柄宽度
     var HANDLE_HEIGHT = 30;//手柄高度
+    var HANDLE_PADDING=-5;
+    var TEXT_PADDING=-2;
    // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
         return obj === undefined || obj === null;
@@ -33,11 +35,11 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
             this.handle = this.d3g.append('rect')
                 .attr('class', className||'edit_rect')
                 .attr('x', x)
-                .attr('y', y)
+                .attr('y', y+HANDLE_PADDING)//突出handle长度，比当前块高5个像素
                 .attr('width', HANDLE_WIDTH)
                 .attr('height', HANDLE_HEIGHT);
             this.pos[0]=x;
-            this.pos[1]=y;
+            this.pos[1]=y+HANDLE_PADDING;
             return this; //在每个方法的最后return this;
         },
         drawHandleText: function(x,y) {
@@ -51,7 +53,7 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
             var hText=moment(this.handle_xScale.invert(textTimeX)).format('HH:mm');
             //add the handle text
             this.handleText =new text(this.d3g);
-            this.handleText.drawText(hText,'edit_text',textX,y);
+            this.handleText.drawText(hText,'edit_text',textX,y+TEXT_PADDING);
             return this; //在每个方法的最后return this;
         },
         drag_Event: function(dragStart,dragged,dragEnd) {
@@ -78,20 +80,6 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
                     dragged.call(null,x);//传参数回调
                 
                 _this.updatePos(x);
-                // //修改手柄位置
-                // _this.handle.attr('x', x);
-                // _this.pos[0]=x;
-
-                // //更新手柄提示
-                // var textTimeX=x;
-                // var textX=x+HANDLE_WIDTH;
-                // if(_this.type==END_EDIT){
-                //     textX=x-_this.distance-HANDLE_WIDTH;//结束手柄的提示位置在手柄之前
-                //     textTimeX+=HANDLE_WIDTH;//时间显示为手柄结束位置的时间
-                // }
-                // var htext=moment(_this.handle_xScale.invert(textTimeX)).format('HH:mm');
-
-                // _this.handleText.update(htext,textX);//修改手柄提示的坐标
             };
             //After the drag
             var handleDragEnd=function(){
@@ -126,16 +114,16 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
                 this.pos[0]=x;
                 //修改手柄位置
                 this.handle.attr('x', x);
+                var textY=null;
+                if(y!=undefined){
+
+                    this.pos[1]=y;
+                    this.handle.attr('y', y+HANDLE_PADDING);
+                    textY=y+TEXT_PADDING;
+                }
                 var htext=moment(this.handle_xScale.invert(textTimeX)).format('HH:mm');//显示时间
-                this.handleText.update(htext,textX);//修改手柄提示的坐标
-
+                this.handleText.update(htext,textX,textY);//修改手柄提示的坐标
             }
-            if(y!=undefined){
-                this.handle.attr('y', y);
-            }
-        },
-        updateTextPos:function(){
-
         },
         removeHandle:function(){
             this.handle.remove();

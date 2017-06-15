@@ -11,7 +11,8 @@
         showCurrent: true,
         showHover:true,
         showLegend:false,
-        edit: false
+        edit: false,
+        drag:false
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -280,6 +281,8 @@
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
                 this.area.bind_check().bind_dbclick().bind_popover();
+            if(this.option.drag)//是否可拖拽
+                this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
         },
         drawLegend:function(){
@@ -302,6 +305,10 @@
             this.area.bind_dbclick();
             return this;
         },
+        bind_drag:function(){
+            this.area.bind_drag();
+            return this;
+        },//拖拽事件
         bind_popover:function(){
             this.area.bind_popover();
             return this;

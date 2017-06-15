@@ -45,6 +45,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
             this.hasChecked = false; //是否有选中
             this.hasDBclick = false; //是否有双击事件
+            this.hasDrag = false;
             this.hasPopover = false; //是否有弹出事件
 
             this.isEditing = false; //是否编辑中
@@ -299,14 +300,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                 //计算手柄的位置
                 var x = parseFloat(curRect.attr('x'));
-                var y = parseFloat(curRect.attr('y')) - 5; //突出handle长度，比当前块高5个像素
+                var y = parseFloat(curRect.attr('y')); 
 
 
                 var minX = x;
                 if (!(x == 0 && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加开始手柄
                     _this.startHandle = new handle(d3g, _this.xScale);
-                    _this.startHandle.drawHandle(x, y).drawHandleText(x, -2).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
+                    _this.startHandle.drawHandle(x, y).drawHandleText(x, y).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
                 }
                 var width = parseFloat(curRect.attr('width')) //curRect.width();//获取当前块的宽度
 
@@ -316,7 +317,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 if (!(x2 == _this.gWIDTH && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加结束手柄
                     _this.endHandle = new handle(d3g, _this.xScale, 'end'); //时间的文本要在编辑区域内
-                    _this.endHandle.drawHandle(endX, y).drawHandleText(endX, -2).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
+                    _this.endHandle.drawHandle(endX, y).drawHandleText(endX, y).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
                 }
                 //设置手柄的可移动范围
                 if (_this.startHandle != null)
@@ -335,10 +336,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             } else {
                 var curWidth = parseFloat(this.curBlock.block.attr('width'));
                 var curX = parseFloat(this.curBlock.block.attr('x'));
+                var curY=parseFloat(this.curBlock.block.attr('y'));
                 var endHandleX = curWidth + curX;
                 //修改手柄位置
+                if (this.startHandle != null)
+                    this.startHandle.updatePos(curX,curY);
                 if (this.endHandle != null)
-                    this.endHandle.updatePos(endHandleX);
+                    this.endHandle.updatePos(endHandleX,curY);
             }
         }, //更新手柄
         removeHandles: function() {
@@ -365,6 +369,30 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             })
             return this;
         }, //鼠标双击，更改状态
+        bind_drag:function(){
+            this.hasDrag = true;
+            var _this = this;
+            var drag = function(x,y) {
+                if(_this.hoverLine.isShow){
+                    _this.hideHoverLine(); //隐藏提示线
+                    _this.isEditing = true; //选中：编辑状态
+                }
+                if(_this.curBlock!=null)
+                    _this.updateHandles();
+            } //拖动中回调
+
+            var dragEnd = function(x,y) {
+                 _.each(this.lines, function(line) {
+                    if(line.inBox(x,y)){
+
+                    }
+                })
+            } //拖动结束回调
+            _.each(this.lines, function(line) {
+                line.drag_Event(drag,dragEnd); //绑定事件
+            })
+            return this;
+        },//拖拽事件
         bind_popover: function() {
             this.hasPopover = true;
             var _this = this;
