@@ -13,14 +13,26 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
     // Check whether the obj is null or undfined.
     var isNullOrUndefine = function(obj) {
-        return obj === undefined || obj === null;
-    }
-       //默认样式
-    var defaultClass={
-        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
-        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
-        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
-        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+            return obj === undefined || obj === null;
+        }
+        //默认样式
+    var defaultClass = {
+        CLASS_OPEN_STATE: {
+            'text': '开',
+            'class': 'rect open_state'
+        },
+        CLASS_CLOSE_STATE: {
+            'text': '关',
+            'class': 'rect close_state'
+        },
+        CLASS_FAULT_STATE: {
+            'text': '故障',
+            'class': 'rect fault_state'
+        },
+        CLASS_INDEFINITE_STATE: {
+            'text': '不定',
+            'class': 'rect indefinite_state'
+        }
     }
 
     // Defines the hydochart type
@@ -56,7 +68,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.element = ele;
             this.describe = desc;
 
-            this.dicState=defaultClass;
+            this.dicState = defaultClass;
 
 
             // Compute the size of the svg        
@@ -137,15 +149,15 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.dAxis.drawAxis();
             return this;
         }, //绘制坐标轴
-        drawChart: function(timelines,stateClass) {
+        drawChart: function(timelines, stateClass) {
             var _this = this;
-            if(stateClass)
-                this.dicState=stateClass;
+            if (stateClass)
+                this.dicState = stateClass;
             this.originalData = timelines;
             this.updateData = _.cloneDeep(timelines);
             _.each(this.updateData, function(line) {
                 var pLine = new pumpLine(_this.svg, _this.xScale, _this.yScale, _this.option, _this.describe);
-                pLine.drawLine(line,stateClass);
+                pLine.drawLine(line, stateClass);
                 _this.lines.push(pLine);
             })
             return this;
@@ -159,7 +171,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 if (type == '取消') {
                     _this.refresh();
                 } else {
-                    if (_this.curBlock != null&&_this.curBlock.block != null) {
+                    if (_this.curBlock != null && _this.curBlock.block != null) {
                         if (type == '新增') {
                             _this.curBlock.insertCentre();
                             _this.bind_popover();
@@ -198,7 +210,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 //End of the startHandle drag
             var startDragEnd = function(x) {
                     _this.curBlock.changeLeft();
-                    if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
+                    if (_this.curBlock == null || _this.curBlock.block == null) { //判断当前的块是否被删除
                         _this.curBlock = null;
                         //删除选中状态
                         _this.removeHandles();
@@ -223,7 +235,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 //End of the endHandle drag
             var endDragEnd = function() {
                 _this.curBlock.changeRight();
-                if (_this.curBlock==null||_this.curBlock.block == null) { //判断当前的块是否被删除
+                if (_this.curBlock == null || _this.curBlock.block == null) { //判断当前的块是否被删除
                     _this.curBlock = null;
                     //删除选中状态
                     _this.removeHandles();
@@ -263,19 +275,18 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 _this.curBlock = block;
                 var label = _this.curBlock.blockData.label;
 
-                if(_this.chartLegend!=null){
+                if (_this.chartLegend != null) {
                     /*故障 状态不能新增*/
-                    if (label == _this.dicState.CLASS_FAULT_STATE.text){
+                    if (label == _this.dicState.CLASS_FAULT_STATE.text) {
                         _this.chartLegend.add_button.setDisabled(true); //如果是故障状态 禁用 新增
                         _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
                     }
                     /*不定 状态不能删除*/
-                    else if (label == _this.dicState.CLASS_INDEFINITE_STATE.text){
+                    else if (label == _this.dicState.CLASS_INDEFINITE_STATE.text) {
                         _this.chartLegend.add_button.setDisabled(true); //新增 按钮禁用
                         _this.chartLegend.delete_button.setDisabled(true); //删除 按钮禁用
-                    }
-                    else{
-                        _this.chartLegend.add_button.setDisabled(false);//其他状态 启用 新增
+                    } else {
+                        _this.chartLegend.add_button.setDisabled(false); //其他状态 启用 新增
                         _this.chartLegend.delete_button.setDisabled(false); //其他状态 启用 删除
                     }
                 }
@@ -300,11 +311,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                 //计算手柄的位置
                 var x = parseFloat(curRect.attr('x'));
-                var y = parseFloat(curRect.attr('y')); 
+                var y = parseFloat(curRect.attr('y'));
 
 
                 var minX = x;
-                if (!(x == 0 && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
+                if (!(x == 0 && label == _this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加开始手柄
                     _this.startHandle = new handle(d3g, _this.xScale);
                     _this.startHandle.drawHandle(x, y).drawHandleText(x, y).drag_Event(null, startDragged, startDragEnd); //-2是 handle的文体提示与块的间隔
@@ -314,7 +325,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 var x2 = x + width;
                 var endX = x2 - HANDLE_WIDTH; //当前位置加选中块的宽度，减去手柄的宽度
 
-                if (!(x2 == _this.gWIDTH && label ==_this.dicState.CLASS_INDEFINITE_STATE.text)) {
+                if (!(x2 == _this.gWIDTH && label == _this.dicState.CLASS_INDEFINITE_STATE.text)) {
                     //添加结束手柄
                     _this.endHandle = new handle(d3g, _this.xScale, 'end'); //时间的文本要在编辑区域内
                     _this.endHandle.drawHandle(endX, y).drawHandleText(endX, y).drag_Event(null, endDragged, endDragEnd); //28是:  30(text width)- 2(handle width/2).
@@ -336,13 +347,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             } else {
                 var curWidth = parseFloat(this.curBlock.block.attr('width'));
                 var curX = parseFloat(this.curBlock.block.attr('x'));
-                var curY=parseFloat(this.curBlock.block.attr('y'));
+                var curY = parseFloat(this.curBlock.block.attr('y'));
                 var endHandleX = curWidth + curX;
                 //修改手柄位置
                 if (this.startHandle != null)
-                    this.startHandle.updatePos(curX,curY);
+                    this.startHandle.updatePos(curX, curY);
                 if (this.endHandle != null)
-                    this.endHandle.updatePos(endHandleX,curY);
+                    this.endHandle.updatePos(endHandleX, curY);
             }
         }, //更新手柄
         removeHandles: function() {
@@ -356,43 +367,95 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.startHandle = null;
             this.endHandle = null;
 
-            this.curBlock =null;
+            this.curBlock = null;
         }, //清除手柄
         bind_dbclick: function() {
             this.hasDBclick = true;
             var _this = this;
             var changeState = function(i, rects, block) {
-                _this.updateHandles();
-            } //双击回调
+                    _this.updateHandles();
+                } //双击回调
             _.each(this.lines, function(line) {
                 line.dbclick_Event(changeState); //绑定事件
             })
             return this;
         }, //鼠标双击，更改状态
-        bind_drag:function(){
+        bind_drag: function() {
             this.hasDrag = true;
             var _this = this;
-            var drag = function(x,y) {
-                if(_this.hoverLine.isShow){
-                    _this.hideHoverLine(); //隐藏提示线
-                    _this.isEditing = true; //选中：编辑状态
-                }
-                if(_this.curBlock!=null)
-                    _this.updateHandles();
-            } //拖动中回调
-
-            var dragEnd = function(x,y) {
-                 _.each(this.lines, function(line) {
-                    if(line.inBox(x,y)){
-
+            var drag = function(x, y) {
+                    if (_this.hoverLine.isShow) {
+                        _this.hideHoverLine(); //隐藏提示线
+                        _this.isEditing = true; //选中：编辑状态
                     }
-                })
-            } //拖动结束回调
+                    if (_this.curBlock != null)
+                        _this.updateHandles();
+                } //拖动中回调
+
+            var dragEnd = function(x, y, block) {
+                    var pos = block.line_data.pos;
+                    var newX = pos.x1 + x;
+                    var newY = pos.y1 + y;
+                    var margin = false;
+                    _.each(_this.lines, function(line) {
+                        if (line.inBox(newX, newY)) {
+                            if(line.g!=block.block_Line){//不是同一行
+                                _.each(line.blocks, function(lineBlock) {
+                                    if (lineBlock!=block&&lineBlock.inBox(x, 0)) {
+                                        margin = true;
+                                        lineBlock.insertBlock(block,x);
+                                        //拖动的块的前一块覆盖空白
+                                        var width=parseFloat(block.block.attr('width'));
+                                        var x2=block.blockData.x+width;
+                                        block.update(x2,0,0);
+                                        block.changeLeft();
+                                        block.remove();
+                                        return false;
+                                        // var leftWidth = x - lineBlock.blockData.x;
+                                        // lineBlock.updateWidth(leftWidth);
+
+                                        //line.insert(block);
+                                    }
+                                })
+                                if (!margin) {//没有合并就还原
+                                    block.restorePos(); //还原回去
+                                }
+                            }
+                            else{//当前行的整块拖动
+                                _.each(line.blocks, function(lineBlock) {
+                                    if (lineBlock!=block&&lineBlock.inBox(x, 0)) {
+                                        margin = true;
+                                        lineBlock.insertBlock(block,x);
+                                        block.remove();
+                                        return false;
+                                        // var leftWidth = x - lineBlock.blockData.x;
+                                        // lineBlock.updateWidth(leftWidth);
+
+                                        //line.insert(block);
+                                    }
+                                })
+                                if (!margin) {//没有合并就还原
+                                    block.restorePos(); //还原回去
+                                }
+                            }
+                        }
+                    })
+                    // if (!margin) {//没有合并就还原
+                    //     block.restorePos(); //还原回去
+                    // }
+                    // else{//拖动的块的前一块覆盖空白
+                    //     var width=parseFloat(block.block.attr('width'));
+                    //     var x2=block.blockData.x+width;
+                    //     block.update(x2,0,0);
+                    //     block.changeLeft();
+                    //     block.remove();
+                    // }
+                } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.drag_Event(drag,dragEnd); //绑定事件
+                line.drag_Event(drag, dragEnd); //绑定事件
             })
             return this;
-        },//拖拽事件
+        }, //拖拽事件
         bind_popover: function() {
             this.hasPopover = true;
             var _this = this;
@@ -411,15 +474,15 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 }
                 return html;
             }
-            var popEle="[data-toggle='popover']";
-            if(_this.element&&_this.element.nodes().length>0)
-                popEle="#"+_this.element.nodes()[0].id +" "+ popEle;
+            var popEle = "[data-toggle='popover']";
+            if (_this.element && _this.element.nodes().length > 0)
+                popEle = "#" + _this.element.nodes()[0].id + " " + popEle;
             //所有设置弹出框属性的元素绑定弹出
             $(popEle).each(function(i, e) {
                 var element = $(e);
                 element.popover({
                         trigger: 'click', //弹出框的触发事件： click| hover | focus | manual
-                        container: '#'+_this.element.node().id, //向指定元素中追加弹出框
+                        container: '#' + _this.element.node().id, //向指定元素中追加弹出框
                         placement: 'top', //弹出框定位方向（即 top|bottom|left|right|auto）
                         html: 'true', //是否解析html标签
                         content: ContentMethod(e.__data__), //弹出框内容
@@ -430,9 +493,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         var data = ele.__data__;
                         $(ele).popover("show"); //显示弹出框
 
-                        var popId=$(ele).attr('aria-describedby');
+                        var popId = $(ele).attr('aria-describedby');
 
-                        var inputEle=$('.pumpvalue').last();
+                        var inputEle = $('.pumpvalue').last();
                         inputEle.val(data.value); //更新弹出框的input的值
 
                         $(ele).siblings("[data-toggle]").on("mouseleave", function() {
@@ -441,53 +504,53 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
                         /*  弹出框事件  */
                         var changeData = function(val) {
-                            val.trim();
-                            if (val == '') {
-                                data.value = undefined;
-                                data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
-                            } else {
-                                val = parseInt(val);
-                                data.value = val;
-                                if (val > 0) {
-                                    data.label = val.toString().trim();
-                                } else if (val == 0)
-                                    data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                                else if (val < 0)
-                                    data.label =  _this.dicState.CLASS_FAULT_STATE.text;
+                                val.trim();
+                                if (val == '') {
+                                    data.value = undefined;
+                                    data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
+                                } else {
+                                    val = parseInt(val);
+                                    data.value = val;
+                                    if (val > 0) {
+                                        data.label = val.toString().trim();
+                                    } else if (val == 0)
+                                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                                    else if (val < 0)
+                                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
+                                }
+                                //修改值或状态
+                                _this.curBlock.updateState(data);
                             }
-                            //修改值或状态
-                            _this.curBlock.updateState(data);
-                        }
-                        /*  输入框值改变事件  */
-                        $('#'+popId+' .pumpvalue').on('change', function() {
-                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
+                            /*  输入框值改变事件  */
+                        $('#' + popId + ' .pumpvalue').on('change', function() {
+                                if (_this.curBlock != null && _this.curBlock.block != null) {
                                     changeData(this.value); //更新当前块
-                                    $(this).val(data.value);//this.value =data.value;
+                                    $(this).val(data.value); //this.value =data.value;
                                     //_this.removeHandles(); //关闭选中状态
                                     _this.updateHandles(); //更新手柄
                                 }
                             }) //值改变事件
                             .on('keyup', function() {
-                                if(_this.curBlock!=null&&_this.curBlock.block!=null){
+                                if (_this.curBlock != null && _this.curBlock.block != null) {
                                     changeData(this.value); //更新当前块
-                                    $(this).val(data.value);//this.value =data.value;
+                                    $(this).val(data.value); //this.value =data.value;
                                     _this.updateHandles(); //更新手柄
                                 }
                             }) //手动输入事件
                             /*  关闭按钮点击事件  */
-                        $('#'+popId+' .closeBtn').on('click', function() {
-                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
-                                data.value = 0;
-                                data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                                _this.curBlock.updateState(data); //状态修改为关
-                                $(ele).popover('hide'); //关掉弹出框
-                                _this.removeHandles(); //关闭选中状态
-                                //_this.updateHandles();//更新手柄
-                            }
-                        })
-                        /*  打开按钮点击事件  */
-                        $('#'+popId+' .openBtn').on('click', function() {
-                            if(_this.curBlock!=null&&_this.curBlock.block!=null){
+                        $('#' + popId + ' .closeBtn').on('click', function() {
+                                if (_this.curBlock != null && _this.curBlock.block != null) {
+                                    data.value = 0;
+                                    data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                                    _this.curBlock.updateState(data); //状态修改为关
+                                    $(ele).popover('hide'); //关掉弹出框
+                                    _this.removeHandles(); //关闭选中状态
+                                    //_this.updateHandles();//更新手柄
+                                }
+                            })
+                            /*  打开按钮点击事件  */
+                        $('#' + popId + ' .openBtn').on('click', function() {
+                            if (_this.curBlock != null && _this.curBlock.block != null) {
                                 data.value = 1;
                                 data.label = _this.dicState.CLASS_OPEN_STATE.text;
                                 _this.curBlock.updateState(data); //状态修改为关

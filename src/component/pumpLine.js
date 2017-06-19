@@ -64,7 +64,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         this.line_xScale=xScale;
         this.line_yScale=yScale;
         this.line_describe=describe;
-
+        this.stateClass=null;
         this.line_data=null;
 
         this.valueGrade=[];//值域
@@ -76,16 +76,18 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         drawLine:function(line,stateClass){
             var _this=this;
             this.line_data=line;
+            this.stateClass=stateClass;
             //计算top
             var top = this.line_yScale(line.name) + this.line_option.padding.top + ((BAR_HEIGHT - 2) / 2) -
                     this.line_describe.barCount * 0.2;
             this.g = this.line_svg.append('g')
                 .attr('transform', 'translate(' + this.line_option.padding.left + ',' + top + ')');
-            this.pos.x1=this.line_option.padding.left;
-            this.pos.y1=top;
-            this.pos.x2=this.pos.x1+this.lineWidth;
-            this.pos.y2=top+BAR_HEIGHT;
-            
+            var pos={};
+            pos.x1=this.line_option.padding.left;
+            pos.y1=top;
+            pos.x2=pos.x1+this.lineWidth;
+            pos.y2=top+BAR_HEIGHT;
+            this.line_data.pos=pos;
 
             if(line.points.length>0){
                 var minValue=null;
@@ -168,6 +170,24 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             this.g.remove();
             return this;
         },
+        insert:function(block){
+            var type=stateBlock;
+            if(block){
+                if(block.blockType=='state')//定速泵
+                    type=stateBlock;
+                else if(block.blockType=='numeric')//定速泵
+                    type=numericBlock;
+                else//流量/压力
+                    type=gradientBlock;
+                var newBlock=null;
+                newBlock=new type(this.g,this.line_xScale,this.stateClass,ColorGrade,this.valueGrade);
+                newBlock.draw(block.blockData,this.line_data).drawText();//绘制快
+
+                this.blocks.push(newBlock);
+               // _.sortBy(this.blocks, [function(b) { return b.blockData.time; }]);
+
+            }
+        },
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){
                 _.each(this.blocks,function(block){
@@ -191,11 +211,15 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             return this;
         },//拖拽事件
         inBox:function(x,y){
-            return x >=this.pos.x1 &&
-                    x <= this.pos.x2 &&
-                    y >= this.pos.y1 &&
-                    y <= this.pos.y2;
-        }
+            if(this.line_data){
+                return x >=this.line_data.pos.x1 &&
+                        x <= this.line_data.pos.x2 &&
+                        y >= this.line_data.pos.y1 &&
+                        y <= this.line_data.pos.y2;
+            }
+            else
+                return false;
+        }//是否在坐标范围内
     }
 
     //// Exports pumpLine Component ////
