@@ -398,7 +398,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     var newY = pos.y1 + y;
                     var margin = false;
                     _.each(_this.lines, function(line) {
-                        if (line.inBox(newX, newY)) {
+                        if (line.inBox(newX, newY)&&line.blocks[0].blockType==block.blockType) {//在同类型的分组内
                             if(line.g!=block.block_Line){//不是同一行
                                 _.each(line.blocks, function(lineBlock) {
                                     if (lineBlock!=block&&lineBlock.inBox(x, 0)) {
@@ -417,9 +417,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         //line.insert(block);
                                     }
                                 })
-                                if (!margin) {//没有合并就还原
-                                    block.restorePos(); //还原回去
-                                }
                             }
                             else{//当前行的整块拖动
                                 _.each(line.blocks, function(lineBlock) {
@@ -434,15 +431,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         //line.insert(block);
                                     }
                                 })
-                                if (!margin) {//没有合并就还原
-                                    block.restorePos(); //还原回去
-                                }
                             }
                         }
                     })
-                    // if (!margin) {//没有合并就还原
-                    //     block.restorePos(); //还原回去
-                    // }
+                    if (!margin) {//没有合并就还原
+                        block.restorePos(); //还原回去
+                    }
                     // else{//拖动的块的前一块覆盖空白
                     //     var width=parseFloat(block.block.attr('width'));
                     //     var x2=block.blockData.x+width;

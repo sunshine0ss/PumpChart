@@ -108,6 +108,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             }
            
             this.blockData=data;
+            var pos = {};
+            pos.x1 = data.x;
+            pos.y1 = 0;
+            pos.x2 = data.x + data.width;
+            pos.y2 = 0 + BAR_HEIGHT;
+            this.blockData.pos = pos;
             return this;
         },//绘制块
         getColorByValue:function(value) {
@@ -140,13 +146,25 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//块对应的文本提示
         update:function(x,y,width,fn){ 
             if(!isNullOrUndefine(x)){
-                this.block.attr('x', x);
+                this.block.attr('x', function(d) {
+                    d.x = x;
+                    d.pos.x1 = d.x;
+                    return d.x;
+                });
             }
             if(!isNullOrUndefine(y)){
-                this.block.attr('y', y);
+                this.block.attr('y',  function(d) {
+                    d.y = y;
+                    d.pos.y1 = d.y;
+                    return d.y;
+                });
             }
             if(!isNullOrUndefine(width)){
-                this.block.attr('width', width);
+                this.block.attr('width', function(d) {
+                    d.width = width;
+                    d.pos.x2 = d.x + d.width;
+                    return d.width;
+                });
             }
             //修改对应text的位置
             if(this.blockText!=null)
@@ -161,7 +179,11 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         },//修改坐标和宽度
         updateWidth:function(width,fn){
             if(!isNullOrUndefine(width)){
-                this.block.attr('width',width);
+                this.block.attr('width',function(d) {
+                    d.width = width;
+                    d.pos.x2 = d.x + d.width;
+                    return d.width;
+                });
             }
             //回调函数
             if(typeof fn==='function')
@@ -172,7 +194,11 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(!isNullOrUndefine(width)){
                 var oldwidth = parseFloat(this.block.attr('width'));
                 var rectWidth = oldwidth+ width;
-                this.block.attr('width',rectWidth);
+                this.block.attr('width',function(d) {
+                    d.width = rectWidth;
+                    d.pos.x2 = d.x + d.width;
+                    return d.width;
+                });
             }
             //回调函数
             if(typeof fn==='function')
@@ -203,7 +229,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             var _this=this;
             if(_this.block!=null){
                 var x2=parseFloat(_this.block.attr('x'));
-                if(_this.leftBlock){//判断左边是否有邻近块
+                if(_this.leftBlock && _this.leftBlock.block){//判断左边是否有邻近块
                     var x1=parseFloat(_this.leftBlock.block.attr('x'));
                     var width=x2-x1;
                     if(width<=0){//左边块被覆盖
@@ -238,7 +264,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             var curWidth=parseFloat(_this.block.attr('width'));
             var x1=curX+curWidth;//当前结束位置
             //判断右边是否有邻近块
-            if(_this.rightBlock){
+            if(_this.rightBlock && _this.rightBlock.block){
                 //获取右边快的结束位置
                 var oldx=parseFloat(_this.rightBlock.block.attr('x'));
                 var oldwidth=parseFloat(_this.rightBlock.block.attr('width'));
@@ -305,6 +331,9 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
+                    if (this.line_data != null) {
+                        _.remove(this.line_data.points, this.blockData);
+                    } //从数据集合删除
                     this.remove(); //移除当前
                 }
             }
@@ -312,6 +341,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(this.blockText){
                 this.blockText.updateText(data);
             }
+            return this;
         },//修改当前快的状态
         remove:function(){
             if(this.line_data!=null){
@@ -341,7 +371,22 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             //删除对应text的位置
             if(this.blockText!=null)
                 this.blockText.remove();
+            return this;
         },//删除当前块，并合并相同状态的邻近块
+        restorePos: function() {
+            var _this = this;
+            this.block
+                .attr('x', function(d) {
+                    d.x = _this.blockData.x;
+                    return d.x;
+                })
+                .attr('y', 0);
+
+            //修改对应text的位置
+            if (this.blockText != null)
+                this.blockText.update(this.blockData.x, 0);
+            return this;
+        }, //还原坐标
         insertCentre:function(){
             if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
@@ -395,6 +440,97 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             }
             return this;
         },//插入新的块到当前块的中间
+        insertBlock: function(block, x, y) {
+            if (isNullOrUndefine(x)) {
+                x = block.blockData.x;
+            }
+            var rightBlock = this.rightBlock; //获取当前的右侧块
+            var addBlockWidth = parseFloat(block.block.attr('width'));
+            var x2 = x + addBlockWidth;
+            var x3 = this.blockData.pos.x2;
+            if (this.blockData.label != block.blockData.label) {
+                //修改当前的块
+                var width = x - this.blockData.x;
+                this.updateWidth(width);
+                //新增一块
+                var newData = {
+                        height: BAR_HEIGHT,
+                        time: this.block_xScale.invert(x),
+                        value: block.blockData.value,
+                        label: block.blockData.label,
+                        width: addBlockWidth,
+                        x: x
+                    }
+                    //新建中间一段
+                var newBlock = new gradientBlock(this.block_Line, this.block_xScale, dicClass,this.block_ColorGrade,this.block_ValueGrade);
+                newBlock.draw(newData, this.line_data).drawText(newData).click_Event(this.callFn).setLeft(this);
+
+                if (this.line_data != null) {
+                    this.line_data.points.push(newData);
+                } //添加到数据集合中
+                this.setRight(newBlock);
+
+                if (x3 > x2) { //包含在当前块
+                    var sameWidth = x3 - x2;
+                    //新建相同的一段
+                    var data = {
+                        height: BAR_HEIGHT,
+                        time: this.block_xScale.invert(x2),
+                        value: this.blockData.value,
+                        label: this.blockData.label,
+                        width: sameWidth,
+                        x: x2
+                    }
+                    var sameBlock = new gradientBlock(this.block_Line, this.block_xScale, dicClass,this.block_ColorGrade,this.block_ValueGrade);
+                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    this.line_data.points.push(data); //添加到数据集合中
+
+                    if (rightBlock != null)
+                        rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
+
+                    newBlock.setRight(sameBlock); //设置中间一块的右侧
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
+                } else {
+                    newBlock.setRight(rightBlock)
+                    if (newBlock.blockData.label != rightBlock.blockData.label) {
+                        newBlock.changeRight();
+                    } else { //合并右侧
+                        var rightX2 = rightBlock.blockData.pos.x2;
+                        if (x2 > rightX2) { //覆盖了右侧
+                            rightBlock.remove();
+                        } else {
+                            var newRightWidth = rightX2 - x2;
+                            rightBlock.update(x2, 0, newRightWidth);
+                        }
+                    }
+
+                }
+
+                newBlock.dbclick_Event(this.dbclick_callFn);
+
+                if (this.line_data.points.length > 1) {
+                    // Sort all values by time
+                    var sorted_values = this.line_data.points.sort(function(a, b) {
+                        return a.time - b.time;
+                    });
+                    this.line_data.points = sorted_values;
+                }
+            } else { //状态一样，合并
+                //修改当前的块
+                var width = x2 - this.blockData.x;
+                this.updateWidth(width).changeRight();
+            }
+            return this;
+        }, //插入块到当前块
+        inBox: function(x, y) {
+            if (this.blockData) {
+                return x >= this.blockData.pos.x1 &&
+                    x <= this.blockData.pos.x2 &&
+                    y >= this.blockData.pos.y1 &&
+                    y <= this.blockData.pos.y2;
+            } else
+                return false;
+        }, //是否在坐标范围内
         click_Event:function(fn){//点击事件
             if(typeof fn=='function'){
                 this.callFn=fn;
@@ -415,32 +551,43 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             })
             return this;
         },//鼠标双击事件，更改状态
-        drag_Event: function(fn) { 
-            var _this=this;
-            //定义拖拽行为
-            function dragmove(d) {
-                var newX=d3.event.x;
-                var newY=d3.event.y;
-                d3.select(this)
-                    .attr("x", function() {
-                        return d.x = newX;
-                    })
-                    .attr("y", function() {
-                        return d.y = newY
-                    });
-                //修改文字位置
-                _this.blockText.update(newX,newY);
-
-                if (typeof fn == 'function'){ //回调函数
-                    fn.call(newX,newY);
+        drag_Event: function(dragFn, dragEndFn) {
+                var _this = this;
+                //定义拖拽结束行为
+                function dragStart(d, e, i, event) {
+                    timeout = setTimeout(function() {
+                        return true;
+                    }, 2000);
                 }
-            }
+                //定义拖拽行为
+                function dragmove(d) {
+                    var newX = d3.event.x;
+                    var newY = d3.event.y;
+                    d3.select(this)
+                        .attr("x", newX)
+                        .attr("y", newY);
+                    //修改文字位置
+                    _this.blockText.update(newX, newY);
 
-            var drag = d3.drag()
-                .on("drag", dragmove);
-            this.block.call(drag);
-            return this;
-        } //鼠标拖拽事件
+                    if (typeof dragFn == 'function') { //回调函数
+                        dragFn.call(null, newX, newY);
+                    }
+                }
+                //定义拖拽结束行为
+                function dragEnd(d) {
+                    var newX = d3.event.x;
+                    var newY = d3.event.y;
+                    if (typeof dragEndFn == 'function') { //回调函数
+                        dragEndFn.call(null, newX, newY, _this);
+                    }
+                }
+                var drag = d3.drag()
+                    .on("start", dragStart)
+                    .on("drag", dragmove)
+                    .on("end", dragEnd);
+                this.block.call(drag);
+                return this;
+            } //鼠标拖拽事件
     }
 
     //// Exports gradientBlock Component ////

@@ -287,6 +287,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             if (this.blockText) {
                 this.blockText.updateText(data);
             }
+            return this;
         }, //修改当前快的状态
         remove: function() {
             if (this.line_data != null) {
@@ -316,6 +317,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             //删除对应text的位置
             if (this.blockText != null)
                 this.blockText.remove();
+            return this;
         }, //删除当前块，并合并相同状态的邻近块
         restorePos: function() {
             var _this = this;
@@ -329,6 +331,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             //修改对应text的位置
             if (this.blockText != null)
                 this.blockText.update(this.blockData.x, 0);
+            return this;
         }, //还原坐标
         insertCentre: function() {
             if (this.blockData.className != dicClass.CLASS_FAULT_STATE.class) { //故障不能新增
@@ -451,12 +454,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
                     else{//合并右侧
                         var rightX2=rightBlock.blockData.pos.x2;
-                        if(x2>rightX2){//覆盖了右侧
+                        if(x2>rightX2){//覆盖了右侧,移除右侧并修改新的右侧块
                             rightBlock.remove();
+                            newBlock.changeRight();
                         }
-                        else{
-                            var newRightWidth=rightX2-x2;
-                            rightBlock.update(x2,0,newRightWidth);
+                        else{//合并右侧
+                           var marginWidth= rightX2-x;
+                           newBlock.updateWidth(marginWidth);
                         }
                     }
                     
@@ -494,15 +498,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 var _this = this;
                 if (this.block != null) {
                     this.block.on("click", function(d, i, rects) {
-
-                        // rects.popover({   
-                        //     trigger:'click',//manual 触发方式  
-                        //     placement : 'top',    
-                        //     html: 'true',   
-                        //     content : '<input type="number" id="pumpvalue" name="pumpvalue" style="width: 50px"><button style="height: 26px;width: 25px;margin: 0px;padding: 0px;" onclick="btnClick()">关</button>',  //这里可以直接写字符串，也可以 是一个函数，该函数返回一个字符串；  
-                        //     animation: false  
-                        // }) 
-
                         fn.call(d, i, rects, _this);
                     })
                 }
@@ -534,13 +529,61 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             return this;
         }, //鼠标双击事件，更改状态
         drag_Event: function(dragFn, dragEndFn) {
-                var _this = this;
+            var _this = this;
+            // var isDraging=false;
+            // var oldx=0;
+            // var oldy=0;
+            // this.block.on("mousedown", function(d, i, rects) {
+            //     var event=d3.event;
+            //     if(event.button==2){//如果是右键
+            //         isDraging=true;
+            //         oldx=event.x;
+            //         oldy=event.y;
+            //     }
+            // })
+            // this.block.on("mousemove", function(d, i, rects) {
+            //     var event=d3.event;
+            //      if(event.button==2&&isDraging){//如果是右键
+            //         var diffValueX = event.x-oldx;
+            //         var diffValueY = event.y-oldy;
+
+            //         var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
+            //         var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
+
+            //         d3.select(this)
+            //             .attr("x", newX)
+            //             .attr("y", newY);
+            //         //修改文字位置
+            //         _this.blockText.update(newX, newY);
+            //         //更新历史值
+            //         oldx=event.x;
+            //         oldy=event.y;
+            //         if (typeof dragFn == 'function') { //回调函数
+            //             dragFn.call(null, newX, newY);
+            //         }
+            //      }
+            // })
+            // this.block.on("mouseup", function(d, i, rects) {
+            //     var event=d3.event;
+            //      if(event.button==2&&isDraging){//如果是右键
+            //         var diffValueX = event.x-oldx;
+            //         var diffValueY = event.y-oldy;
+            //         var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
+            //         var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
+            //         if (typeof dragEndFn == 'function') { //回调函数
+            //             dragEndFn.call(null, newX, newY, _this);
+            //         }
+            //      }
+            // })
+
 
                 //定义拖拽结束行为
                 function dragStart(d,e,i,event) {
-                    timeout = setTimeout(function() {  
-                        return true; 
-                    }, 2000);
+                    var event = d3.event;
+                    // timeout = setTimeout(function() {  
+                    //     return true; 
+                    // }, 2000);
+                    // event.stopPropagation();
                 }
                 //定义拖拽行为
                 function dragmove(d) {
