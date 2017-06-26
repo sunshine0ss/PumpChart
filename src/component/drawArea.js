@@ -383,14 +383,28 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
         bind_drag: function() {
             this.hasDrag = true;
             var _this = this;
+            var curDragBlock=null;
+            var tempLine =null;
+            var dragStart= function(block) {
+                curDragBlock=block;
+                _this.removeHandles();//移除编辑手柄
+                if (_this.hoverLine.isShow) {
+                    _this.hideHoverLine(); //隐藏提示线
+                    _this.isEditing = true; //选中：编辑状态
+                }
+                var curLine=_.cloneDeep(block.block_Line);
+                tempLine = new pumpLine(curLine.line_svg, curLine.line_xScale, curLine.line_yScale, curLine.line_option, curLine.line_describe);
+                var lineData=curLine.line_data;
+                lineData.points=[];
+                lineData.points.push(block.blockData);
+                
+                tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
+               
+            } //拖动结束回调
             var drag = function(x, y) {
-                    if (_this.hoverLine.isShow) {
-                        _this.hideHoverLine(); //隐藏提示线
-                        _this.isEditing = true; //选中：编辑状态
-                    }
-                    if (_this.curBlock != null)
-                        _this.updateHandles();
-                } //拖动中回调
+                if (_this.curBlock != null)
+                    _this.updateHandles();
+            } //拖动中回调
 
             var dragEnd = function(x, y, block) {
                     var pos = block.line_data.pos;
@@ -399,17 +413,17 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     var margin = false;
                     _.each(_this.lines, function(line) {
                         if (line.inBox(newX, newY)&&line.blocks[0].blockType==block.blockType) {//在同类型的分组内
-                            if(line.g!=block.block_Line){//不是同一行
+                            if(line.g!=curDragBlock.block_Line){//不是同一行
                                 _.each(line.blocks, function(lineBlock) {
-                                    if (lineBlock!=block&&lineBlock.inBox(x, 0)) {
+                                    if (lineBlock!=curDragBlock&&lineBlock.inBox(x, 0)) {
                                         margin = true;
                                         lineBlock.insertBlock(block,x);
                                         //拖动的块的前一块覆盖空白
                                         var width=parseFloat(block.block.attr('width'));
                                         var x2=block.blockData.x+width;
-                                        block.update(x2,0,0);
-                                        block.changeLeft();
-                                        block.remove();
+                                        curDragBlock.update(x2,0,0);
+                                        curDragBlock.changeLeft();
+                                        curDragBlock.remove();
                                         return false;
                                         // var leftWidth = x - lineBlock.blockData.x;
                                         // lineBlock.updateWidth(leftWidth);
@@ -420,10 +434,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }
                             else{//当前行的整块拖动
                                 _.each(line.blocks, function(lineBlock) {
-                                    if (lineBlock!=block&&lineBlock.inBox(x, 0)) {
+                                    if (lineBlock!=curDragBlock&&lineBlock.inBox(x, 0)) {
                                         margin = true;
                                         lineBlock.insertBlock(block,x);
-                                        block.remove();
+                                        curDragBlock.remove();
                                         return false;
                                         // var leftWidth = x - lineBlock.blockData.x;
                                         // lineBlock.updateWidth(leftWidth);
@@ -434,9 +448,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }
                         }
                     })
-                    if (!margin) {//没有合并就还原
-                        block.restorePos(); //还原回去
-                    }
+                    tempLine.remove();
                     // else{//拖动的块的前一块覆盖空白
                     //     var width=parseFloat(block.block.attr('width'));
                     //     var x2=block.blockData.x+width;
@@ -444,9 +456,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     //     block.changeLeft();
                     //     block.remove();
                     // }
-                } //拖动结束回调
+            } //拖动结束回调
+
+            // var line={
+            //     'name':'temporary',
+            //     'points':[]
+            // }
+            // var tempLine = new pumpLine(_this.svg, _this.xScale, _this.yScale, _this.option, _this.describe);
+            // tempLine.drawLine(line, stateClass);
             _.each(this.lines, function(line) {
-                line.drag_Event(drag, dragEnd); //绑定事件
+                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
             })
             return this;
         }, //拖拽事件

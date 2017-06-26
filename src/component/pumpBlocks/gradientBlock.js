@@ -1,28 +1,6 @@
 define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, moment,lodash,pumpText) {
 
     var BAR_HEIGHT=22;
-    //默认样式
-    var dicClass={
-        CLASS_OPEN_STATE:{'text':'开','class':'rect open_state'},
-        CLASS_CLOSE_STATE:{'text':'关','class':'rect close_state'},
-        CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
-        CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
-    }
-     //根据值转换样式
-    function formatClass(d) {
-        var className = null;
-        if (d.value > 0) {
-            d.className = dicClass.CLASS_OPEN_STATE.class;//dicClass['开'];
-        } else if (d.value == 0) {
-            d.className = dicClass.CLASS_CLOSE_STATE.class;//dicClass['关'];
-
-        } else if (d.value < 0) {
-            d.className = dicClass.CLASS_FAULT_STATE.class;//dicClass['故障'];
-        } else {
-            d.className = dicClass.CLASS_INDEFINITE_STATE.class;//dicClass['不定'];
-        }
-        return d.className;
-    }
     //rgb颜色转换成16进制
     var changeColor=function(rgbColor){
         for (var i = 0; i < rgbColor.length; i++) {
@@ -40,7 +18,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
     }
     
     // Defines the gradientBlock type
-    var gradientBlock = function(line,xScale,stateClass,colorGrade,valueGrade) {
+    var gradientBlock = function(line) {
         this.version = '1.0';
         this.blockType='gradient';
 
@@ -54,29 +32,42 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         // this.blockState =null;//当前的块的状态
         
         this.block_Line=line;
-        this.block_xScale=xScale;
-        this.block_ColorGrade=colorGrade;
-        this.block_ValueGrade=valueGrade;
+        this.block_xScale = line.line_xScale; //x比例尺
+        this.line_data = line.line_data; //赋值行的数据
+        this.block_ColorGrade=line.ColorGrade;
+        this.block_ValueGrade=line.valueGrade;
 
-        this.line_data=null;
 
         this.callFn=null;
-        if(!isNullOrUndefine(stateClass))
-            dicClass=_.cloneDeep(stateClass);
+        if (!isNullOrUndefine(line.stateClass))
+            this.stateClass =line.stateClass;
     }
     //链式方法
     gradientBlock.prototype = {
-        draw: function(data,line) {//在绘图区绘制出块
-            this.line_data=line;//赋值行的数据
+        formatClass:function(d) {
+            var className = null;
+            if (d.value > 0) {
+                d.className = this.stateClass.CLASS_OPEN_STATE.class; //dicClass['开'];
+            } else if (d.value == 0) {
+                d.className = this.stateClass.CLASS_CLOSE_STATE.class; //dicClass['关'];
+
+            } else if (d.value < 0) {
+                d.className = this.stateClass.CLASS_FAULT_STATE.class; //dicClass['故障'];
+            } else {
+                d.className = this.stateClass.CLASS_INDEFINITE_STATE.class; //dicClass['不定'];
+            }
+            return d.className;
+        },
+        draw: function(data) {//在绘图区绘制出块
             if(!isNullOrUndefine(data.value))
                 data.label=data.value.toString().trim();
             data.blockType=this.blockType;
             var _this=this;
-            this.block=this.block_Line
+            this.block=this.block_Line.g
                 .append('rect')
                 .datum(data)
                 .attr('class', function(d, i) {
-                    return formatClass(d);
+                    return _this.formatClass(d);
                 })
                 .attr('x', function(d, i) {
                     if(d.x==undefined)
@@ -106,7 +97,6 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     $(this.block.node()).css('fill',data.colorGrade);
                 }//设置当前颜色
             }
-           
             this.blockData=data;
             var pos = {};
             pos.x1 = data.x;
@@ -241,15 +231,15 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     }
                 }
                 else{//如果没有就创建  不定状态
-                    if(_this.blockData.className != dicClass.CLASS_INDEFINITE_STATE.class){
+                    if(_this.blockData.className !=_this.stateClass.CLASS_INDEFINITE_STATE.class){
                         var data = {
                             height: BAR_HEIGHT,
                             time:_this.block_xScale.invert(0),
                             value: null,
-                            label: dicClass.CLASS_INDEFINITE_STATE.text,
+                            label: _this.stateClass.CLASS_INDEFINITE_STATE.text,
                             width:x2
                         };
-                        var leftBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
+                        var leftBlock=new gradientBlock(_this.block_Line);
                         leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
                         _this.leftBlock=leftBlock;
                     }
@@ -286,10 +276,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:_this.block_xScale.invert(x1),
                     value: null,
-                    label: dicClass.CLASS_INDEFINITE_STATE.text,
+                    label: this.stateClass.CLASS_INDEFINITE_STATE.text,
                     width:MaxX
                 };
-                var rightBlock=new gradientBlock(_this.block_Line,_this.block_xScale,dicClass,_this.block_ColorGrade,_this.block_ValueGrade);
+                var rightBlock=new gradientBlock(_this.block_Line);
                 rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
                 _this.rightBlock=rightBlock;
             }
@@ -304,7 +294,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 data.value = data.maxValue;
             }
             this.block.attr('class', function(d, i) {//.datum(data)
-                return formatClass(d);
+                return _this.formatClass(d);
             })
             if(!isNullOrUndefine(data.value)){//修改填充颜色
                 data.label=data.value.toString().trim();
@@ -388,7 +378,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             return this;
         }, //还原坐标
         insertCentre:function(){
-            if(this.blockData.className!=dicClass.CLASS_FAULT_STATE.class){//故障不能新增
+            if(this.blockData.className!=this.stateClass.CLASS_FAULT_STATE.class){//故障不能新增
                 var totalWidth=parseFloat(this.block.attr('width'));//获取当前快的总宽
                 var rightBlock=this.rightBlock;//获取当前的右侧块
                 var intWidth=parseInt(totalWidth);
@@ -403,13 +393,13 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     height: BAR_HEIGHT,
                     time:this.block_xScale.invert(x2),
                     value: undefined,
-                    label:dicClass.CLASS_INDEFINITE_STATE.text,
+                    label:this.stateClass.CLASS_INDEFINITE_STATE.text,
                     width:averageWidth,
                     x:x2
                 }
                 //新建中间一段
-                var newBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                newBlock.draw(newData,this.line_data).drawText(newData).click_Event(this.callFn).setLeft(this);
+                var newBlock=new gradientBlock(this.block_Line);
+                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
                 if(this.line_data!=null){
                     this.line_data.points.push(newData);
                 }//添加到数据集合中
@@ -422,8 +412,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     width:averageWidth,
                     x:x3
                 }
-                var sameBlock=new gradientBlock(this.block_Line,this.block_xScale,dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                sameBlock.draw(data,this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                var sameBlock=new gradientBlock(this.block_Line);
+                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
                 this.line_data.points.push(data);//添加到数据集合中
 
@@ -462,8 +452,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                         x: x
                     }
                     //新建中间一段
-                var newBlock = new gradientBlock(this.block_Line, this.block_xScale, dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                newBlock.draw(newData, this.line_data).drawText(newData).click_Event(this.callFn).setLeft(this);
+                var newBlock = new gradientBlock(this.block_Line);
+                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
 
                 if (this.line_data != null) {
                     this.line_data.points.push(newData);
@@ -481,8 +471,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                         width: sameWidth,
                         x: x2
                     }
-                    var sameBlock = new gradientBlock(this.block_Line, this.block_xScale, dicClass,this.block_ColorGrade,this.block_ValueGrade);
-                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    var sameBlock = new gradientBlock(this.block_Line);
+                    sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                     this.line_data.points.push(data); //添加到数据集合中
 
                     if (rightBlock != null)

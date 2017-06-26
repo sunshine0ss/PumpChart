@@ -10,10 +10,9 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
 
     var DEFAULT_COLOR=[0,0,255];//蓝色
     var COLOR_STEP=5;//颜色分级步长
-    var ColorGrade=[];//渐变颜色
 
     //计算渐变色系
-    function getColorGradient() {
+    function getColorGradient(ColorGrade) {
         var colorLength=COLOR_STEP+1;//间隔加一是颜色的数量
         var code = DEFAULT_COLOR;
         //当前颜色/255，计算基数
@@ -68,7 +67,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         this.line_data=null;
 
         this.valueGrade=[];//值域
-
+        this.ColorGrade=[];
     }
 
     //The chain method
@@ -99,7 +98,7 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                     type=numericBlock;
                 else{//流量/压力
                     type=gradientBlock;
-                    getColorGradient();
+                    getColorGradient(this.ColorGrade);
                     // var maxPoint=_.maxBy(line.points, function(o) { return o.value; });//获取最大值
                     // _this.getValueGrade(maxPoint.value);
                     if(line.hasOwnProperty('minValue'))
@@ -112,8 +111,8 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 //循环数据并绘制块
                 _.each(line.points,function(data){
                     var block=null;
-                    block=new type(_this.g,_this.line_xScale,stateClass,ColorGrade,_this.valueGrade);
-                    block.draw(data,_this.line_data).drawText();//绘制快
+                    block=new type(_this);
+                    block.draw(data).drawText();//绘制快
                     //设置最大最小限制
                     if(minValue!=null)
                         block.setMinValue(minValue);
@@ -150,17 +149,17 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 var rgbColor=null;
                 if(i==0){
                     if(value<=_this.valueGrade[i])
-                        rgbColor=ColorGrade[i];
+                        rgbColor=_this.ColorGrade[i];
                     else if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                        rgbColor=_this.ColorGrade[i+1];
                 }
                 else if(i>0&&i<_this.valueGrade.length-1){
                     if(value>_this.valueGrade[i]&&value<=_this.valueGrade[i+1])
-                        rgbColor=ColorGrade[i+1];
+                        rgbColor=_this.ColorGrade[i+1];
                 }
                 else if(i==_this.valueGrade.length-1){
                     if(value>_this.valueGrade[i])
-                        rgbColor=ColorGrade[i+1];
+                        rgbColor=_this.ColorGrade[i+1];
                 }
                 if(rgbColor!=null)
                     return changeColor(_.clone(rgbColor));
@@ -180,13 +179,13 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
                 else//流量/压力
                     type=gradientBlock;
                 var newBlock=null;
-                newBlock=new type(this.g,this.line_xScale,this.stateClass,ColorGrade,this.valueGrade);
-                newBlock.draw(block.blockData,this.line_data).drawText();//绘制快
+                newBlock=new type(this);
+                newBlock.draw(block.blockData).drawText();//绘制快
 
                 this.blocks.push(newBlock);
                // _.sortBy(this.blocks, [function(b) { return b.blockData.time; }]);
-
             }
+            return this;
         },
         checkBlock_Event:function(fn){
             if(typeof fn==='function'){
@@ -204,9 +203,20 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             }
             return this;
         },//双击事件
-        drag_Event:function(dragFn,dragEndFn){
+        drag_Event:function(dragStartFn,dragFn,dragEndFn){
+            // var line={
+            //     'name':'temporary',
+            //     'points':[],
+            //     'type':this.line_data.type,
+            // }
+            // if(this.line_data.hasOwnProperty('minValue'))
+            //     line.minValue=this.line_data.minValue;
+            // if(this.line_data.hasOwnProperty('maxValue'))
+            //     line.maxValue=this.line_data.maxValue;;
+            // var tempLine = new pumpLine(this.line_svg, this.line_xScale, this.line_yScale, this.line_option, this.line_describe);
+            // tempLine.drawLine(line, this.stateClass);
             _.each(this.blocks,function(block){
-                block.drag_Event(dragFn,dragEndFn);
+                block.drag_Event(dragStartFn,dragFn,dragEndFn);
             }) 
             return this;
         },//拖拽事件

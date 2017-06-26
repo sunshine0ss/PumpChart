@@ -13,7 +13,7 @@ define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
     var pumpText = function(line,xScale) {
         this.version = '1.0';
         this.pumpText=null;
-        this.g=line;
+        this.line=line;
         this.block_xScale=xScale;
         this.text_data=null;
     }
@@ -21,33 +21,36 @@ define(['d3', 'jQuery', 'moment', 'lodash'], function(d3, jquery, moment,lodash)
     pumpText.prototype = {
         draw: function(data) {
             var _this=this;
-            this.text_data=data;
-            var isRemove=false;
-            this.pumpText=_this.g
-                .append('text')
-                .datum(data)
-                .filter(function(d,i,ele) {
-                    if(d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time))
-                        return true;
-                    else{
-                        //不满足条件就删除text标签
-                        $(ele).remove();
-                        isRemove=true;
-                        return false;
-                    }
-                })
-                .attr('class', 'label')
-                .text(function(d) {
-                    return d.label;
-                })
-                .attr('x', function(d, i) {
-                    return _this.block_xScale(d.time) + PADDING;
-                })
-                .attr('y', function(d, i) {
-                    return TEXT_HEIGHT;
-                });
-            if(isRemove)//判断元素是否删除
-                this.pumpText=null;//置空
+            if(_this.line&&_this.line.g){
+                this.text_data=data;
+                var isRemove=false;
+                this.pumpText=_this.line.g
+                    .append('text')
+                    .datum(data)
+                    .filter(function(d,i,ele) {
+                        if(d.width > TEXT_WIDTH && (!d.next  ||d.time !== d.next.time))
+                            return true;
+                        else{
+                            //不满足条件就删除text标签
+                            $(ele).remove();
+                            isRemove=true;
+                            return false;
+                        }
+                    })
+                    .attr('class', 'label')
+                    .text(function(d) {
+                        return d.label;
+                    })
+                    .attr('x', function(d, i) {
+                        return _this.block_xScale(d.time) + PADDING;
+                    })
+                    .attr('y', function(d, i) {
+                        return TEXT_HEIGHT;
+                    });
+                if(isRemove)//判断元素是否删除
+                    this.pumpText=null;//置空
+            }
+            
             return this;
         },
         update:function(x,y,width){ 
