@@ -37,6 +37,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         this.block_ColorGrade=line.ColorGrade;
         this.block_ValueGrade=line.valueGrade;
 
+        this.hasDrag=false;//是否有拖拽
+        this.dragStartFn=null;//拖拽开始回调函数
+        this.dragFn=null;//拖拽中回调函数
+        this.dragEndFn=null;//拖拽结束回调函数
 
         this.callFn=null;
         if (!isNullOrUndefine(line.stateClass))
@@ -268,20 +272,28 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 else{//修改位置和宽度
                     _this.rightBlock.update(x1,null,width);
                 }
+                
+                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
+                    var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
+                    this.addWidth(addWidth); //合并到当前块
+                    this.rightBlock.remove(); //移除右侧
+                }
             }
             else{
                 var MaxX=this.block_Line.lineWidth;
-                //如果没有就创建  不定状态
-                var data = {
-                    height: BAR_HEIGHT,
-                    time:_this.block_xScale.invert(x1),
-                    value: null,
-                    label: this.stateClass.CLASS_INDEFINITE_STATE.text,
-                    width:MaxX
-                };
-                var rightBlock=new gradientBlock(_this.block_Line);
-                rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
-                _this.rightBlock=rightBlock;
+                if(x1<MaxX){
+                    //如果没有就创建  不定状态
+                    var data = {
+                        height: BAR_HEIGHT,
+                        time:_this.block_xScale.invert(x1),
+                        value: null,
+                        label: this.stateClass.CLASS_INDEFINITE_STATE.text,
+                        width:MaxX
+                    };
+                    var rightBlock=new gradientBlock(_this.block_Line);
+                    rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                    _this.rightBlock=rightBlock;
+                }
             }
             return this;   
         },//修改右边的块
@@ -321,9 +333,6 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
-                    if (this.line_data != null) {
-                        _.remove(this.line_data.points, this.blockData);
-                    } //从数据集合删除
                     this.remove(); //移除当前
                 }
             }
@@ -337,6 +346,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if(this.line_data!=null){
                 _.remove(this.line_data.points,this.blockData);
             }//从数据集合删除
+             _.remove(this.block_Line.points, this);
             this.block.remove();//移除当前块
             this.block=null;
             this.blockData=null;
@@ -400,7 +410,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 //新建中间一段
                 var newBlock=new gradientBlock(this.block_Line);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-                if(this.line_data!=null){
+                if(this.hasDrag)
+                    newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
+                if (this.block_Line != null) {
+                    this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
                 }//添加到数据集合中
                 //新建相同的一段
@@ -414,8 +427,12 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 }
                 var sameBlock=new gradientBlock(this.block_Line);
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
-                rightBlock.setLeft(sameBlock);//设置当前新建块的右侧快的左侧
+                if(this.hasDrag)
+                    sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 this.line_data.points.push(data);//添加到数据集合中
+                this.block_Line.blocks.push(sameBlock);
+                if (rightBlock != null)
+                    rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                 newBlock.setRight(sameBlock);//设置中间一块的右侧
                 this.setRight(newBlock);
@@ -430,38 +447,40 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             }
             return this;
         },//插入新的块到当前块的中间
-        insertBlock: function(block, x, y) {
-            if (isNullOrUndefine(x)) {
-                x = block.blockData.x;
+        insertBlock: function(block,x,y) {
+            if(isNullOrUndefine(x)){
+                x=block.blockData.x;
             }
             var rightBlock = this.rightBlock; //获取当前的右侧块
-            var addBlockWidth = parseFloat(block.block.attr('width'));
-            var x2 = x + addBlockWidth;
-            var x3 = this.blockData.pos.x2;
-            if (this.blockData.label != block.blockData.label) {
+            var addBlockWidth=parseFloat(block.block.attr('width'));
+            var x2=x+addBlockWidth;
+            var x3=this.blockData.pos.x2;
+            if (this.blockData.label != block.blockData.label) { 
                 //修改当前的块
-                var width = x - this.blockData.x;
+                var width=x-this.blockData.x;
                 this.updateWidth(width);
                 //新增一块
-                var newData = {
-                        height: BAR_HEIGHT,
-                        time: this.block_xScale.invert(x),
-                        value: block.blockData.value,
-                        label: block.blockData.label,
-                        width: addBlockWidth,
-                        x: x
-                    }
-                    //新建中间一段
+                var newData={
+                    height: BAR_HEIGHT,
+                    time: this.block_xScale.invert(x),
+                    value: block.blockData.value,
+                    label: block.blockData.label,
+                    width: addBlockWidth,
+                    x: x
+                }
+                //新建中间一段
                 var newBlock = new gradientBlock(this.block_Line);
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-
-                if (this.line_data != null) {
+                if(this.hasDrag)
+                    newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
+                if (this.block_Line != null) {
+                    this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
                 } //添加到数据集合中
                 this.setRight(newBlock);
 
-                if (x3 > x2) { //包含在当前块
-                    var sameWidth = x3 - x2;
+                if(x3>x2){//包含在当前块
+                    var sameWidth=x3-x2;
                     //新建相同的一段
                     var data = {
                         height: BAR_HEIGHT,
@@ -472,30 +491,39 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                         x: x2
                     }
                     var sameBlock = new gradientBlock(this.block_Line);
-                    sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    if(this.hasDrag)
+                        sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     this.line_data.points.push(data); //添加到数据集合中
-
+                    this.block_Line.blocks.push(sameBlock);
+                                        
                     if (rightBlock != null)
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
                     sameBlock.dbclick_Event(this.dbclick_callFn);
-                } else {
-                    newBlock.setRight(rightBlock)
-                    if (newBlock.blockData.label != rightBlock.blockData.label) {
+                }
+                else{
+                    newBlock.setRight(rightBlock);
+                    if (rightBlock != null)
+                        rightBlock.setLeft(newBlock);
+                    if(newBlock.blockData.label != rightBlock.blockData.label){
                         newBlock.changeRight();
-                    } else { //合并右侧
-                        var rightX2 = rightBlock.blockData.pos.x2;
-                        if (x2 > rightX2) { //覆盖了右侧
-                            rightBlock.remove();
-                        } else {
-                            var newRightWidth = rightX2 - x2;
-                            rightBlock.update(x2, 0, newRightWidth);
+                    }
+                    else{//合并右侧
+                        var rightX2=rightBlock.blockData.pos.x2;
+                        rightBlock.remove();
+                        if(x2>rightX2){//覆盖了右侧,移除右侧并修改新的右侧块
+                            newBlock.changeRight();
+                        }
+                        else{//合并右侧
+                           var marginWidth= rightX2-x;
+                           newBlock.updateWidth(marginWidth);
                         }
                     }
-
+                    
                 }
-
+                
                 newBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
@@ -505,9 +533,10 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     });
                     this.line_data.points = sorted_values;
                 }
-            } else { //状态一样，合并
+            }
+            else{//状态一样，合并
                 //修改当前的块
-                var width = x2 - this.blockData.x;
+                var width=x2-this.blockData.x;
                 this.updateWidth(width).changeRight();
             }
             return this;
@@ -541,43 +570,64 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             })
             return this;
         },//鼠标双击事件，更改状态
-        drag_Event: function(dragFn, dragEndFn) {
-                var _this = this;
-                //定义拖拽结束行为
-                function dragStart(d, e, i, event) {
-                    timeout = setTimeout(function() {
-                        return true;
-                    }, 2000);
+        drag_Event: function(dragStartFn,dragFn, dragEndFn) {
+            var _this = this;
+            this.hasDrag=true;
+            this.dragStartFn=dragStartFn;
+            this.dragFn=dragFn;
+            this.dragEndFn=dragEndFn;
+
+            var isDraging=false;
+            var oldx=0;
+            var oldy=0;
+            this.block.on("mousedown", function(d, i, rects) {
+                var event=d3.event;
+                if(event.button==2){//如果是右键
+                    isDraging=true;
+                    oldx=event.x;
+                    oldy=event.y;
+                    if (typeof dragStartFn == 'function') { //回调函数
+                        dragStartFn.call(null, _this);
+                    }
                 }
-                //定义拖拽行为
-                function dragmove(d) {
-                    var newX = d3.event.x;
-                    var newY = d3.event.y;
+            })
+            this.block.on("mousemove", function(d, i, rects) {
+                var event=d3.event;
+                 if(event.button==2&&isDraging){//如果是右键
+                    var diffValueX = event.x-oldx;
+                    var diffValueY = event.y-oldy;
+
+                    var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
+                    var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
+
                     d3.select(this)
                         .attr("x", newX)
                         .attr("y", newY);
                     //修改文字位置
                     _this.blockText.update(newX, newY);
-
+                    //更新历史值
+                    oldx=event.x;
+                    oldy=event.y;
                     if (typeof dragFn == 'function') { //回调函数
                         dragFn.call(null, newX, newY);
                     }
-                }
-                //定义拖拽结束行为
-                function dragEnd(d) {
-                    var newX = d3.event.x;
-                    var newY = d3.event.y;
+                 }
+            })
+            this.block.on("mouseup", function(d, i, rects) {
+                var event=d3.event;
+                 if(event.button==2&&isDraging){//如果是右键
+                    var diffValueX = event.x-oldx;
+                    var diffValueY = event.y-oldy;
+                    var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
+                    var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
                     if (typeof dragEndFn == 'function') { //回调函数
                         dragEndFn.call(null, newX, newY, _this);
                     }
-                }
-                var drag = d3.drag()
-                    .on("start", dragStart)
-                    .on("drag", dragmove)
-                    .on("end", dragEnd);
-                this.block.call(drag);
-                return this;
-            } //鼠标拖拽事件
+                    isDraging=false;
+                 }
+            })
+            return this;
+        } //鼠标拖拽事件
     }
 
     //// Exports gradientBlock Component ////

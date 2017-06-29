@@ -267,7 +267,7 @@ var objects = [{
 //     }, 
 
 var objects1 = [{
-    "id": 17,
+    "id": 1,
     "name": "增压1#",
     "type": "CSP",
     "dataType": "STATE",
@@ -281,9 +281,9 @@ var objects1 = [{
         "time": "2017-04-18 21:00:00",
         "value": -1
     }],
-    "lineIndex": 5
+    "lineIndex": 1
 }, {
-    "id": 13,
+    "id": 2,
     "name": "西山1#",
     "type": "CSP",
     "dataType": "STATE",
@@ -303,9 +303,9 @@ var objects1 = [{
         "time": "2017-04-18 20:00:00",
         "value": 1
     }],
-    "lineIndex": 4
+    "lineIndex": 2
 }, {
-    "id": 18,
+    "id": 3,
     "name": "增压2#",
     "type": "CSP",
     "dataType": "STATE",
@@ -322,9 +322,31 @@ var objects1 = [{
         "time": "2017-04-18 15:00:00",
         "value": -1
     }],
+    "lineIndex": 3
+}, {
+    "id": 4,
+    "name": "西向1#",
+    "type": "RSP",
+    "dataType": "STATE",
+    "values": [{
+        "time": "2017-04-18 0:00:00",
+        "value": 40
+    }, {
+        "time": "2017-04-18 4:00:00",
+        "value": 32
+    }, {
+        "time": "2017-04-18 10:00:00",
+        "value": 16
+    }, {
+        "time": "2017-04-18 16:00:00",
+        "value": 42
+    }, {
+        "time": "2017-04-18 20:00:00",
+        "value": 3
+    }],
     "lineIndex": 4
 }, {
-    "id": 14,
+    "id": 5,
     "name": "西山2#",
     "type": "RSP",
     "dataType": "STATE",
@@ -341,9 +363,9 @@ var objects1 = [{
         "time": "2017-04-18 14:00:00",
         "value": 13
     }],
-    "lineIndex": 3
+    "lineIndex": 5
 }, {
-    "id": 19,
+    "id": 6,
     "name": "增压3#",
     "type": "CSP",
     "dataType": "STATE",
@@ -360,9 +382,9 @@ var objects1 = [{
         "time": "2017-04-18 10:00:00",
         "value": 1
     }],
-    "lineIndex": 3
+    "lineIndex": 6
 }, {
-    "id": 15,
+    "id": 7,
     "name": "西山3#",
     "type": "CSP",
     "dataType": "STATE",
@@ -379,9 +401,9 @@ var objects1 = [{
         "time": "2017-04-18 12:00:00",
         "value": 1
     }],
-    "lineIndex": 2
+    "lineIndex": 7
 }, {
-    "id": 20,
+    "id": 8,
     "name": "增压4#",
     "type": "CSP",
     "dataType": "STATE",
@@ -398,9 +420,9 @@ var objects1 = [{
         "time": "2017-04-18 13:00:00",
         "value": 1
     }],
-    "lineIndex": 2
+    "lineIndex": 8
 }, {
-    "id": 16,
+    "id": 9,
     "name": "西山4#",
     "type": "CSP",
     "dataType": "STATE",
@@ -417,9 +439,9 @@ var objects1 = [{
         "time": "2017-04-18 20:00:00",
         "value": 1
     }],
-    "lineIndex": 1
+    "lineIndex": 9
 }, {
-    "id": 21,
+    "id": 10,
     "name": "增压5#",
     "type": "CSP",
     "dataType": "STATE",
@@ -436,9 +458,9 @@ var objects1 = [{
         "time": "2017-04-18 18:00:00",
         "value": 0
     }],
-    "lineIndex": 1
+    "lineIndex": 10
 }, {
-    "id": 23,
+    "id": 11,
     "name": "西山压力",
     "type": "PRESSURE",
     "dataType": "PRESSURE",
@@ -464,7 +486,29 @@ var objects1 = [{
     "minValue":20,
     "maxValue":600,
     //"format":'0.00',
-    "lineIndex": 1
+    "lineIndex": 11
+}, {
+    "id": 110,
+    "name": "西向压力",
+    "type": "PRESSURE",
+    "dataType": "PRESSURE",
+    "values": [{
+        "time": "2017-04-18 0:00:00",
+        "value": 250
+    }, {
+        "time": "2017-04-18 10:00:00",
+        "value": 60
+    }, {
+        "time": "2017-04-18 16:00:00",
+        "value": 180
+    }, {
+        "time": "2017-04-18 20:00:00",
+        "value": 580
+    }],
+    "minValue":20,
+    "maxValue":600,
+    //"format":'0.00',
+    "lineIndex": 11
 }];
 
 var chart = new chart('#chart', option);

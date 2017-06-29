@@ -25,10 +25,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.callFn = null; //点击回调
             this.dbclick_callFn = null; //双击回调
 
-            this.hasDrag=false;
-            this.dragStartFn=null;
-            this.dragFn=null;
-            this.dragEndFn=null;
+            this.hasDrag=false;//是否有拖拽
+            this.dragStartFn=null;//拖拽开始回调函数
+            this.dragFn=null;//拖拽中回调函数
+            this.dragEndFn=null;//拖拽结束回调函数
 
             if (!isNullOrUndefine(line.stateClass))
                 this.stateClass =line.stateClass;
@@ -225,7 +225,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     _this.changeRight(); //修改新的前一块
                 } else { //修改位置和宽度
                     _this.rightBlock.update(x1, null, width);
-                    // _this.rightBlock.blockText
+                }
+                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
+                    var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
+                    this.addWidth(addWidth); //合并到当前块
+                    this.rightBlock.remove(); //移除右侧
                 }
             } else {
                 // //获取当前选中的块
@@ -268,10 +272,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (this.blockData.label.trim() == this.leftBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.block.attr('width')); //计算增加的宽度
                     this.leftBlock.addWidth(addWidth); //合并到前一块
-
-                    if (this.line_data != null) {
-                        _.remove(this.line_data.points, this.blockData);
-                    } //从数据集合删除
                     this.remove(); //移除当前
                 }
             }
@@ -284,6 +284,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             if (this.line_data != null) {
                 _.remove(this.line_data.points, this.blockData);
             } //从数据集合删除
+             _.remove(this.block_Line.points, this);
             this.block.remove(); //移除当前块
             this.block = null;
             this.blockData = null;
@@ -353,7 +354,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
-                if (this.line_data != null) {
+                if (this.block_Line != null) {
+                    this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
                 } //添加到数据集合中
 
@@ -370,6 +372,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
                 if(this.hasDrag)
                     sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
+                this.block_Line.blocks.push(sameBlock);
                 this.line_data.points.push(data); //添加到数据集合中
 
                 if (rightBlock != null)
@@ -417,7 +420,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
-                if (this.line_data != null) {
+                if (this.block_Line != null) {
+                    this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
                 } //添加到数据集合中
                 this.setRight(newBlock);
@@ -435,6 +439,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
                     var sameBlock = new stateBlock(this.block_Line);
                     sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    this.block_Line.blocks.push(sameBlock);
                     this.line_data.points.push(data); //添加到数据集合中
                     if(this.hasDrag)
                         sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
@@ -584,43 +589,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     isDraging=false;
                  }
             })
-
-
-                // //定义拖拽结束行为
-                // function dragStart(d,e,i,event) {
-                //     var event = d3.event;
-                //     // timeout = setTimeout(function() {  
-                //     //     return true; 
-                //     // }, 2000);
-                //     // event.stopPropagation();
-                // }
-                // //定义拖拽行为
-                // function dragmove(d) {
-                //     var newX = d3.event.x;
-                //     var newY = d3.event.y;
-                //     d3.select(this)
-                //         .attr("x", newX)
-                //         .attr("y", newY);
-                //     //修改文字位置
-                //     _this.blockText.update(newX, newY);
-
-                //     if (typeof dragFn == 'function') { //回调函数
-                //         dragFn.call(null, newX, newY);
-                //     }
-                // }
-                // //定义拖拽结束行为
-                // function dragEnd(d) {
-                //     var newX = d3.event.x;
-                //     var newY = d3.event.y;
-                //     if (typeof dragEndFn == 'function') { //回调函数
-                //         dragEndFn.call(null, newX, newY, _this);
-                //     }
-                // }
-                // var drag = d3.drag()
-                //     .on("start",dragStart)
-                //     .on("drag", dragmove)
-                //     .on("end", dragEnd);
-                // this.block.call(drag);
                 return this;
             } //鼠标拖拽事件
     }
