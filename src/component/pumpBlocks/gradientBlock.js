@@ -347,30 +347,32 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 _.remove(this.line_data.points,this.blockData);
             }//从数据集合删除
              _.remove(this.block_Line.points, this);
-            this.block.remove();//移除当前块
-            this.block=null;
-            this.blockData=null;
-            //修改前后块的邻近块
-            if(this.leftBlock!=null)
-                this.leftBlock.rightBlock=this.rightBlock;
-            if(this.rightBlock!=null)
-                this.rightBlock.leftBlock=this.leftBlock;
-            if(this.rightBlock&&this.leftBlock){
-                    //判断是否同一状态，是:合并
-                    if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
-                        var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
-                        var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
-                        var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
-                        if(x2<curx2){//判断是否修改左侧宽度
-                            var width = curx2 - x1; //计算宽度
-                            this.leftBlock.update(x1, null, width); //合并到前一块
+            if(this.block!=null){
+                this.block.remove();//移除当前块
+                this.block=null;
+                this.blockData=null;
+                //修改前后块的邻近块
+                if(this.leftBlock!=null)
+                    this.leftBlock.rightBlock=this.rightBlock;
+                if(this.rightBlock!=null)
+                    this.rightBlock.leftBlock=this.leftBlock;
+                if(this.rightBlock&&this.leftBlock){
+                        //判断是否同一状态，是:合并
+                        if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
+                            var x1=parseFloat(this.leftBlock.block.attr('x'));//获取开始坐标
+                            var x2=parseFloat(this.leftBlock.block.attr('width'))+x1;//左边的结束坐标
+                            var curx2 = parseFloat(this.rightBlock.block.attr('x')) + parseFloat(this.rightBlock.block.attr('width')); //计算结束坐标
+                            if(x2<curx2){//判断是否修改左侧宽度
+                                var width = curx2 - x1; //计算宽度
+                                this.leftBlock.update(x1, null, width); //合并到前一块
+                            }
+                            this.rightBlock.remove();//删除后一条
                         }
-                        this.rightBlock.remove();//删除后一条
-                    }
+                }
+                //删除对应text的位置
+                if(this.blockText!=null)
+                    this.blockText.remove();
             }
-            //删除对应text的位置
-            if(this.blockText!=null)
-                this.blockText.remove();
             return this;
         },//删除当前块，并合并相同状态的邻近块
         restorePos: function() {
@@ -577,55 +579,51 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             this.dragFn=dragFn;
             this.dragEndFn=dragEndFn;
 
-            var isDraging=false;
             var oldx=0;
             var oldy=0;
-            this.block.on("mousedown", function(d, i, rects) {
-                var event=d3.event;
-                if(event.button==2){//如果是右键
-                    isDraging=true;
-                    oldx=event.x;
-                    oldy=event.y;
-                    if (typeof dragStartFn == 'function') { //回调函数
-                        dragStartFn.call(null, _this);
-                    }
+            var dragStart = function(d, i, rects) {
+                oldx = event.x;
+                oldy = event.y;
+                if (typeof dragStartFn == 'function') { //回调函数
+                    dragStartFn.call(null, _this);
                 }
-            })
-            this.block.on("mousemove", function(d, i, rects) {
-                var event=d3.event;
-                 if(event.button==2&&isDraging){//如果是右键
-                    var diffValueX = event.x-oldx;
-                    var diffValueY = event.y-oldy;
+            }
+            var drag = function(d, i, rects) {
+                var diffValueX = event.x - oldx;
+                var diffValueY = event.y - oldy;
 
-                    var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-                    var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
+                var newX = parseFloat(d3.select(this).attr("x")) + diffValueX;
+                var newY = parseFloat(d3.select(this).attr("y")) + diffValueY;
 
-                    d3.select(this)
-                        .attr("x", newX)
-                        .attr("y", newY);
-                    //修改文字位置
-                    _this.blockText.update(newX, newY);
-                    //更新历史值
-                    oldx=event.x;
-                    oldy=event.y;
-                    if (typeof dragFn == 'function') { //回调函数
-                        dragFn.call(null, newX, newY);
-                    }
-                 }
-            })
-            this.block.on("mouseup", function(d, i, rects) {
-                var event=d3.event;
-                 if(event.button==2&&isDraging){//如果是右键
-                    var diffValueX = event.x-oldx;
-                    var diffValueY = event.y-oldy;
-                    var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-                    var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
-                    if (typeof dragEndFn == 'function') { //回调函数
-                        dragEndFn.call(null, newX, newY, _this);
-                    }
-                    isDraging=false;
-                 }
-            })
+                d3.select(this)
+                    .attr("x", newX)
+                    .attr("y", newY);
+                //修改文字位置
+                _this.blockText.update(newX, newY);
+                //更新历史值
+                oldx = event.x;
+                oldy = event.y;
+                if (typeof dragFn == 'function') { //回调函数
+                    dragFn.call(null, newX, newY);
+                }
+            }
+            var dragEnd = function(d, i, rects) {
+                var diffValueX = event.x - oldx;
+                var diffValueY = event.y - oldy;
+                var newX = parseFloat(d3.select(this).attr("x")) + diffValueX;
+                var newY = parseFloat(d3.select(this).attr("y")) + diffValueY;
+                if (typeof dragEndFn == 'function') { //回调函数
+                    dragEndFn.call(null, newX, newY, _this);
+                }
+            }
+            var blockDrag = d3.drag()
+                .filter(function() {
+                    return d3.event.button == 2;
+                })
+                .on("start", dragStart)
+                .on("drag", drag)
+                .on("end", dragEnd);
+            this.block.call(blockDrag);
             return this;
         } //鼠标拖拽事件
     }
