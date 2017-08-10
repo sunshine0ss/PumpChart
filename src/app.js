@@ -123,6 +123,8 @@ var objects = [{
         "time": "2017-04-21 14:00:00",
         "value": 25
     }],
+    "minValue":45,
+    "maxValue":60,
     "lineIndex": 3
 }, {
     "id": 19,
@@ -249,22 +251,17 @@ var objects = [{
     "minValue":20,
     "maxValue":600,
     //"format":'0.00',
-    "lineIndex": 1
+    "lineIndex": 1,
+    "unitText":'HZ'
 }];
 
 
-// var dicState={
-//     CLASS_OPEN_STATE:{'text':'开','class':'rect close_state'},
-//     CLASS_CLOSE_STATE:{'text':'关','class':'rect open_state'},
-//     CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
-//     CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
-// }
-
-
-// {
-//         "time": "2017-04-18 6:00:00",
-//         "value": 0
-//     }, 
+var dicState={
+    CLASS_OPEN_STATE:{'text':'开','class':'rect close_state'},
+    CLASS_CLOSE_STATE:{'text':'关','class':'rect open_state'},
+    CLASS_FAULT_STATE:{'text':'故障','class':'rect fault_state'},
+    CLASS_INDEFINITE_STATE:{'text':'不定','class':'rect indefinite_state'}
+}
 
 var objects1 = [{
     "id": 1,
@@ -485,6 +482,7 @@ var objects1 = [{
     }],
     "minValue":20,
     "maxValue":600,
+    'unitText':'HZ',
     //"format":'0.00',
     "lineIndex": 11
 }, {
@@ -519,3 +517,40 @@ chart.draw(objects1);
 $("#inputBtn").on('click', function() {
     chart.getData();
 })
+
+
+// var objs = [{
+//     "id": 1,
+//     "name": "增压1#",
+//     "type": "CSP",
+//     "dataType": "STATE",
+//     "values": [{
+//         "time": "2017-04-18 0:00:00",
+//         "value": 1
+//     }],
+//     "lineIndex": 1
+// }, {
+//     "id": 2,
+//     "name": "西山1#",
+//     "type": "RSP",
+//     "dataType": "STATE",
+//     "values": [{
+//         "time": "2017-04-18 0:00:00",
+//         "value": 0
+//     },{
+//         "time": "2017-04-18 9:00:00",
+//         "value": 122
+//     }],
+//     "lineIndex": 2
+// }, {
+//     "id": 3,
+//     "name": "增压2#",
+//     "type": "CSP",
+//     "dataType": "STATE",
+//     "values": [{
+//         "time": "2017-04-18 0:00:00",
+//         "value": 1
+//     }],
+//     "lineIndex": 3
+// }]
+// chart.draw(objs,dicState);

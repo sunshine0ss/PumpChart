@@ -245,7 +245,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         time: _this.block_xScale.invert(x1),
                         value: null,
                         label: _this.stateClass.CLASS_INDEFINITE_STATE.text,
-                        width: MaxX
+                        width: MaxX-x1
                     };
                     var rightBlock = new stateBlock(_this.block_Line);
                     rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);

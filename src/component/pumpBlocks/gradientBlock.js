@@ -63,6 +63,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             return d.className;
         },
         draw: function(data) {//在绘图区绘制出块
+            if(isNullOrUndefine(data.unitText))
+                data.unitText='';
             if(!isNullOrUndefine(data.value))
                 data.label=data.value.toString().trim();
             data.blockType=this.blockType;
@@ -273,7 +275,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                     _this.rightBlock.update(x1,null,width);
                 }
                 
-                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
+                if (_this.rightBlock&&_this.rightBlock.block&&this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
                     this.addWidth(addWidth); //合并到当前块
                     this.rightBlock.remove(); //移除右侧
@@ -288,7 +290,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                         time:_this.block_xScale.invert(x1),
                         value: null,
                         label: this.stateClass.CLASS_INDEFINITE_STATE.text,
-                        width:MaxX
+                        width:MaxX-x1
                     };
                     var rightBlock=new gradientBlock(_this.block_Line);
                     rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
@@ -305,6 +307,7 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
             if (data.value > data.maxValue){ //最大限制
                 data.value = data.maxValue;
             }
+            data.label=data.value.toString();
             this.block.attr('class', function(d, i) {//.datum(data)
                 return _this.formatClass(d);
             })

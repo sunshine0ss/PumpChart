@@ -51,9 +51,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             }
             return d.className;
         },
-        draw: function(data) { //在绘图区绘制出块
+        draw: function(data) { //在绘图区绘制出块   
+            if(isNullOrUndefine(data.unitText))
+                data.unitText='';
             data.blockType = this.blockType; //设置当前类型
-            data.maxValue = MAX_VALUE; //设置默认最大值
+            if(!data.maxValue)
+                data.maxValue = MAX_VALUE; //设置默认最大值
+            if(!data.minValue)
+                data.minValue = MIN_VALUE; //设置默认最大值
             if (data.value > MAX_VALUE) { //判断是否超过最大限制
                 data.value = MAX_VALUE;
                 data.label = MAX_VALUE.toString().trim();
@@ -238,7 +243,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     _this.rightBlock.update(x1, null, width);
                 }
 
-                if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
+                if (_this.rightBlock&&_this.rightBlock.block&&this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
                     this.addWidth(addWidth); //合并到当前块
                     this.rightBlock.remove(); //移除右侧
@@ -252,7 +257,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         time: _this.block_xScale.invert(x1),
                         value: null,
                         label: _this.stateClass.CLASS_INDEFINITE_STATE.text,
-                        width: MaxX
+                        width: MaxX-x1
                     };
                     var rightBlock = new numericBlock(_this.block_Line);
                     rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
@@ -267,6 +272,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 data.value = data.minValue;
             if (data.value > data.maxValue) //最大限制
                 data.value = data.maxValue;
+            data.label=data.value.toString();
             this.block.attr('class', function(d, i) {
                 return _this.formatClass(d);
             })

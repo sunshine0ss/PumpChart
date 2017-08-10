@@ -128,6 +128,8 @@
                         v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
                     else
                         v.label =dicState.CLASS_INDEFINITE_STATE.text; 
+                    if(v.unitText==undefined)
+                        v.unitText=line.unitText||'';
                 }
 
                 // Sort all values by time
@@ -167,8 +169,9 @@
 
                     var point = {
                         time: time,
-                        value: merged_values[0].value,
-                        label: merged_values[0].label
+                        value: null,
+                        label: dicState.CLASS_INDEFINITE_STATE.text,
+                        unitText:line.unitText||''
                     }
                     merged_values.push(point);
                 }
@@ -217,6 +220,7 @@
                             time: time,
                             value: null,
                             label: dicState.CLASS_INDEFINITE_STATE.text,
+                            unitText:line.unitText||'',
                             prev: last
                         }
                         last.next = point;
