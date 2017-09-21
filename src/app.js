@@ -509,13 +509,13 @@ var objects1 = [{
     "lineIndex": 11
 }];
 
-var chart = new chart('#chart', option);
+var pumpChart = new pumpChart('#chart', option);
 //chart.draw(objects);
-chart.draw(objects1);
+pumpChart.draw(objects1);
 // chart.draw(objects1,dicState);
 
 $("#inputBtn").on('click', function() {
-    chart.getData();
+    pumpChart.getData();
 })
 
 

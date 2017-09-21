@@ -6,7 +6,7 @@ const path = require("path");
 module.exports = {
     context: __dirname + "/src",
     entry: {
-        chart: "./chart/chart.js",
+        pumpChart: "./chart/pumpChart.js",
     },
     output: {
         path: __dirname + "/src/dist",
