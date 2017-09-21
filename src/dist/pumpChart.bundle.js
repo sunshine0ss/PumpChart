@@ -661,7 +661,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.drag_Event(dragStart,null,null); //绑定事件
+                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
             })
             return this;
         }, //拖拽事件
@@ -1084,7 +1084,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     }
                     if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
                         var last=merged_values.length-2;
-                        _.remove(merged_values,merged_values[last]);
+                        if(last>0)
+                            _.remove(merged_values,merged_values[last]);
                     }
                 }
 

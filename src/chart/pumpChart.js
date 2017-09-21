@@ -154,7 +154,8 @@
                     }
                     if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
                         var last=merged_values.length-2;
-                        _.remove(merged_values,merged_values[last]);
+                        if(last>0)
+                            _.remove(merged_values,merged_values[last]);
                     }
                 }
 

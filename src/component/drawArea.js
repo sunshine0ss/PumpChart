@@ -455,7 +455,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.drag_Event(dragStart,null,null); //绑定事件
+                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
             })
             return this;
         }, //拖拽事件
