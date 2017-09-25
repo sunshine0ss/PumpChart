@@ -386,7 +386,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             var curDragBlock=null;
             var curLine=null;
             var tempLine =null;
-            var dragStart= function(block) {
+            var rightClick= function(i, rects, block) {
+                if(tempLine)
+                    tempLine.remove();
+                if(block.blockData.label=='不定'){
+                    return;
+                }
                 curDragBlock=block;
                 _this.removeHandles();//移除编辑手柄
                 if (_this.hoverLine.isShow) {
@@ -400,11 +405,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 lineData.points.push(block.blockData);
                 
                 tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
-               
-            } //拖动结束回调
+            } //右键点击新建
             var drag = function(x, y) {
                 if (_this.curBlock != null)
-                    _this.updateHandles();
+                    _this.removeHandles();
             } //拖动中回调
 
             var dragEnd = function(x, y, block) {
@@ -427,10 +431,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         curDragBlock.changeLeft();
                                         curDragBlock.remove();
                                         return false;
-                                        // var leftWidth = x - lineBlock.blockData.x;
-                                        // lineBlock.updateWidth(leftWidth);
-
-                                        //line.insert(block);
                                     }
                                 })
                             }
@@ -441,10 +441,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         lineBlock.insertBlock(block,x);
                                         curDragBlock.remove();
                                         return false;
-                                        // var leftWidth = x - lineBlock.blockData.x;
-                                        // lineBlock.updateWidth(leftWidth);
-
-                                        //line.insert(block);
                                     }
                                 })
                             }
@@ -455,7 +451,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
+                line.rightClick_Event(rightClick); //绑定事件
             })
             return this;
         }, //拖拽事件

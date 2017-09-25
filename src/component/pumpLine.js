@@ -167,6 +167,15 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
         },//获取对应颜色
         remove:function(){
             this.g.remove();
+            this.blocks=[];
+            this.line_data=null;
+            // if(this.g){
+            //     this.g.remove();
+            //     this.g=null;
+            //     this.blocks=[];
+            //     this.line_data=null;
+            // }
+            // this=null;
             return this;
         },
         insert:function(block){
@@ -203,18 +212,15 @@ define(['d3', 'jQuery','stateBlock','numericBlock','gradientBlock', 'moment', 'l
             }
             return this;
         },//双击事件
+        rightClick_Event:function(fn){
+            if(typeof fn==='function'){
+                _.each(this.blocks,function(block){
+                    block.rightClick_Event(fn);
+                })     
+            }
+            return this;
+        },//鼠标右键点击事件
         drag_Event:function(dragStartFn,dragFn,dragEndFn){
-            // var line={
-            //     'name':'temporary',
-            //     'points':[],
-            //     'type':this.line_data.type,
-            // }
-            // if(this.line_data.hasOwnProperty('minValue'))
-            //     line.minValue=this.line_data.minValue;
-            // if(this.line_data.hasOwnProperty('maxValue'))
-            //     line.maxValue=this.line_data.maxValue;;
-            // var tempLine = new pumpLine(this.line_svg, this.line_xScale, this.line_yScale, this.line_option, this.line_describe);
-            // tempLine.drawLine(line, this.stateClass);
             _.each(this.blocks,function(block){
                 block.drag_Event(dragStartFn,dragFn,dragEndFn);
             }) 

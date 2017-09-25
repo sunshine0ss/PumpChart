@@ -592,7 +592,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var curDragBlock=null;
             var curLine=null;
             var tempLine =null;
-            var dragStart= function(block) {
+            var rightClick= function(i, rects, block) {
+                if(tempLine)
+                    tempLine.remove();
+                if(block.blockData.label=='不定'){
+                    return;
+                }
                 curDragBlock=block;
                 _this.removeHandles();//移除编辑手柄
                 if (_this.hoverLine.isShow) {
@@ -606,11 +611,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 lineData.points.push(block.blockData);
                 
                 tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
-               
-            } //拖动结束回调
+            } //右键点击新建
             var drag = function(x, y) {
                 if (_this.curBlock != null)
-                    _this.updateHandles();
+                    _this.removeHandles();
             } //拖动中回调
 
             var dragEnd = function(x, y, block) {
@@ -633,10 +637,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                         curDragBlock.changeLeft();
                                         curDragBlock.remove();
                                         return false;
-                                        // var leftWidth = x - lineBlock.blockData.x;
-                                        // lineBlock.updateWidth(leftWidth);
-
-                                        //line.insert(block);
                                     }
                                 })
                             }
@@ -647,10 +647,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                         lineBlock.insertBlock(block,x);
                                         curDragBlock.remove();
                                         return false;
-                                        // var leftWidth = x - lineBlock.blockData.x;
-                                        // lineBlock.updateWidth(leftWidth);
-
-                                        //line.insert(block);
                                     }
                                 })
                             }
@@ -661,7 +657,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
+                line.rightClick_Event(rightClick); //绑定事件
             })
             return this;
         }, //拖拽事件
@@ -1706,12 +1702,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         this.block_ColorGrade=line.ColorGrade;
         this.block_ValueGrade=line.valueGrade;
 
+        this.click_callFn = null; //点击回调
+        this.rightclick_callFn = null; //点击回调
+        this.dbclick_callFn = null; //双击回调
+
         this.hasDrag=false;//是否有拖拽
         this.dragStartFn=null;//拖拽开始回调函数
         this.dragFn=null;//拖拽中回调函数
         this.dragEndFn=null;//拖拽结束回调函数
 
-        this.callFn=null;
         if (!isNullOrUndefine(line.stateClass))
             this.stateClass =line.stateClass;
     }
@@ -1810,10 +1809,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         },//块对应的文本提示
         update:function(x,y,width,fn){ 
+            var _this=this;
             if(!isNullOrUndefine(x)){
                 this.block.attr('x', function(d) {
                     d.x = x;
                     d.pos.x1 = d.x;
+                    d.time=_this.block_xScale.invert(d.x);
                     return d.x;
                 });
             }
@@ -1871,13 +1872,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         },//修改宽度
         setLeft:function(left){
-            if(!isNullOrUndefine(left))
+            if(!isNullOrUndefine(left)){
                 this.leftBlock=left;
+                this.blockData.prev=left.blockData;
+            }
             return this;
         },//设置左边邻近块
         setRight:function(right){
-            if(!isNullOrUndefine(right))
+            if(!isNullOrUndefine(right)){
                 this.rightBlock=right;
+                this.blockData.next=right.blockData;
+            }
             return this;
         },//设置右边邻近块
         setMinValue:function(min){
@@ -1915,7 +1920,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             width:x2
                         };
                         var leftBlock=new gradientBlock(_this.block_Line);
-                        leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                        leftBlock.draw(data).drawText(data).setRight(_this);
+                        //绑定事件
+                        if(this.click_callFn)
+                            leftBlock.click_Event(this.click_callFn);
+                        if(this.rightclick_callFn)
+                            leftBlock.rightClick_Event(this.rightclick_callFn);
+                        if(this.dbclick_callFn)
+                            leftBlock.dbclick_Event(this.dbclick_callFn);
+                        if(this.hasDrag)
+                            leftBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                         _this.leftBlock=leftBlock;
                     }
                 }  
@@ -1962,7 +1976,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         width:MaxX-x1
                     };
                     var rightBlock=new gradientBlock(_this.block_Line);
-                    rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                    rightBlock.draw(data).drawText(data).setLeft(_this);
+                    //绑定事件
+                    if(this.click_callFn)
+                        rightBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        rightBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        rightBlock.dbclick_Event(this.dbclick_callFn);
+                    if(this.hasDrag)
+                        rightBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     _this.rightBlock=rightBlock;
                 }
             }
@@ -2024,10 +2047,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.block=null;
                 this.blockData=null;
                 //修改前后块的邻近块
-                if(this.leftBlock!=null)
-                    this.leftBlock.rightBlock=this.rightBlock;
-                if(this.rightBlock!=null)
-                    this.rightBlock.leftBlock=this.leftBlock;
+                if (this.leftBlock != null)
+                    this.leftBlock.setRight(this.rightBlock);
+                if (this.rightBlock != null)
+                    this.rightBlock.setLeft(this.leftBlock);
                 if(this.rightBlock&&this.leftBlock){
                         //判断是否同一状态，是:合并
                         if(this.leftBlock.blockData.label== this.rightBlock.blockData.label){
@@ -2083,9 +2106,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 //新建中间一段
                 var newBlock=new gradientBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
+
                 if (this.block_Line != null) {
                     this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
@@ -2144,7 +2175,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 //新建中间一段
                 var newBlock = new gradientBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
@@ -2165,7 +2203,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         x: x2
                     }
                     var sameBlock = new gradientBlock(this.block_Line);
-                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                    sameBlock.draw(data, this.line_data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                    //绑定事件
+                    if(this.click_callFn)
+                        sameBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        sameBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        sameBlock.dbclick_Event(this.dbclick_callFn);
                     if(this.hasDrag)
                         sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     this.line_data.points.push(data); //添加到数据集合中
@@ -2175,7 +2220,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
-                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 }
                 else{
                     newBlock.setRight(rightBlock);
@@ -2197,8 +2241,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     
                 }
-                
-                newBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -2226,7 +2268,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //是否在坐标范围内
         click_Event:function(fn){//点击事件
             if(typeof fn=='function'){
-                this.callFn=fn;
+                this.click_callFn = fn;
                 var _this=this;
                 if(this.block!=null){
                     this.block.on("click", function(d, i, rects) {
@@ -2236,6 +2278,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             return this;
         },//鼠标单击事件
+        rightClick_Event:function(fn){
+            if (typeof fn == 'function') {
+                this.rightclick_callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("mousedown", function(d, i, rects) {
+                        if(d3.event.button == 2)
+                            fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标右键单击事件
         dbclick_Event:function(fn){//点击事件
             var _this=this;
             this.block.on("dblclick", function(d, i, rects) {
@@ -2336,7 +2391,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block_xScale = line.line_xScale;
             this.line_data = line.line_data;
 
-            this.callFn = null;
+            this.click_callFn = null; //点击回调
+            this.rightclick_callFn = null; //点击回调
+            this.dbclick_callFn = null; //双击回调
 
             this.hasDrag = false; //是否有拖拽
             this.dragStartFn = null; //拖拽开始回调函数
@@ -2423,10 +2480,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         }, //块对应的文本提示
         update: function(x, y, width, fn) {
+            var _this=this;
             if (!isNullOrUndefine(x)) {
                 this.block.attr('x', function(d) {
                     d.x = x;
                     d.pos.x1 = d.x;
+                    d.time=_this.block_xScale.invert(d.x);
                     return d.x;
                 });
             }
@@ -2484,13 +2543,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         }, //修改宽度
         setLeft: function(left) {
-            if (!isNullOrUndefine(left))
+            if (!isNullOrUndefine(left)){
                 this.leftBlock = left;
+                this.blockData.prev=left.blockData;
+            }
             return this;
         }, //设置左边邻近块
         setRight: function(right) {
-            if (!isNullOrUndefine(right))
+            if (!isNullOrUndefine(right)){
                 this.rightBlock = right;
+                this.blockData.next=right.blockData;
+            }
             return this;
         }, //设置右边邻近块
         setMinValue: function(min) {
@@ -2526,7 +2589,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             width: x2
                         };
                         var leftBlock = new numericBlock(_this.block_Line);
-                        leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                        leftBlock.draw(data).drawText(data).setRight(_this);
+
+                        //绑定事件
+                        if(this.click_callFn)
+                            leftBlock.click_Event(this.click_callFn);
+                        if(this.rightclick_callFn)
+                            leftBlock.rightClick_Event(this.rightclick_callFn);
+                        if(this.dbclick_callFn)
+                            leftBlock.dbclick_Event(this.dbclick_callFn);
+                        if(this.hasDrag)
+                            leftBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                         _this.leftBlock = leftBlock;
                     }
                 }
@@ -2571,7 +2644,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         width: MaxX-x1
                     };
                     var rightBlock = new numericBlock(_this.block_Line);
-                    rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                    rightBlock.draw(data).drawText(data).setLeft(_this);
+
+                    //绑定事件
+                    if(this.click_callFn)
+                        rightBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        rightBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        rightBlock.dbclick_Event(this.dbclick_callFn);
+                    if(this.hasDrag)
+                        rightBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     _this.rightBlock = rightBlock;
                 }
             }
@@ -2622,9 +2705,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockData = null;
                 //修改前后块的邻近块
                 if (this.leftBlock != null)
-                    this.leftBlock.rightBlock = this.rightBlock;
+                    this.leftBlock.setRight(this.rightBlock);
                 if (this.rightBlock != null)
-                    this.rightBlock.leftBlock = this.leftBlock;
+                    this.rightBlock.setLeft(this.leftBlock);
                 if (this.rightBlock && this.leftBlock) {
                     //判断是否同一状态，是:合并
                     if (this.leftBlock.blockData.label == this.rightBlock.blockData.label) {
@@ -2684,9 +2767,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 //新建中间一段
                 var newBlock = new numericBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-                if (this.hasDrag)
-                    newBlock.drag_Event(this.dragStartFn, this.dragFn, this.dragEndFn);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
+                if(this.hasDrag)
+                    newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
                     this.block_Line.blocks.push(newBlock);
                     this.line_data.points.push(newData);
@@ -2748,9 +2838,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     //新建中间一段
                 var newBlock = new numericBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
-                if (this.hasDrag)
-                    newBlock.drag_Event(this.dragStartFn, this.dragFn, this.dragEndFn);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
+                if(this.hasDrag)
+                    newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
 
                 if (this.block_Line != null) {
                     this.block_Line.blocks.push(newBlock);
@@ -2770,9 +2867,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         x: x2
                     }
                     var sameBlock = new numericBlock(this.block_Line);
-                    sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
-                    if (this.hasDrag)
-                        sameBlock.drag_Event(this.dragStartFn, this.dragFn, this.dragEndFn);
+                    sameBlock.draw(data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                    //绑定事件
+                    if(this.click_callFn)
+                        sameBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        sameBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        sameBlock.dbclick_Event(this.dbclick_callFn);
+                    if(this.hasDrag)
+                        sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
 
                     this.line_data.points.push(data); //添加到数据集合中
                     this.block_Line.blocks.push(sameBlock);
@@ -2781,7 +2885,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
 
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
-                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 } else {
                     newBlock.setRight(rightBlock);
                     if (rightBlock != null)
@@ -2800,8 +2903,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
 
                 }
-
-                newBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -2828,7 +2929,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //是否在坐标范围内
         click_Event: function(fn) { //点击事件
             if (typeof fn == 'function') {
-                this.callFn = fn;
+                this.click_callFn = fn;
                 var _this = this;
                 if (this.block != null) {
                     this.block.on("click", function(d, i, rects) {
@@ -2838,6 +2939,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             return this;
         }, //鼠标单击事件
+        rightClick_Event:function(fn){
+            if (typeof fn == 'function') {
+                this.rightclick_callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("mousedown", function(d, i, rects) {
+                        if(d3.event.button == 2)
+                            fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标右键单击事件
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
             if (this.block != null) {
@@ -2937,7 +3051,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block_xScale = line.line_xScale; //x比例尺
             this.line_data = line.line_data; //赋值行的数据
 
-            this.callFn = null; //点击回调
+            this.click_callFn = null; //点击回调
+            this.rightclick_callFn = null; //点击回调
             this.dbclick_callFn = null; //双击回调
 
             this.hasDrag=false;//是否有拖拽
@@ -3021,10 +3136,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         }, //块对应的文本提示
         update: function(x, y, width, fn) {
+            var _this=this;
             if (!isNullOrUndefine(x)) {
                 this.block.attr('x', function(d) {
                     d.x = x;
                     d.pos.x1 =d.x;
+                    d.time=_this.block_xScale.invert(d.x);
                     return d.x;
                 });
 
@@ -3082,13 +3199,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         }, //修改宽度
         setLeft: function(left) {
-            if (!isNullOrUndefine(left))
+            if (!isNullOrUndefine(left)){
                 this.leftBlock = left;
+                this.blockData.prev=left.blockData;
+            }
             return this;
         },
         setRight: function(right) {
-            if (!isNullOrUndefine(right))
+            if (!isNullOrUndefine(right)){
                 this.rightBlock = right;
+                this.blockData.next=right.blockData;
+            }
             return this;
         },
         changeLeft: function() {
@@ -3114,7 +3235,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             width: x2
                         };
                         var leftBlock = new stateBlock(_this.block_Line);
-                        leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                        leftBlock.draw(data).drawText(data).setRight(_this);
+                        //绑定事件
+                        if(this.click_callFn)
+                            leftBlock.click_Event(this.click_callFn);
+                        if(this.rightclick_callFn)
+                            leftBlock.rightClick_Event(this.rightclick_callFn);
+                        if(this.dbclick_callFn)
+                            leftBlock.dbclick_Event(this.dbclick_callFn);
+                        if(this.hasDrag)
+                            leftBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                         _this.leftBlock = leftBlock;
                     }
                 }
@@ -3143,15 +3273,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 if (_this.rightBlock&&_this.rightBlock.block&&this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
-                    this.addWidth(addWidth); //合并到当前块
+                    this.addWidth(addWidth) //合并到当前块
                     this.rightBlock.remove(); //移除右侧
                 }
             } else {
-                // //获取当前选中的块
-                // var curRect = $(rects[i]);
-                // //获取当前那一行
-                // var g = curRect.parent()[0];//获取父级
-                // var parentWidth= curRect.parent().width();//获取父级总宽
                 var MaxX = this.block_Line.lineWidth;
                 if(x1<MaxX){
                     //如果没有就创建  不定状态
@@ -3163,7 +3288,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         width: MaxX-x1
                     };
                     var rightBlock = new stateBlock(_this.block_Line);
-                    rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                    rightBlock.draw(data).drawText(data).setLeft(_this);
+                    //绑定事件
+                    if(this.click_callFn)
+                        rightBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        rightBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        rightBlock.dbclick_Event(this.dbclick_callFn);
+                    if(this.hasDrag)
+                        rightBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     _this.rightBlock = rightBlock;
                 }
             }
@@ -3206,9 +3340,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.blockData = null;
                 //修改前后块的邻近块
                 if (this.leftBlock != null)
-                    this.leftBlock.rightBlock = this.rightBlock;
+                    this.leftBlock.setRight(this.rightBlock);
                 if (this.rightBlock != null)
-                    this.rightBlock.leftBlock = this.leftBlock;
+                    this.rightBlock.setLeft(this.leftBlock);
                 if (this.rightBlock && this.leftBlock) {
                     //判断是否同一状态，是:合并
                     if (this.leftBlock.blockData.label.trim() == this.rightBlock.blockData.label.trim()) {
@@ -3226,7 +3360,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (this.blockText != null)
                     this.blockText.remove();
              }
-            
             return this;
         }, //删除当前块，并合并相同状态的邻近块
         restorePos: function() {
@@ -3269,7 +3402,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 //新建中间一段
                 var newBlock = new stateBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
@@ -3287,7 +3427,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     x: x3
                 }
                 var sameBlock = new stateBlock(this.block_Line);
-                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                sameBlock.draw(data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                //绑定事件
+                if(this.click_callFn)
+                    sameBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    sameBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 this.block_Line.blocks.push(sameBlock);
@@ -3298,9 +3445,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
                 newBlock.setRight(sameBlock); //设置中间一块的右侧
                 this.setRight(newBlock);
-
-                newBlock.dbclick_Event(this.dbclick_callFn);
-                sameBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -3335,7 +3479,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 //新建中间一段
                 var newBlock = new stateBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
@@ -3356,17 +3507,22 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         x: x2
                     }
                     var sameBlock = new stateBlock(this.block_Line);
-                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
-                    this.block_Line.blocks.push(sameBlock);
-                    this.line_data.points.push(data); //添加到数据集合中
+                    sameBlock.draw(data, this.line_data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                    //绑定事件
+                    if(this.click_callFn)
+                        sameBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        sameBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        sameBlock.dbclick_Event(this.dbclick_callFn);
                     if(this.hasDrag)
                         sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
 
+                    this.block_Line.blocks.push(sameBlock);
+                    this.line_data.points.push(data); //添加到数据集合中
                     if (rightBlock != null)
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
-
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
-                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 }
                 else{
                     newBlock.setRight(rightBlock);
@@ -3388,8 +3544,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     
                 }
-                
-                newBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -3417,7 +3571,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         }, //是否在坐标范围内
         click_Event: function(fn) { //点击事件
             if (typeof fn == 'function') {
-                this.callFn = fn;
+                this.click_callFn = fn;
                 var _this = this;
                 if (this.block != null) {
                     this.block.on("click", function(d, i, rects) {
@@ -3427,6 +3581,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             return this;
         }, //鼠标单击事件
+        rightClick_Event:function(fn){
+            if (typeof fn == 'function') {
+                this.rightclick_callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("mousedown", function(d, i, rects) {
+                        if(d3.event.button == 2)
+                            fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标右键单击事件
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
             _this.dbclick_callFn = fn;
@@ -3505,65 +3672,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.block.call(blockDrag);
             return this;
         } //鼠标拖拽事件
-        // drag_Event: function(dragStartFn,dragFn, dragEndFn) {
-        //     var _this = this;
-        //     this.hasDrag=true;
-        //     this.dragStartFn=dragStartFn;
-        //     this.dragFn=dragFn;
-        //     this.dragEndFn=dragEndFn;
-
-        //     var isDraging=false;
-        //     var oldx=0;
-        //     var oldy=0;
-        //     this.block.on("mousedown", function(d, i, rects) {
-        //         var event=d3.event;
-        //         if(event.button==2){//如果是右键
-        //             // window.captureEvents(event.type);
-        //             isDraging=true;
-        //             oldx=event.x;
-        //             oldy=event.y;
-        //             if (typeof dragStartFn == 'function') { //回调函数
-        //                 dragStartFn.call(null, _this);
-        //             }
-        //         }
-        //     })
-        //     this.block.on("mousemove", function(d, i, rects) {
-        //         var event=d3.event;
-        //          if(event.button==2&&isDraging){//如果是右键
-        //             var diffValueX = event.x-oldx;
-        //             var diffValueY = event.y-oldy;
-
-        //             var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-        //             var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
-
-        //             d3.select(this)
-        //                 .attr("x", newX)
-        //                 .attr("y", newY);
-        //             //修改文字位置
-        //             _this.blockText.update(newX, newY);
-        //             //更新历史值
-        //             oldx=event.x;
-        //             oldy=event.y;
-        //             if (typeof dragFn == 'function') { //回调函数
-        //                 dragFn.call(null, newX, newY);
-        //             }
-        //          }
-        //     })
-        //     this.block.on("mouseup", function(d, i, rects) {
-        //         var event=d3.event;
-        //          if(event.button==2&&isDraging){//如果是右键
-        //             var diffValueX = event.x-oldx;
-        //             var diffValueY = event.y-oldy;
-        //             var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-        //             var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
-        //             if (typeof dragEndFn == 'function') { //回调函数
-        //                 dragEndFn.call(null, newX, newY, _this);
-        //             }
-        //             isDraging=false;
-        //          }
-        //     })
-        //     return this;
-        // } //鼠标拖拽事件
     }
 
     //// Exports stateBlock Component ////
@@ -3744,6 +3852,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         },//获取对应颜色
         remove:function(){
             this.g.remove();
+            this.blocks=[];
+            this.line_data=null;
+            // if(this.g){
+            //     this.g.remove();
+            //     this.g=null;
+            //     this.blocks=[];
+            //     this.line_data=null;
+            // }
+            // this=null;
             return this;
         },
         insert:function(block){
@@ -3780,18 +3897,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             }
             return this;
         },//双击事件
+        rightClick_Event:function(fn){
+            if(typeof fn==='function'){
+                _.each(this.blocks,function(block){
+                    block.rightClick_Event(fn);
+                })     
+            }
+            return this;
+        },//鼠标右键点击事件
         drag_Event:function(dragStartFn,dragFn,dragEndFn){
-            // var line={
-            //     'name':'temporary',
-            //     'points':[],
-            //     'type':this.line_data.type,
-            // }
-            // if(this.line_data.hasOwnProperty('minValue'))
-            //     line.minValue=this.line_data.minValue;
-            // if(this.line_data.hasOwnProperty('maxValue'))
-            //     line.maxValue=this.line_data.maxValue;;
-            // var tempLine = new pumpLine(this.line_svg, this.line_xScale, this.line_yScale, this.line_option, this.line_describe);
-            // tempLine.drawLine(line, this.stateClass);
             _.each(this.blocks,function(block){
                 block.drag_Event(dragStartFn,dragFn,dragEndFn);
             }) 

@@ -22,7 +22,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.block_xScale = line.line_xScale; //x比例尺
             this.line_data = line.line_data; //赋值行的数据
 
-            this.callFn = null; //点击回调
+            this.click_callFn = null; //点击回调
+            this.rightclick_callFn = null; //点击回调
             this.dbclick_callFn = null; //双击回调
 
             this.hasDrag=false;//是否有拖拽
@@ -106,10 +107,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             return this;
         }, //块对应的文本提示
         update: function(x, y, width, fn) {
+            var _this=this;
             if (!isNullOrUndefine(x)) {
                 this.block.attr('x', function(d) {
                     d.x = x;
                     d.pos.x1 =d.x;
+                    d.time=_this.block_xScale.invert(d.x);
                     return d.x;
                 });
 
@@ -167,13 +170,17 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             return this;
         }, //修改宽度
         setLeft: function(left) {
-            if (!isNullOrUndefine(left))
+            if (!isNullOrUndefine(left)){
                 this.leftBlock = left;
+                this.blockData.prev=left.blockData;
+            }
             return this;
         },
         setRight: function(right) {
-            if (!isNullOrUndefine(right))
+            if (!isNullOrUndefine(right)){
                 this.rightBlock = right;
+                this.blockData.next=right.blockData;
+            }
             return this;
         },
         changeLeft: function() {
@@ -199,7 +206,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                             width: x2
                         };
                         var leftBlock = new stateBlock(_this.block_Line);
-                        leftBlock.draw(data).drawText(data).click_Event(_this.callFn).setRight(_this);
+                        leftBlock.draw(data).drawText(data).setRight(_this);
+                        //绑定事件
+                        if(this.click_callFn)
+                            leftBlock.click_Event(this.click_callFn);
+                        if(this.rightclick_callFn)
+                            leftBlock.rightClick_Event(this.rightclick_callFn);
+                        if(this.dbclick_callFn)
+                            leftBlock.dbclick_Event(this.dbclick_callFn);
+                        if(this.hasDrag)
+                            leftBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                         _this.leftBlock = leftBlock;
                     }
                 }
@@ -228,15 +244,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 }
                 if (_this.rightBlock&&_this.rightBlock.block&&this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                     var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度
-                    this.addWidth(addWidth); //合并到当前块
+                    this.addWidth(addWidth) //合并到当前块
                     this.rightBlock.remove(); //移除右侧
                 }
             } else {
-                // //获取当前选中的块
-                // var curRect = $(rects[i]);
-                // //获取当前那一行
-                // var g = curRect.parent()[0];//获取父级
-                // var parentWidth= curRect.parent().width();//获取父级总宽
                 var MaxX = this.block_Line.lineWidth;
                 if(x1<MaxX){
                     //如果没有就创建  不定状态
@@ -248,7 +259,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         width: MaxX-x1
                     };
                     var rightBlock = new stateBlock(_this.block_Line);
-                    rightBlock.draw(data).drawText(data).click_Event(_this.callFn).setLeft(_this);
+                    rightBlock.draw(data).drawText(data).setLeft(_this);
+                    //绑定事件
+                    if(this.click_callFn)
+                        rightBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        rightBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        rightBlock.dbclick_Event(this.dbclick_callFn);
+                    if(this.hasDrag)
+                        rightBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                     _this.rightBlock = rightBlock;
                 }
             }
@@ -291,9 +311,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 this.blockData = null;
                 //修改前后块的邻近块
                 if (this.leftBlock != null)
-                    this.leftBlock.rightBlock = this.rightBlock;
+                    this.leftBlock.setRight(this.rightBlock);
                 if (this.rightBlock != null)
-                    this.rightBlock.leftBlock = this.leftBlock;
+                    this.rightBlock.setLeft(this.leftBlock);
                 if (this.rightBlock && this.leftBlock) {
                     //判断是否同一状态，是:合并
                     if (this.leftBlock.blockData.label.trim() == this.rightBlock.blockData.label.trim()) {
@@ -311,7 +331,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (this.blockText != null)
                     this.blockText.remove();
              }
-            
             return this;
         }, //删除当前块，并合并相同状态的邻近块
         restorePos: function() {
@@ -354,7 +373,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 }
                 //新建中间一段
                 var newBlock = new stateBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
@@ -372,7 +398,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     x: x3
                 }
                 var sameBlock = new stateBlock(this.block_Line);
-                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
+                sameBlock.draw(data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                //绑定事件
+                if(this.click_callFn)
+                    sameBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    sameBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 this.block_Line.blocks.push(sameBlock);
@@ -383,9 +416,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
 
                 newBlock.setRight(sameBlock); //设置中间一块的右侧
                 this.setRight(newBlock);
-
-                newBlock.dbclick_Event(this.dbclick_callFn);
-                sameBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -420,7 +450,14 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 }
                 //新建中间一段
                 var newBlock = new stateBlock(this.block_Line);
-                newBlock.draw(newData).drawText(newData).click_Event(this.callFn).setLeft(this);
+                newBlock.draw(newData).drawText(newData).setLeft(this);
+                //绑定事件
+                if(this.click_callFn)
+                    newBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    newBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    newBlock.dbclick_Event(this.dbclick_callFn);
                 if(this.hasDrag)
                     newBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 if (this.block_Line != null) {
@@ -441,17 +478,22 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                         x: x2
                     }
                     var sameBlock = new stateBlock(this.block_Line);
-                    sameBlock.draw(data, this.line_data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
-                    this.block_Line.blocks.push(sameBlock);
-                    this.line_data.points.push(data); //添加到数据集合中
+                    sameBlock.draw(data, this.line_data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                    //绑定事件
+                    if(this.click_callFn)
+                        sameBlock.click_Event(this.click_callFn);
+                    if(this.rightclick_callFn)
+                        sameBlock.rightClick_Event(this.rightclick_callFn);
+                    if(this.dbclick_callFn)
+                        sameBlock.dbclick_Event(this.dbclick_callFn);
                     if(this.hasDrag)
                         sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
 
+                    this.block_Line.blocks.push(sameBlock);
+                    this.line_data.points.push(data); //添加到数据集合中
                     if (rightBlock != null)
                         rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
-
                     newBlock.setRight(sameBlock); //设置中间一块的右侧
-                    sameBlock.dbclick_Event(this.dbclick_callFn);
                 }
                 else{
                     newBlock.setRight(rightBlock);
@@ -473,8 +515,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
                     
                 }
-                
-                newBlock.dbclick_Event(this.dbclick_callFn);
 
                 if (this.line_data.points.length > 1) {
                     // Sort all values by time
@@ -502,7 +542,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         }, //是否在坐标范围内
         click_Event: function(fn) { //点击事件
             if (typeof fn == 'function') {
-                this.callFn = fn;
+                this.click_callFn = fn;
                 var _this = this;
                 if (this.block != null) {
                     this.block.on("click", function(d, i, rects) {
@@ -512,6 +552,19 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             }
             return this;
         }, //鼠标单击事件
+        rightClick_Event:function(fn){
+            if (typeof fn == 'function') {
+                this.rightclick_callFn = fn;
+                var _this = this;
+                if (this.block != null) {
+                    this.block.on("mousedown", function(d, i, rects) {
+                        if(d3.event.button == 2)
+                            fn.call(d, i, rects, _this);
+                    })
+                }
+            }
+            return this;
+        },//鼠标右键单击事件
         dbclick_Event: function(fn) { //点击事件
             var _this = this;
             _this.dbclick_callFn = fn;
@@ -590,65 +643,6 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
             this.block.call(blockDrag);
             return this;
         } //鼠标拖拽事件
-        // drag_Event: function(dragStartFn,dragFn, dragEndFn) {
-        //     var _this = this;
-        //     this.hasDrag=true;
-        //     this.dragStartFn=dragStartFn;
-        //     this.dragFn=dragFn;
-        //     this.dragEndFn=dragEndFn;
-
-        //     var isDraging=false;
-        //     var oldx=0;
-        //     var oldy=0;
-        //     this.block.on("mousedown", function(d, i, rects) {
-        //         var event=d3.event;
-        //         if(event.button==2){//如果是右键
-        //             // window.captureEvents(event.type);
-        //             isDraging=true;
-        //             oldx=event.x;
-        //             oldy=event.y;
-        //             if (typeof dragStartFn == 'function') { //回调函数
-        //                 dragStartFn.call(null, _this);
-        //             }
-        //         }
-        //     })
-        //     this.block.on("mousemove", function(d, i, rects) {
-        //         var event=d3.event;
-        //          if(event.button==2&&isDraging){//如果是右键
-        //             var diffValueX = event.x-oldx;
-        //             var diffValueY = event.y-oldy;
-
-        //             var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-        //             var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
-
-        //             d3.select(this)
-        //                 .attr("x", newX)
-        //                 .attr("y", newY);
-        //             //修改文字位置
-        //             _this.blockText.update(newX, newY);
-        //             //更新历史值
-        //             oldx=event.x;
-        //             oldy=event.y;
-        //             if (typeof dragFn == 'function') { //回调函数
-        //                 dragFn.call(null, newX, newY);
-        //             }
-        //          }
-        //     })
-        //     this.block.on("mouseup", function(d, i, rects) {
-        //         var event=d3.event;
-        //          if(event.button==2&&isDraging){//如果是右键
-        //             var diffValueX = event.x-oldx;
-        //             var diffValueY = event.y-oldy;
-        //             var newX =parseFloat(d3.select(this).attr("x"))+diffValueX;
-        //             var newY =parseFloat(d3.select(this).attr("y"))+diffValueY;
-        //             if (typeof dragEndFn == 'function') { //回调函数
-        //                 dragEndFn.call(null, newX, newY, _this);
-        //             }
-        //             isDraging=false;
-        //          }
-        //     })
-        //     return this;
-        // } //鼠标拖拽事件
     }
 
     //// Exports stateBlock Component ////
