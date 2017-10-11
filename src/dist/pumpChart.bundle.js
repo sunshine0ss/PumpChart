@@ -592,8 +592,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var curDragBlock=null;
             var curLine=null;
             var tempLine =null;
-            var rightClick= function(i, rects, block) {
-                if(tempLine)
+            var dragStart= function(block) {     
+				if(tempLine)
                     tempLine.remove();
                 if(block.blockData.label=='不定'){
                     return;
@@ -611,6 +611,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 lineData.points.push(block.blockData);
                 
                 tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
+               
             } //右键点击新建
             var drag = function(x, y) {
                 if (_this.curBlock != null)
@@ -657,7 +658,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.rightClick_Event(rightClick); //绑定事件
+                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
             })
             return this;
         }, //拖拽事件
@@ -2314,6 +2315,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (typeof dragStartFn == 'function') { //回调函数
                     dragStartFn.call(null, _this);
                 }
+                _this.block.raise();
+                _this.blockText.pumpText.raise();
+                _this.block_Line.g.raise();
             }
             var drag = function(d, i, rects) {
                 var diffValueX = event.x - oldx;
@@ -2977,6 +2981,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (typeof dragStartFn == 'function') { //回调函数
                     dragStartFn.call(null, _this);
                 }
+                _this.block.raise();
+                _this.blockText.pumpText.raise();
+                _this.block_Line.g.raise();
             }
             var drag = function(d, i, rects) {
                 var diffValueX = event.x - oldx;
@@ -3628,11 +3635,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var oldx=0;
             var oldy=0;
             var dragStart=function(d, i, rects) {
-                    oldx=event.x;
-                    oldy=event.y;
-                    if (typeof dragStartFn == 'function') { //回调函数
-                        dragStartFn.call(null, _this);
-                    }
+                oldx=event.x;
+                oldy=event.y;
+                if (typeof dragStartFn == 'function') { //回调函数
+                    dragStartFn.call(null, _this);
+                }
+                _this.block.raise();
+                _this.blockText.pumpText.raise();
+                _this.block_Line.g.raise();
             }
             var drag=function(d, i, rects) {
                     var diffValueX = event.x-oldx;

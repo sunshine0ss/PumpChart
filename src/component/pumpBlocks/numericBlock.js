@@ -611,6 +611,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (typeof dragStartFn == 'function') { //回调函数
                     dragStartFn.call(null, _this);
                 }
+                _this.block.raise();
+                _this.blockText.pumpText.raise();
+                _this.block_Line.g.raise();
             }
             var drag = function(d, i, rects) {
                 var diffValueX = event.x - oldx;

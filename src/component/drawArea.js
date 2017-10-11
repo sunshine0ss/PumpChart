@@ -386,8 +386,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             var curDragBlock=null;
             var curLine=null;
             var tempLine =null;
-            var rightClick= function(i, rects, block) {
-                if(tempLine)
+            var dragStart= function(block) {     
+				if(tempLine)
                     tempLine.remove();
                 if(block.blockData.label=='不定'){
                     return;
@@ -405,6 +405,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 lineData.points.push(block.blockData);
                 
                 tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
+               
             } //右键点击新建
             var drag = function(x, y) {
                 if (_this.curBlock != null)
@@ -451,7 +452,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 }
             } //拖动结束回调
             _.each(this.lines, function(line) {
-                line.rightClick_Event(rightClick); //绑定事件
+                line.drag_Event(dragStart,drag, dragEnd); //绑定事件
             })
             return this;
         }, //拖拽事件
