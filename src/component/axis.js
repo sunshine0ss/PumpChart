@@ -24,14 +24,14 @@ define(['d3','jQuery','moment'], function(d3,jquery,moment) {
                         return data;
                 })
                 .ticks(24);
-            this.axis_svg.append('g')
+            this.axis_x=this.axis_svg.append('g')
                 .attr('class', 'axis axis--x')
                 .attr('transform', 'translate(' + this.axis_option.padding.left + ',' + (this.axis_params.size.height - this.axis_option.padding.bottom) + ')')
                 .call(this.xAxis);
            
             this.yAxis = d3.axisLeft()
                 .scale(this.axis_yScale);
-            this.axis_svg.append('g')
+            this.axis_y=this.axis_svg.append('g')
                 .attr('class', 'axis axis--y')
                 .attr('transform', 'translate(' + this.axis_option.padding.left + ',' + this.axis_option.padding.top + ')')
                 .call(this.yAxis);

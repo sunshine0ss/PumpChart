@@ -255,8 +255,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         //重新计算结束手柄的位置
                         _this.endHandle.updatePos(endHandleX);
                         //修改手柄的边界值
-                        var minX = _this.startHandle.pos[0];
-                        var maxX = _this.endHandle.pos[0];
+                        var minX =_this.startHandle?_this.startHandle.pos[0]:0;
+                        var maxX = _this.endHandle?_this.endHandle.pos[0]:_this.curBlock.block_Line.lineWidth;
 
                         if (_this.startHandle != null)
                             _this.startHandle.setMaxX(maxX);
@@ -418,7 +418,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     var newX = pos.x1 + x;
                     var newY = pos.y1 + y;
                     var margin = false;
-                    _.each(_this.lines, function(line) {
+                    _.forEach(_this.lines, function(line,index) {
+                        var isReturn=false;//是否跳出循环
                         if (line.inBox(newX, newY)&&line.blocks[0].blockType==block.blockType) {//在同类型的分组内
                             if(line.g!=curDragBlock.block_Line.g){//不是同一行
                                 _.each(line.blocks, function(lineBlock) {
@@ -431,6 +432,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         curDragBlock.update(x2,0,0);
                                         curDragBlock.changeLeft();
                                         curDragBlock.remove();
+                                        isReturn=true;
                                         return false;
                                     }
                                 })
@@ -441,17 +443,32 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                         margin = true;
                                         lineBlock.insertBlock(block,x);
                                         curDragBlock.remove();
+                                        isReturn=true;
                                         return false;
                                     }
                                 })
                             }
                         }
+                        if(isReturn)//找到匹配就跳出循环
+                            return false;
+                        // if(index==_this.lines.length-1)//如果没有符合条件就还原位置
+                        // {
+                        //     var oldX=tempLine.blocks[0].blockData.x;
+                        //     curDragBlock.update(oldX,0);
+                        //     tempLine.remove();//删除临时line
+                        // }
                     })
                     var oldX=tempLine.blocks[0].blockData.x;
                     curDragBlock.update(oldX,0);
-                    tempLine.remove();
-                    _this.bind_popover();
+                    tempLine.remove();//删除临时line
+                    _this.bind_popover();//绑定弹出框
                 }
+
+                _this.dAxis.axis_y.raise();//坐标轴置顶
+                if(_this.currentLine)
+                    _this.currentLine.currentLine.raise(); //当前时间的分割线置顶
+                if(_this.hoverLine)
+                    _this.hoverLine.currentLine.raise(); //鼠标移动的提示线置顶
             } //拖动结束回调
             _.each(this.lines, function(line) {
                 line.drag_Event(dragStart,drag, dragEnd); //绑定事件
@@ -672,9 +689,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.chartLegend = null; //图例
             this.dAxis = null; //坐标轴
             this.originalData = null; //数据
-            this.hasChecked = false; //是否有选中
             this.isEditing = false; //是否编辑中
             this.curBlock = null; //当前选中的块
+            this.hasChecked = false; //是否有单击选中
+            this.hasDBclick = false; //是否有双击
+            this.hasPopover = false; //是否有弹出框
+            this.hasDrag = false; //是否有拖动
             //Make the variable function in the current scope
             this.option = opt;
             this.element = ele;
@@ -705,6 +725,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 this.bind_dbclick();
             if (this.hasPopover)
                 this.bind_popover();
+            if (this.hasDrag)
+                this.bind_drag();
             return this;
         }, //刷新
         getData: function() {
