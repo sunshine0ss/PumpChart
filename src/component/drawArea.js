@@ -389,9 +389,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             var dragStart= function(block) {     
 				if(tempLine)
                     tempLine.remove();
-                if(block.blockData.label=='不定'){
-                    return;
-                }
+                // if(block.blockData.label=='不定'){
+                //     return;//结束事件
+                // }
                 curDragBlock=block;
                 _this.removeHandles();//移除编辑手柄
                 if (_this.hoverLine.isShow) {
@@ -447,6 +447,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             }
                         }
                     })
+                    var oldX=tempLine.blocks[0].blockData.x;
+                    curDragBlock.update(oldX,0);
                     tempLine.remove();
                     _this.bind_popover();
                 }

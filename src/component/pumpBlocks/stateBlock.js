@@ -108,37 +108,39 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         }, //块对应的文本提示
         update: function(x, y, width, fn) {
             var _this=this;
-            if (!isNullOrUndefine(x)) {
-                this.block.attr('x', function(d) {
-                    d.x = x;
-                    d.pos.x1 =d.x;
-                    d.time=_this.block_xScale.invert(d.x);
-                    return d.x;
-                });
+            if(this.block){
+                if (!isNullOrUndefine(x)) {
+                    this.block.attr('x', function(d) {
+                        d.x = x;
+                        d.pos.x1 =d.x;
+                        d.time=_this.block_xScale.invert(d.x);
+                        return d.x;
+                    });
 
+                }
+                if (!isNullOrUndefine(y)) {
+                    this.block.attr('y', function(d) {
+                        d.y = y;
+                        return d.y;
+                    });
+                }
+                if (!isNullOrUndefine(width)) {
+                    this.block.attr('width', function(d) {
+                        d.width = width;
+                        d.pos.x2 =d.x + d.width;
+                        return d.width;
+                    });
+                }
+                //修改对应text的位置
+                if (this.blockText != null)
+                    this.blockText.update(x, y, width);
+                // else{//新加text
+                //     this.drawText(this.blockData);
+                // }
+                //回调函数
+                if (typeof fn === 'function')
+                    fn.call(x, y);
             }
-            if (!isNullOrUndefine(y)) {
-                this.block.attr('y', function(d) {
-                    d.y = y;
-                    return d.y;
-                });
-            }
-            if (!isNullOrUndefine(width)) {
-                this.block.attr('width', function(d) {
-                    d.width = width;
-                    d.pos.x2 =d.x + d.width;
-                    return d.width;
-                });
-            }
-            //修改对应text的位置
-            if (this.blockText != null)
-                this.blockText.update(x, y, width);
-            // else{//新加text
-            //     this.drawText(this.blockData);
-            // }
-            //回调函数
-            if (typeof fn === 'function')
-                fn.call(x, y);
             return this;
         }, //修改坐标和宽度
         updateWidth: function(width, fn) {
@@ -172,14 +174,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         setLeft: function(left) {
             if (!isNullOrUndefine(left)){
                 this.leftBlock = left;
-                this.blockData.prev=left.blockData;
+                if(left)
+                    this.blockData.prev=left.blockData;
             }
             return this;
         },
         setRight: function(right) {
             if (!isNullOrUndefine(right)){
                 this.rightBlock = right;
-                this.blockData.next=right.blockData;
+                if(right)
+                    this.blockData.next=right.blockData;
             }
             return this;
         },
@@ -637,8 +641,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     }
             }
             var blockDrag = d3.drag()
-                .filter(function(){
-                    return d3.event.button == 2;
+                .filter(function(d, i, rects){
+                    return d3.event.button == 2&&d.label!='不定';
                 })
                 .on("start",dragStart)
                 .on("drag", drag)

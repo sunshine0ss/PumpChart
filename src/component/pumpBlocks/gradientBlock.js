@@ -209,14 +209,16 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
         setLeft:function(left){
             if(!isNullOrUndefine(left)){
                 this.leftBlock=left;
-                this.blockData.prev=left.blockData;
+                if(left)
+                    this.blockData.prev=left.blockData;
             }
             return this;
         },//设置左边邻近块
         setRight:function(right){
             if(!isNullOrUndefine(right)){
                 this.rightBlock=right;
-                this.blockData.next=right.blockData;
+                if(right)
+                    this.blockData.next=right.blockData;
             }
             return this;
         },//设置右边邻近块
@@ -682,8 +684,8 @@ define(['d3', 'jQuery', 'moment', 'lodash','pumpText'], function(d3, jquery, mom
                 }
             }
             var blockDrag = d3.drag()
-                .filter(function() {
-                    return d3.event.button == 2;
+                .filter(function(d, i, rects) {
+                    return d3.event.button == 2&&d.label!='不定';
                 })
                 .on("start", dragStart)
                 .on("drag", drag)
