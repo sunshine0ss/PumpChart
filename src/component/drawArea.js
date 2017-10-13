@@ -421,33 +421,35 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     _.forEach(_this.lines, function(line,index) {
                         var isReturn=false;//是否跳出循环
                         if (line.inBox(newX, newY)&&line.blocks[0].blockType==block.blockType) {//在同类型的分组内
-                            if(line.g!=curDragBlock.block_Line.g){//不是同一行
+                            // if(line.g!=curDragBlock.block_Line.g){//不是同一行
                                 _.each(line.blocks, function(lineBlock) {
                                     if (lineBlock!=curDragBlock&&lineBlock.inBox(x, 0)) {
                                         margin = true;
                                         lineBlock.insertBlock(block,x);
-                                        //拖动的块的前一块覆盖空白
-                                        var width=parseFloat(block.block.attr('width'));
-                                        var x2=block.blockData.x+width;
-                                        curDragBlock.update(x2,0,0);
-                                        curDragBlock.changeLeft();
-                                        curDragBlock.remove();
-                                        isReturn=true;
-                                        return false;
+                                        if(block.block){
+                                            //拖动的块的前一块覆盖空白
+                                            var width=parseFloat(block.block.attr('width'));
+                                            var x2=block.blockData.x+width;
+                                            curDragBlock.update(x2,0,0);
+                                            curDragBlock.changeLeft();
+                                            curDragBlock.remove();
+                                            isReturn=true;
+                                            return false;
+                                        }
                                     }
                                 })
-                            }
-                            else{//当前行的整块拖动
-                                _.each(line.blocks, function(lineBlock) {
-                                    if (lineBlock!=curDragBlock&&lineBlock.inBox(x, 0)) {
-                                        margin = true;
-                                        lineBlock.insertBlock(block,x);
-                                        curDragBlock.remove();
-                                        isReturn=true;
-                                        return false;
-                                    }
-                                })
-                            }
+                            // }
+                            // else{//当前行的整块拖动
+                            //     _.each(line.blocks, function(lineBlock) {
+                            //         if (lineBlock!=curDragBlock&&lineBlock.inBox(x, 0)) {
+                            //             margin = true;
+                            //             lineBlock.insertBlock(block,x);
+                            //             curDragBlock.remove();
+                            //             isReturn=true;
+                            //             return false;
+                            //         }
+                            //     })
+                            // }
                         }
                         if(isReturn)//找到匹配就跳出循环
                             return false;
@@ -463,8 +465,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     tempLine.remove();//删除临时line
                     _this.bind_popover();//绑定弹出框
                 }
-
-                _this.dAxis.axis_y.raise();//坐标轴置顶
+                if(_this.dAxis&&_this.dAxis.axis_y)
+                    _this.dAxis.axis_y.raise();//坐标轴置顶
                 if(_this.currentLine)
                     _this.currentLine.currentLine.raise(); //当前时间的分割线置顶
                 if(_this.hoverLine)
@@ -640,13 +642,15 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             //Gets the current time
             this.currentTime = new Date();
             var x = this.xScale(this.currentTime) + this.option.padding.left;
-            this.currentLine.showLine(x);
+            if(this.currentLine)
+                this.currentLine.showLine(x);
 
             return this;
         }, //显示当前时间
         hideCurrentLine: function() {
             //hide currentline
-            this.currentLine.hideLine();
+            if(this.currentLine)
+                this.currentLine.hideLine();
             return this;
         }, //隐藏当前时间
         drawHoverLine: function() {
@@ -656,11 +660,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             return this;
         }, //绘制鼠标移动提示线
         showHoverLine: function(x, y) {
-            this.hoverLine.showLine(x);
+            if(this.hoverLine)
+                this.hoverLine.showLine(x);
             return this;
         },
         hideHoverLine: function() {
-            this.hoverLine.hideLine();
+            if(this.hoverLine)
+                this.hoverLine.hideLine();
             return this;
         },
         getSvg: function() {
@@ -678,27 +684,27 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
         remove: function() {
             this.svg.remove();
             this.svg = null; //画布
+            this.dAxis = null; //坐标轴
             this.xScale = null; //x轴比例尺
             this.yScale = null; //y轴比例尺
-            this.lines = []; //泵图行集合
             this.currentTime = null; //当前时间
             this.currentLine = null; //当前时间的分割线
             this.hoverLine = null; //鼠标移动的提示线
             this.startHandle = null; //开始手柄
             this.endHandle = null; //结束手柄
             this.chartLegend = null; //图例
-            this.dAxis = null; //坐标轴
-            this.originalData = null; //数据
             this.isEditing = false; //是否编辑中
             this.curBlock = null; //当前选中的块
             this.hasChecked = false; //是否有单击选中
             this.hasDBclick = false; //是否有双击
             this.hasPopover = false; //是否有弹出框
             this.hasDrag = false; //是否有拖动
-            //Make the variable function in the current scope
-            this.option = opt;
-            this.element = ele;
-            this.describe = desc;
+            this.lines = []; //泵图行集合
+            this.originalData = null; //数据
+            // //Make the variable function in the current scope
+            // this.option = opt;
+            // this.element = ele;
+            // this.describe = desc;
             return this;
         }, //删除当前画布
         removeChart: function() {
@@ -708,17 +714,22 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             return this;
         }, //删除当前chart
         refresh: function() {
-            this.isEditing = false
             this.svg.remove();
+            this.svg = null; //画布
+            this.dAxis = null; //坐标轴
+            this.xScale = null; //x轴比例尺
+            this.yScale = null; //y轴比例尺
+            this.startHandle = null; //开始手柄
+            this.endHandle = null; //结束手柄
+            this.lines = []; //泵图行集合
             this.draw();
             if (this.originalData != null)
                 this.drawChart(this.originalData,this.dicState);
-            if (this.dAxis != null)
-                this.drawAsix();
             if (this.currentLine)
                 this.drawCurrentLine();
             if (this.hoverLine)
                 this.drawHoverLine();
+            this.drawAsix();
             if (this.hasChecked)
                 this.bind_check();
             if (this.hasDBclick)

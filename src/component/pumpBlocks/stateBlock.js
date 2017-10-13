@@ -645,9 +645,12 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (typeof dragStartFn == 'function') { //回调函数
                     dragStartFn.call(null, _this);
                 }
-                _this.block.raise();//层叠置顶
-                _this.blockText.pumpText.raise();
-                _this.block_Line.g.raise();
+                if(_this.block)
+                    _this.block.raise();//层叠置顶
+                if(_this.blockText&&_this.blockText.pumpText)
+                    _this.blockText.pumpText.raise();
+                if(_this.block_Line&&_this.block_Line.g)
+                    _this.block_Line.g.raise();
             }
             var drag=function(d, i, rects) {
                     var diffValueX = event.x-oldx;
