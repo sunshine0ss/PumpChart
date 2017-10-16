@@ -462,9 +462,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     })
                     var oldX=tempLine.blocks[0].blockData.x;
                     curDragBlock.update(oldX,0);
-                    tempLine.remove();//删除临时line
                     _this.bind_popover();//绑定弹出框
-                }
+                }  
+                tempLine.remove();//删除临时line
                 if(_this.dAxis&&_this.dAxis.axis_y)
                     _this.dAxis.axis_y.raise();//坐标轴置顶
                 if(_this.currentLine)

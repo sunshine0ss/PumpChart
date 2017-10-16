@@ -668,9 +668,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     })
                     var oldX=tempLine.blocks[0].blockData.x;
                     curDragBlock.update(oldX,0);
-                    tempLine.remove();//删除临时line
                     _this.bind_popover();//绑定弹出框
-                }
+                }  
+                tempLine.remove();//删除临时line
                 if(_this.dAxis&&_this.dAxis.axis_y)
                     _this.dAxis.axis_y.raise();//坐标轴置顶
                 if(_this.currentLine)
