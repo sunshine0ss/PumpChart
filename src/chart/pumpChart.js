@@ -12,7 +12,11 @@
         showHover:true,
         showLegend:false,
         edit: false,
-        drag:false
+        drag:false,        
+        isContinue:true,//是否延续状态
+        xStartTime:null,//x轴开始时间
+        xEndTime:null,//y轴开始时间
+        xInterval:15//x轴时间间隔,单位：分
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -98,6 +102,10 @@
 
         // Get the pumpChart option
         this.option = $.extend({}, default_option, opt);
+        if (this.option.xStartTime)
+            this.option.xStartTime = new Date(this.option.xStartTime);
+        if (this.option.xEndTime)
+            this.option.xEndTime = new Date(this.option.xEndTime);
     }
     //链式方法
     pumpChart.prototype = {
@@ -194,14 +202,35 @@
                 if (_this.option.mode == MODE_DAY) {
                     var first = getFirst(merged_values);
                     if (first.time.getHours() !== 0 || first.time.getMinutes() !== 0) {
-                        first.time.setHours(0);
-                        first.time.setMinutes(0);
+                        if(_this.option.isContinue){//前后延续状态
+                            first.time.setHours(0);
+                            first.time.setMinutes(0);
+                        }
+                        else{//不延续，没数据设置为不定
+                            var time = new Date(first.time);
+                            time.setDate(time.getDate());
+                            time.setHours(0);
+                            time.setMinutes(0);
+                            time.setSeconds(0);
+                            var firstpoint = {
+                                time: time,
+                                value: null,
+                                label: dicState.CLASS_INDEFINITE_STATE.text,
+                                unitText:line.unitText||'',
+                                next: first
+                            }
+                            merged_values.unshift(firstpoint);
+                        }
                     }
 
                     var last = getLast(merged_values);
                     if (last.time.getHours() !== 0 ||
                         last.time.getMinutes() !== 0 ||
                         moment(last.time).format() !== moment(first.time).add(1, 'day').format()) {
+                        if(!_this.option.isContinue){//如果不延续，则吧最后一个数据改成不定
+                            last.value=null;
+                            last.label= dicState.CLASS_INDEFINITE_STATE.text;
+                        }
                         // TODO: to process the timeline if the last point is not 23:59 or 0:00 in next day
                         var time = new Date(last.time);
                         time.setDate(time.getDate() + 1);
@@ -231,9 +260,13 @@
                 // Rename points property
                 line.points = merged_values;
                 delete line.values;
+                if(_this.option.xStartTime)
+                    _this.describe.startTime = _this.option.xStartTime;
+                if(_this.option.xEndTime)
+                    _this.describe.endTime = _this.option.xEndTime;
 
                 for (var i in line.points) {
-                    var point = line.points[i];
+                     var point = line.points[i];
                     if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
                         _this.describe.startTime = point.time;
                     }
@@ -288,11 +321,11 @@
             if(this.option.drag)//是否可拖拽
                 this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
-        },
+        },//根据数据绘制
         drawLegend:function(){
             this.area.drawLegend();
             return this;
-        },
+        },//图例,增删改 按钮
         drawCurrentLine:function(){
             this.area.drawCurrentLine();
             return this;

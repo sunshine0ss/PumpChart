@@ -9,8 +9,116 @@ var option = {
     },
     showLegend:true,
     edit: true,
-    drag:true
+    drag:true,
+    isContinue:false,//是否延续状态
+    // xStartTime:new Date('2017-04-18 7:00:00'),//x轴开始时间
+    // xEndTime:new Date('2017-04-18 10:00:00'),//y轴开始时间
+    xInterval:15
 }
+//默认配置
+  // var default_option = {
+  //       padding: {
+  //           top: 20,
+  //           left: 45,
+  //           bottom: 30,
+  //           right: 20
+  //       },
+  //       mode: 'Day',
+  //       showCurrent: true,//是否显示当前时间分割线
+  //       showHover:true,//是否显示鼠标移动上去的时间
+  //       showLegend:false,//是否显示图例
+  //       edit: false,//是否编辑
+  //       drag:false//是否拖拽
+  //   }
+
+var object0 = [{
+    "id": 17,
+    "name": "增压1#",
+    "type": "CSP",
+    "dataType": "STATE",
+    "values": [{
+        "time": "2017-04-18 6:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-18 14:00:00",
+        "value": 1
+    }, {
+        "time": "2017-04-18 21:00:00",
+        "value": -1
+    }],
+    "lineIndex": 5
+}, {
+    "id": 13,
+    "name": "西山1#",
+    "type": "CSP",
+    "dataType": "STATE",
+    "values": [{
+        "time": "2017-04-18 10:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-18 12:00:00",
+        "value": 1
+    }, {
+        "time": "2017-04-18 16:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-18 18:00:00",
+        "value": -31
+    }, {
+        "time": "2017-04-18 20:00:00",
+        "value": 1
+    }],
+    "lineIndex": 4
+}, {
+    "id": 18,
+    "name": "增压2#",
+    "type": "CSP",
+    "dataType": "STATE",
+    "values": [{
+        "time": "2017-04-18 6:00:00",
+        "value": 1
+    }, {
+        "time": "2017-04-18 8:00:00",
+        "value": 1
+    }, {
+        "time": "2017-04-18 10:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-18 15:00:00",
+        "value": -1
+    }, {
+        "time": "2017-04-18 18:00:00",
+        "value": -1
+    }, {
+        "time": "2017-04-18 20:00:00",
+        "value": -1
+    }],
+    "lineIndex": 4
+}, {
+    "id": 14,
+    "name": "西山2#",
+    "type": "RSP",
+    "dataType": "STATE",
+    "values": [{
+        "time": "2017-04-18 6:00:00",
+        "value": 50
+    }, {
+        "time": "2017-04-18 8:00:00",
+        "value": -12
+    }, {
+        "time": "2017-04-18 12:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-18 14:00:00",
+        "value": 13
+    }, {
+        "time": "2017-04-18 20:00:00",
+        "value": 13
+    }],
+    "minValue":45,
+    "maxValue":60,
+    "lineIndex": 3
+}]
 
 var objects = [{
     "id": 17,
@@ -511,7 +619,7 @@ var objects1 = [{
 
 var pumpChart = new pumpChart('#chart', option);
 //chart.draw(objects);
-pumpChart.draw(objects1);
+pumpChart.draw(object0);
 // chart.draw(objects1,dicState);
 
 $("#inputBtn").on('click', function() {
