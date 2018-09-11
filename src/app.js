@@ -10,10 +10,10 @@ var option = {
     showLegend:true,
     edit: true,
     drag:true,
-    isContinue:false,//是否延续状态
-    // xStartTime:new Date('2017-04-18 7:00:00'),//x轴开始时间
-    // xEndTime:new Date('2017-04-18 10:00:00'),//y轴开始时间
-    xInterval:15
+    //isContinue:false,//是否延续状态,默认延续
+    xStartTime:new Date('2017-04-18 10:00:00'),//x轴开始时间
+    xEndTime:new Date('2017-04-18 20:00:00'),//y轴开始时间
+    xInterval:30
 }
 //默认配置
   // var default_option = {
@@ -251,6 +251,9 @@ var objects = [{
     }, {
         "time": "2017-04-18 10:00:00",
         "value": 1
+    }, {
+        "time": "2017-04-20 10:00:00",
+        "value": 0
     }],
     "lineIndex": 3
 }, {
@@ -262,13 +265,13 @@ var objects = [{
         "time": "2017-04-18 0:00:00",
         "value": 1
     }, {
-        "time": "2017-04-18 2:00:00",
+        "time": "2017-04-18 12:00:00",
         "value": 1
     }, {
-        "time": "2017-04-18 4:00:00",
+        "time": "2017-04-19 14:00:00",
         "value": 0
     }, {
-        "time": "2017-04-18 12:00:00",
+        "time": "2017-04-20 12:00:00",
         "value": 1
     }],
     "lineIndex": 2
@@ -287,7 +290,7 @@ var objects = [{
         "time": "2017-04-18 10:00:00",
         "value": 0
     }, {
-        "time": "2017-04-18 13:00:00",
+        "time": "2017-04-19 13:00:00",
         "value": 1
     }],
     "lineIndex": 2
@@ -306,8 +309,14 @@ var objects = [{
         "time": "2017-04-18 12:00:00",
         "value": 0
     }, {
-        "time": "2017-04-18 20:00:00",
+        "time": "2017-04-19 10:00:00",
         "value": 1
+    }, {
+        "time": "2017-04-20 17:00:00",
+        "value": 0
+    }, {
+        "time": "2017-04-21 6:00:00",
+        "value": -1
     }],
     "lineIndex": 1
 }, {
@@ -327,6 +336,12 @@ var objects = [{
     }, {
         "time": "2017-04-18 18:00:00",
         "value": 0
+    }, {
+        "time": "2017-04-19 10:00:00",
+        "value": 1
+    }, {
+        "time": "2017-04-20 18:00:00",
+        "value": 0
     }],
     "lineIndex": 1
 }, {
@@ -338,19 +353,19 @@ var objects = [{
         "time": "2017-04-18 0:00:00",
         "value": null
     }, {
-        "time": "2017-04-18 4:00:00",
+        "time": "2017-04-18 12:00:00",
         "value": 360
     }, {
-        "time": "2017-04-18 9:00:00",
+        "time": "2017-04-18 19:00:00",
         "value": 100
     }, {
-        "time": "2017-04-18 14:00:00",
+        "time": "2017-04-19 4:00:00",
         "value": 550
     }, {
-        "time": "2017-04-18 18:00:00",
+        "time": "2017-04-19 18:00:00",
         "value": 250
     }, {
-        "time": "2017-04-18 22:00:00",
+        "time": "2017-04-20 2:00:00",
         "value": 50
     }, {
         "time": "2017-04-21 22:00:00",
@@ -619,7 +634,7 @@ var objects1 = [{
 
 var pumpChart = new pumpChart('#chart', option);
 //chart.draw(objects);
-pumpChart.draw(object0);
+pumpChart.draw(objects1);
 // chart.draw(objects1,dicState);
 
 $("#inputBtn").on('click', function() {

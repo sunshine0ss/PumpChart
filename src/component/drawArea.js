@@ -107,8 +107,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
             //创建x轴的比例尺
             var xScaleWidth = this.params.size.width - this.option.padding.left - this.option.padding.right;
-            var startTime=this.option.xStartTime|| this.describe.startTime;//判断是否设置了x的开始结束时间
-            var endTime=this.option.xEndTime||this.describe.endTime;
+            var startTime=this.describe.startTime;//判断是否设置了x的开始结束时间
+            var endTime=this.describe.endTime;
             this.xScale = d3.scaleTime()
                 .domain([startTime, endTime])
                 .nice(d3.timeHour)

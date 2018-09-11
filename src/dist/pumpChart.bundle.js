@@ -313,8 +313,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             //创建x轴的比例尺
             var xScaleWidth = this.params.size.width - this.option.padding.left - this.option.padding.right;
-            var startTime=this.option.xStartTime|| this.describe.startTime;//判断是否设置了x的开始结束时间
-            var endTime=this.option.xEndTime||this.describe.endTime;
+            var startTime=this.describe.startTime;//判断是否设置了x的开始结束时间
+            var endTime=this.describe.endTime;
             this.xScale = d3.scaleTime()
                 .domain([startTime, endTime])
                 .nice(d3.timeHour)
@@ -1073,6 +1073,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.option.xStartTime = new Date(this.option.xStartTime);
         if (this.option.xEndTime)
             this.option.xEndTime = new Date(this.option.xEndTime);
+        // if(!this.option.isContinue){//延续状态，x轴开始结束无效
+        //     if(this.option.xStartTime)
+        //         this.option.xStartTime=new Date(this.option.xStartTime)
+        //     if(this.option.xEndTime)
+        //         this.option.xEndTime=new Date(this.option.xEndTime)
+        // }
+        // else{
+        //     this.option.xStartTime=null;
+        //     this.option.xEndTime=null;
+        // }
     }
     //链式方法
     pumpChart.prototype = {
@@ -1092,22 +1102,41 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 // Clone and protected the raw data.
                 var line = $.extend({}, d);
                 _this.timelines.push(line);
-
+                var values=[];
                 // Try to convert time string to Date object.
-                _.each(line.values,function(v) {
+                _.forEach(line.values,function(v,index) {
+                    //新增判断，是否在开始结束时间内
                     if (isString(v.time)) {
                         v.time = toTime(v.time);
                     }
                     if(v.value!=null)
-                        v.label = formatValue(parseInt(v.value.toFixed(0)), line.type, line.format, line.unit);
+                        v.label = formatValue(parseFloat(v.value).toFixed(1), line.type, line.format, line.unit);
                     else
                         v.label =dicState.CLASS_INDEFINITE_STATE.text; 
                     if(v.unitText==undefined)
                         v.unitText=line.unitText||'';
+
+                    if (this.option.xStartTime){
+                        if(v.time<this.option.xStartTime){
+                            var next=line.values[index+1];
+                            if(next&&next.time<this.option.xStartTime){
+                                return;
+                            }
+                            else{
+                                v.time=this.option.xStartTime;
+                            }
+                        }
+                    }
+                    if (this.option.xEndTime&&v.time>this.option.xEndTime){
+                        v.time=this.option.xEndTime;
+                        values.push(v);
+                        return false;
+                    }
+                    values.push(v);
                 })
 
                 // Sort all values by time
-                var sorted_values = line.values.sort(function(a, b) {
+                var sorted_values = values.sort(function(a, b) {
                     return a.time - b.time;
                 });
 
@@ -1120,18 +1149,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     else{
                         //跨天的数据处理
                         if (sorted_values[i].time.getDate() !== sorted_values[i - 1].time.getDate()) {
-                            // if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
-                            //     var last=merged_values.length-1;
-                            //     _.remove(merged_values,merged_values[last]);
-                            // }
+                            if(sorted_values[i].value == sorted_values[i - 1].value){
+                                _.remove(merged_values,merged_values[i]);
+                            }
                             merged_values.push(sorted_values[i]);
                         }  
                     }
-                    if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
-                        var last=merged_values.length-2;
-                        if(last>0)
-                            _.remove(merged_values,merged_values[last]);
-                    }
+                    // if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
+                    //     var last=merged_values.length-2;
+                    //     if(last>0)
+                    //         _.remove(merged_values,merged_values[last]);
+                    // }
                 }
 
                 // Make sure that the pump curve at least 2 points
@@ -1141,6 +1169,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     time.setHours(0);
                     time.setMinutes(0);
                     time.setSeconds(0);
+                    if(_this.option.xEndTime)
+                        time =_this.option.xEndTime
 
                     var point = {
                         time: time,
@@ -1153,7 +1183,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
 
                 for (var i = 0, j = merged_values.length; i < j; i++) {
                     var v = merged_values[i];
-
                     // Make relation between neibour values  
                     if (i > 0) {
                         v.prev = merged_values[i - 1];
@@ -1168,44 +1197,49 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 // The time of last point should 0:00 in next day.
                 if (_this.option.mode == MODE_DAY) {
                     var first = getFirst(merged_values);
-                    if (first.time.getHours() !== 0 || first.time.getMinutes() !== 0) {
+                    var firstTime=new Date(first.time);
+                    firstTime.setHours(0);
+                    firstTime.setMinutes(0);
+                    if(_this.option.xStartTime){
+                        firstTime=_this.option.xStartTime;
+                    }
+                    if (first.time>firstTime) {
                         if(_this.option.isContinue){//前后延续状态
-                            first.time.setHours(0);
-                            first.time.setMinutes(0);
+                            first.time=firstTime;
                         }
                         else{//不延续，没数据设置为不定
-                            var time = new Date(first.time);
-                            time.setDate(time.getDate());
-                            time.setHours(0);
-                            time.setMinutes(0);
-                            time.setSeconds(0);
                             var firstpoint = {
-                                time: time,
-                                value: null,
-                                label: dicState.CLASS_INDEFINITE_STATE.text,
-                                unitText:line.unitText||'',
-                                next: first
+                            time: firstTime,
+                            value: null,
+                            label: dicState.CLASS_INDEFINITE_STATE.text,
+                            unitText:line.unitText||'',
+                            next: first
                             }
                             merged_values.unshift(firstpoint);
                         }
                     }
+                    _this.describe.startTime = firstTime;
 
                     var last = getLast(merged_values);
-                    if (last.time.getHours() !== 0 ||
-                        last.time.getMinutes() !== 0 ||
-                        moment(last.time).format() !== moment(first.time).add(1, 'day').format()) {
+                    var lastTime=last.time;
+                    if(_this.option.xEndTime)
+                        lastTime=_this.option.xEndTime;
+                    else if(last.time.getHours() !== 0 ||
+                        last.time.getMinutes() !== 0){
+                        // TODO: to process the timeline if the last point is not 23:59 or 0:00 in next day
+                        lastTime = new Date(last.time);
+                        lastTime.setDate(lastTime.getDate() + 1);
+                        lastTime.setHours(0);
+                        lastTime.setMinutes(0);
+                        lastTime.setSeconds(0);
+                    }
+
+                    
+                    if (last.time<lastTime) {
                         if(!_this.option.isContinue){//如果不延续，则吧最后一个数据改成不定
                             last.value=null;
                             last.label= dicState.CLASS_INDEFINITE_STATE.text;
                         }
-                        // TODO: to process the timeline if the last point is not 23:59 or 0:00 in next day
-                        var time = new Date(last.time);
-                        time.setDate(time.getDate() + 1);
-                        time.setHours(0);
-                        time.setMinutes(0);
-                        time.setSeconds(0);
-
-
                         var lastIndex=merged_values.length-1;
                         if(merged_values[lastIndex - 1].value == merged_values[lastIndex].value){
                             _.remove(merged_values,merged_values[lastIndex]);
@@ -1213,7 +1247,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         }//删除重复数据
 
                         var point = {
-                            time: time,
+                            time: lastTime,
                             value: null,
                             label: dicState.CLASS_INDEFINITE_STATE.text,
                             unitText:line.unitText||'',
@@ -1222,25 +1256,72 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         last.next = point;
                         merged_values.push(point);
                     }
+                    else if(last.time>lastTime)
+                        last.time=lastTime;
+                    _this.describe.endTime = lastTime;
                 }
 
                 // Rename points property
                 line.points = merged_values;
                 delete line.values;
-                if(_this.option.xStartTime)
-                    _this.describe.startTime = _this.option.xStartTime;
-                if(_this.option.xEndTime)
-                    _this.describe.endTime = _this.option.xEndTime;
+                // if(_this.option.xStartTime)
+                //     _this.describe.startTime = _this.option.xStartTime;
+                // if(_this.option.xEndTime)
+                //     _this.describe.endTime = _this.option.xEndTime;
 
-                for (var i in line.points) {
-                     var point = line.points[i];
-                    if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
-                        _this.describe.startTime = point.time;
-                    }
-                    if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
-                        _this.describe.endTime = point.time;
-                    }
-                }
+                // var i=0;
+                // while(i<line.points.length){
+                //     var isDel=false;
+                //      var point = line.points[i];
+                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime){
+                //             _.remove(line.points, point);
+                //             isDel=true;
+                //         }
+                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) 
+                //             _this.describe.startTime = point.time;
+                           
+
+                //         if (_this.option.xEndTime && point.time >= _this.option.xEndTime){
+                //             _.remove(line.points, point);
+                //             isDel=true;
+                //         }
+                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) 
+                //             _this.describe.endTime = point.time;
+                //         if(!isDel)
+                //             i++;
+                // }
+
+                // _.each(line.points,function(point){
+                //     if(point){
+                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime)
+                //             _.remove(line.points, point);
+                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
+                //             _this.describe.startTime = point.time;
+                //         }
+
+                //         if (_this.option.xEndTime && point.time > _this.option.xEndTime)
+                //             _.remove(line.points, point);
+                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
+                //             _this.describe.endTime = point.time;
+                //         }
+                //     }
+                // })
+
+                // for (var i in line.points) {
+                //     var point = line.points[i];
+                //     if (_this.option.xStartTime && point.time < _this.option.xStartTime)
+                //         _.remove(line.points, line.points[i]);
+                //     else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
+                //         _this.describe.startTime = point.time;
+                //     }
+
+
+                //     if (_this.option.xEndTime && point.time > _this.option.xEndTime)
+                //         _.remove(line.points, line.points[i]);
+                //     else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
+                //         _this.describe.endTime = point.time;
+                //     }
+                // }
 
             })
             // To statistic the values
@@ -1339,7 +1420,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 }
             })
             return newData;
-        }
+        },
+        removeSvg: function() {
+            this.area.remove();
+            return this;
+        }, //删除当前画布
+        removeChart: function() {
+            this.area.removeChart();
+            return this;
+        }, //删除当前chart
     }
 
     //// Exports pumpChart Component ////
