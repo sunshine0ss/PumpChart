@@ -1110,7 +1110,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                         v.time = toTime(v.time);
                     }
                     if(v.value!=null)
-                        v.label = formatValue(parseFloat(v.value).toFixed(1), line.type, line.format, line.unit);
+                        v.label = formatValue(parseFloat(v.value), line.type, line.format, line.unit);
                     else
                         v.label =dicState.CLASS_INDEFINITE_STATE.text; 
                     if(v.unitText==undefined)
