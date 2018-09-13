@@ -116,7 +116,6 @@ define(['d3', 'jQuery','moment', 'lodash','text'], function(d3, jquery, moment,l
                 this.handle.attr('x', x);
                 var textY=null;
                 if(y!=undefined){
-
                     this.pos[1]=y;
                     this.handle.attr('y', y+HANDLE_PADDING);
                     textY=y+TEXT_PADDING;

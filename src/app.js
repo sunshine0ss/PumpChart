@@ -1,4 +1,39 @@
-// var chart = require('chart');
+
+var curBlock=null;//当前选中的块 ； 必须设置为全局变量
+var startHandle=null;//选中的开始手柄；必须设置为全局变量
+var endHandle=null;//选中的结束手柄；必须设置为全局变量
+var xScale=null;//x轴比例尺（转换时间或x）：必须设置为全局变量
+var startData=null;//开始时间的年月日：必须设置为全局变量
+var endData=null;//结束时间的年月日：必须设置为全局变量
+
+
+var click_fn=function(block){
+    curBlock=block;
+    var x1=curBlock.blockData.x;
+    var x2=curBlock.blockData.x+curBlock.blockData.width;
+    xScale=pumpChart.getxScale();
+    startHandle=pumpChart.getStartHandle();
+    endHandle=pumpChart.getEndHandle();
+
+    var startTime=moment(xScale.invert(x1)).format('HH:mm');
+    var endTime=moment(xScale.invert(x2)).format('HH:mm');
+
+    startData=moment(xScale.invert(x1)).format('YYYY-MM-DD');
+    endData=moment(xScale.invert(x2)).format('YYYY-MM-DD');
+
+    $('#startTime').val(startTime);
+    $('#endTime').val(endTime);
+}
+var startHandleDragEnd_fn=function(handle){
+    var x1=curBlock.blockData.x;
+    var startTime=moment(xScale.invert(x1)).format('HH:mm');
+    $('#startTime').val(startTime);
+}
+var endHandleDragEnd_fn=function(handle){
+    var x2=curBlock.blockData.x+curBlock.blockData.width;
+    var endTime=moment(xScale.invert(x2)).format('HH:mm');
+    $('#endTime').val(endTime);
+}
 
 var option = {
     padding: {
@@ -7,13 +42,16 @@ var option = {
         bottom: 30,
         right: 20
     },
-    showLegend:true,
-    edit: true,
-    drag:true,
+    showLegend:true,//是否显示图例
+    edit: true,//是否编辑
+    drag:true,//是否拖拽
     //isContinue:false,//是否延续状态,默认延续
-    xStartTime:new Date('2017-04-18 10:00:00'),//x轴开始时间
-    xEndTime:new Date('2017-04-18 20:00:00'),//y轴开始时间
-    xInterval:30
+    xStartTime:new Date('2017-04-18 10:00:00'),//x轴开始时间,默认0点开始
+    xEndTime:new Date('2017-04-18 20:00:00'),//y轴开始时间,默认0点结束
+    xInterval:30,//显示的时间间隔。根据数据和宽度不定显示
+    click_fn:click_fn,//block块点击事件
+    startHandleDragEnd_fn:startHandleDragEnd_fn,//开始手柄拖动事件
+    endHandleDragEnd_fn:endHandleDragEnd_fn//结束手柄拖动事件
 }
 //默认配置
   // var default_option = {
@@ -641,6 +679,19 @@ $("#inputBtn").on('click', function() {
     pumpChart.getData();
 })
 
+var editChart=function(){
+    var startTime=startData+' '+$('#startTime').val();//必须拼成“YYYY-MM-DD HH:mm:ss”
+    var endTime=endData+' '+$('#endTime').val();//判断为00:00时，取（开始时间+一天）的整0点
+    var startX=xScale(moment(startTime));
+    var endX=xScale(moment(endTime));//xScale（）必须传时间格式
+    startHandle.updatePos(startX);//修改手柄位置
+    endHandle.updatePos(endX);//修改手柄位置
+    var width=endX-startX;//计算宽度
+    curBlock.update(startX, null, width);//修改当前块位置和宽度
+    
+    curBlock.changeLeft();//修改左边块
+    curBlock.changeRight();//修改右边块
+}//修改泵图块
 
 // var objs = [{
 //     "id": 1,

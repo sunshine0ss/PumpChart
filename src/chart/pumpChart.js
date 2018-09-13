@@ -16,7 +16,10 @@
         isContinue:true,//是否延续状态
         xStartTime:null,//x轴开始时间
         xEndTime:null,//y轴开始时间
-        xInterval:15//x轴时间间隔,单位：分
+        xInterval:15,//x轴时间间隔,单位：分
+        click_fn:null,//block块点击事件
+        startHandleDragEnd_fn:null,//开始手柄拖动事件
+        endHandleDragEnd_fn:null//结束手柄拖动事件
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -376,7 +379,7 @@
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)
-                this.area.bind_check().bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
@@ -398,7 +401,7 @@
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
-                this.area.bind_check().bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
             if(this.option.drag)//是否可拖拽
                 this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
@@ -410,19 +413,19 @@
         drawCurrentLine:function(){
             this.area.drawCurrentLine();
             return this;
-        },
+        },//当前时间显示的时间线
         drawHoverLine:function(){
             this.area.drawHoverLine();
             return this;
-        },
+        },//鼠标移动显示的时间线
         bind_check:function(){
             this.area.bind_check();
             return this;
-        },
+        },//绑定鼠标点击事件
         bind_dbclick:function(){
             this.area.bind_dbclick();
             return this;
-        },
+        },//绑定鼠标双击事件
         bind_drag:function(){
             this.area.bind_drag();
             return this;
@@ -430,7 +433,23 @@
         bind_popover:function(){
             this.area.bind_popover();
             return this;
-        },
+        },//绑定修改的弹框
+        getxScale: function() {
+            var xScale=this.area.getxScale();
+            return xScale;
+        },//获取x轴的比例尺
+        getyScale: function() {
+            var yScale=this.area.getyScale();
+            return yScale;
+        },//获取y轴的比例尺
+        getStartHandle: function() {
+            var startHandle=this.area.getStartHandle();
+            return startHandle;
+        },//获取拖动的开始手柄
+        getEndHandle: function() {
+            var endHandle=this.area.getEndHandle();
+            return endHandle;
+        },//获取拖动的结束手柄
         getData:function(){
             var newData=this.area.getData();
             //this.preprocess(newData);
@@ -453,7 +472,7 @@
                 }
             })
             return newData;
-        },
+        },//获取修改后的数据
         removeSvg: function() {
             this.area.remove();
             return this;

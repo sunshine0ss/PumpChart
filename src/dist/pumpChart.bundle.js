@@ -407,10 +407,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.chartLegend.draw(width).drawCancelBtn(BTN_FLOAT, click_event).drawDeleteBtn(BTN_FLOAT, click_event).drawAddBtn(BTN_FLOAT, click_event);
             return this;
         }, //图例,增删改 按钮
-        bind_check: function() {
+        bind_check: function(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn) {
             var _this = this;
             this.hasChecked = true;
             var curRect = null;
+
             //// Defines all private methods ////
             //startHandle in drag
             var startDragged = function(x) {
@@ -436,7 +437,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             _this.removeHandles();
                         }
                     }
+
+                if (typeof startHandleDragEnd_fn == 'function') { //回调函数
+                    startHandleDragEnd_fn.call(null,_this.startHandle);
                 }
+            }
                 //endHandle in drag
             var endDragged = function(x) {
                     var x1 = parseFloat(_this.curBlock.block.attr('x'));
@@ -475,6 +480,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         if (_this.endHandle != null)
                             _this.endHandle.setMinX(minX);
                     }
+                }
+
+                if (typeof endHandleDragEnd_fn == 'function') { //回调函数
+                    endHandleDragEnd_fn.call(null,_this.endHandle);
                 }
             }
 
@@ -546,6 +555,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     _this.startHandle.setMinX(0).setMaxX(endX);
                 if (_this.endHandle != null)
                     _this.endHandle.setMinX(x + 4).setMaxX(_this.gWIDTH);
+
+                if (typeof click_fn == 'function') { //回调函数
+                    click_fn.call(null, block);
+                }
             }
             _.each(this.lines, function(line) {
                 line.checkBlock_Event(select); //绑定事件
@@ -881,17 +894,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return this;
         },
         getSvg: function() {
-            return _this.svg;
+            return this.svg;
         },
         getParams: function() {
-            return _this.params;
+            return this.params;
         },
         getxScale: function() {
-            return _this.xScale;
-        },
+            return this.xScale;
+        },//获取x轴的比例尺
         getyScale: function() {
-            return _this.yScale;
-        },
+            return this.yScale;
+        },//获取y轴的比例尺
+        getStartHandle: function() {
+            return this.startHandle;
+        },//获取拖动的开始手柄
+        getEndHandle: function() {
+            return this.endHandle;
+        },//获取拖动的结束手柄
         remove: function() {
             this.svg.remove();
             this.svg = null; //画布
@@ -983,7 +1002,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         isContinue:true,//是否延续状态
         xStartTime:null,//x轴开始时间
         xEndTime:null,//y轴开始时间
-        xInterval:15//x轴时间间隔,单位：分
+        xInterval:15,//x轴时间间隔,单位：分
+        click_fn:null,//block块点击事件
+        startHandleDragEnd_fn:null,//开始手柄拖动事件
+        endHandleDragEnd_fn:null//结束手柄拖动事件
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -1343,7 +1365,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)
-                this.area.bind_check().bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
@@ -1365,7 +1387,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
-                this.area.bind_check().bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
             if(this.option.drag)//是否可拖拽
                 this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
@@ -1377,19 +1399,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         drawCurrentLine:function(){
             this.area.drawCurrentLine();
             return this;
-        },
+        },//当前时间显示的时间线
         drawHoverLine:function(){
             this.area.drawHoverLine();
             return this;
-        },
+        },//鼠标移动显示的时间线
         bind_check:function(){
             this.area.bind_check();
             return this;
-        },
+        },//绑定鼠标点击事件
         bind_dbclick:function(){
             this.area.bind_dbclick();
             return this;
-        },
+        },//绑定鼠标双击事件
         bind_drag:function(){
             this.area.bind_drag();
             return this;
@@ -1397,7 +1419,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         bind_popover:function(){
             this.area.bind_popover();
             return this;
-        },
+        },//绑定修改的弹框
+        getxScale: function() {
+            var xScale=this.area.getxScale();
+            return xScale;
+        },//获取x轴的比例尺
+        getyScale: function() {
+            var yScale=this.area.getyScale();
+            return yScale;
+        },//获取y轴的比例尺
+        getStartHandle: function() {
+            var startHandle=this.area.getStartHandle();
+            return startHandle;
+        },//获取拖动的开始手柄
+        getEndHandle: function() {
+            var endHandle=this.area.getEndHandle();
+            return endHandle;
+        },//获取拖动的结束手柄
         getData:function(){
             var newData=this.area.getData();
             //this.preprocess(newData);
@@ -1420,7 +1458,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 }
             })
             return newData;
-        },
+        },//获取修改后的数据
         removeSvg: function() {
             this.area.remove();
             return this;
@@ -1721,7 +1759,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.handle.attr('x', x);
                 var textY=null;
                 if(y!=undefined){
-
                     this.pos[1]=y;
                     this.handle.attr('y', y+HANDLE_PADDING);
                     textY=y+TEXT_PADDING;

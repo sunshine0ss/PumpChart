@@ -13,6 +13,12 @@
   </head>
   <body>
     <!-- <input data-inputmask="datetime" id="date" /> -->
+
+    <input type="time" id="startTime" />-
+    <input type="time" id="endTime" />
+    <button type="button" id="editBtn" onclick="editChart()">
+        修改
+    </button>
     <!-- BEGIN MAIN CONTENT -->
     <div id="chart" onselectstart="return false" oncontextmenu="self.event.returnValue=false" style="width:900px;height:500px;margin: 10px"></div><!-- float:left; -->
     <!-- <div id="pump" style="width:920px;height:500px;float:left;"></div>

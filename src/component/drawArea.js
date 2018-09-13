@@ -201,10 +201,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.chartLegend.draw(width).drawCancelBtn(BTN_FLOAT, click_event).drawDeleteBtn(BTN_FLOAT, click_event).drawAddBtn(BTN_FLOAT, click_event);
             return this;
         }, //图例,增删改 按钮
-        bind_check: function() {
+        bind_check: function(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn) {
             var _this = this;
             this.hasChecked = true;
             var curRect = null;
+
             //// Defines all private methods ////
             //startHandle in drag
             var startDragged = function(x) {
@@ -230,7 +231,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             _this.removeHandles();
                         }
                     }
+
+                if (typeof startHandleDragEnd_fn == 'function') { //回调函数
+                    startHandleDragEnd_fn.call(null,_this.startHandle);
                 }
+            }
                 //endHandle in drag
             var endDragged = function(x) {
                     var x1 = parseFloat(_this.curBlock.block.attr('x'));
@@ -269,6 +274,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         if (_this.endHandle != null)
                             _this.endHandle.setMinX(minX);
                     }
+                }
+
+                if (typeof endHandleDragEnd_fn == 'function') { //回调函数
+                    endHandleDragEnd_fn.call(null,_this.endHandle);
                 }
             }
 
@@ -340,6 +349,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     _this.startHandle.setMinX(0).setMaxX(endX);
                 if (_this.endHandle != null)
                     _this.endHandle.setMinX(x + 4).setMaxX(_this.gWIDTH);
+
+                if (typeof click_fn == 'function') { //回调函数
+                    click_fn.call(null, block);
+                }
             }
             _.each(this.lines, function(line) {
                 line.checkBlock_Event(select); //绑定事件
@@ -675,17 +688,23 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             return this;
         },
         getSvg: function() {
-            return _this.svg;
+            return this.svg;
         },
         getParams: function() {
-            return _this.params;
+            return this.params;
         },
         getxScale: function() {
-            return _this.xScale;
-        },
+            return this.xScale;
+        },//获取x轴的比例尺
         getyScale: function() {
-            return _this.yScale;
-        },
+            return this.yScale;
+        },//获取y轴的比例尺
+        getStartHandle: function() {
+            return this.startHandle;
+        },//获取拖动的开始手柄
+        getEndHandle: function() {
+            return this.endHandle;
+        },//获取拖动的结束手柄
         remove: function() {
             this.svg.remove();
             this.svg = null; //画布
