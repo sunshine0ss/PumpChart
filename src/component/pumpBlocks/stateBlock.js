@@ -309,7 +309,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     return _this.formatClass(d);
                 })
 
-                //判断两边状态十分合并
+                //判断两边状态是否合并
                 if (this.rightBlock != null&&this.rightBlock.blockData!=null) {
                     if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                         var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度

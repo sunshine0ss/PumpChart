@@ -361,7 +361,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (data.value > data.maxValue) { //最大限制
                     data.value = data.maxValue;
                 }
-                data.label = data.value.toString();
+                //根据值更新label
+                if (data.value > 0) 
+                    data.label = data.value.toString();
+                else if (data.value == 0)
+                    data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
+                else if (data.value < 0)
+                    data.label = _this.stateClass.CLASS_FAULT_STATE.text;
                 this.block.attr('class', function(d, i) { //.datum(data)
                     return _this.formatClass(d);
                 })

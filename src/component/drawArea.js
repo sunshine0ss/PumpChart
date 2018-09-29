@@ -387,12 +387,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
 
             this.curBlock = null;
         }, //清除手柄
-        bind_dbclick: function() {
+        bind_dbclick: function(dbclick_fn) {
             this.hasDBclick = true;
             var _this = this;
             var changeState = function(i, rects, block) {
-                    _this.updateHandles();
-                } //双击回调
+                _this.updateHandles();
+
+                if (typeof dbclick_fn == 'function') { //回调函数
+                    dbclick_fn.call(null, block);
+                }
+            } //双击回调
             _.each(this.lines, function(line) {
                 line.dbclick_Event(changeState); //绑定事件
             })
@@ -495,7 +499,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             })
             return this;
         }, //拖拽事件
-        bind_popover: function() {
+        bind_popover: function(popover_fn) {
             this.hasPopover = true;
             var _this = this;
             //弹出框内容
@@ -550,43 +554,18 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         $(ele).siblings("[data-toggle]").on("mouseleave", function() {
                             $(ele).popover('hide');
                         });
-
-                        /*  弹出框事件  */
-                        var changeData = function(valtext) {
-                            if(valtext){
-                                valtext.trim();
-                                if (valtext == '') {
-                                    data.value = undefined;
-                                    data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
-                                } else {
-                                    var val=0;
-                                    if (data.blockType == 'gradient')
-                                        val=parseFloat(valtext);
-                                    else
-                                        val = parseInt(valtext);
-                                    data.value = val;
-                                    if (val > 0) {
-                                        data.label = valtext;
-                                    } else if (val == 0)
-                                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                                    else if (val < 0)
-                                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
-                                }
-                                //修改值或状态
-                                _this.curBlock.updateState(data);
-                            }
-                        }
                         var previousValue=null;
                         var timer=null;
                         /*  输入框值改变事件  */
-                        $('#' + popId + ' .pumpvalue').on('change', function() {
-                                if (_this.curBlock != null && _this.curBlock.block != null) {
-                                    changeData(this.value); //更新当前块
-                                    $(this).val(data.value); //this.value =data.value;
-                                    //_this.removeHandles(); //关闭选中状态
-                                    _this.updateHandles(); //更新手柄
-                                }
-                            }) //值改变事件
+                        $('#' + popId + ' .pumpvalue')
+                            // .on('change', function() {
+                            //     if (_this.curBlock != null && _this.curBlock.block != null) {
+                            //         changeData(this.value); //更新当前块
+                            //         $(this).val(data.value); //this.value =data.value;
+                            //         //_this.removeHandles(); //关闭选中状态
+                            //         _this.updateHandles(); //更新手柄
+                            //     }
+                            // }) //值改变事件
                             .on('keyup', function() {
                                 var ele=this;
                                 var searchText = ele.value.trim();
@@ -594,10 +573,13 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                     if (timer) clearTimeout(timer)
                                     timer = setTimeout(function () {
                                         if (_this.curBlock != null && _this.curBlock.block != null) {
-                                            changeData(searchText); //更新当前块
+                                            _this.changeBlockData(searchText,_this.curBlock,data); //更新当前块
                                             $(ele).val(data.value); //this.value =data.value;
                                             //_this.removeHandles(); //关闭选中状态
                                             _this.updateHandles(); //更新手柄
+                                            if (typeof popover_fn == 'function') { //回调函数
+                                                popover_fn.call(null, data.value);
+                                            }
                                         }
                                     }, 500);
                                     previousValue = searchText;
@@ -687,6 +669,37 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 this.hoverLine.hideLine();
             return this;
         },
+        changeBlockData :  function(valtext,block,outData) {
+            var _this=this;
+            if (valtext) {
+                valtext.trim();
+                var data=block.blockData;
+                if (valtext == '') {
+                    data.value = undefined;
+                    data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
+                } else {
+                    var val = 0;
+                    if (data.blockType == 'gradient')
+                        val = parseFloat(valtext);
+                    else
+                        val = parseInt(valtext);
+                    data.value = val;
+                    if (val > 0) {
+                        data.label = valtext;
+                    } else if (val == 0)
+                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                    else if (val < 0)
+                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
+                }
+                if(outData){
+                    outData.value=data.value;
+                    outData.label=data.label;
+                }
+                
+                //修改值或状态
+                block.updateState(data);
+            }
+        },
         getSvg: function() {
             return this.svg;
         },
@@ -755,11 +768,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 this.drawHoverLine();
             this.drawAsix();
             if (this.hasChecked)
-                this.bind_check();
+                this.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn);
             if (this.hasDBclick)
-                this.bind_dbclick();
+                this.bind_dbclick(this.option.dbclick_fn);
             if (this.hasPopover)
-                this.bind_popover();
+                this.bind_popover(this.option.popover_fn);
             if (this.hasDrag)
                 this.bind_drag();
             return this;

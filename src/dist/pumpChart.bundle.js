@@ -593,12 +593,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
             this.curBlock = null;
         }, //清除手柄
-        bind_dbclick: function() {
+        bind_dbclick: function(dbclick_fn) {
             this.hasDBclick = true;
             var _this = this;
             var changeState = function(i, rects, block) {
-                    _this.updateHandles();
-                } //双击回调
+                _this.updateHandles();
+
+                if (typeof dbclick_fn == 'function') { //回调函数
+                    dbclick_fn.call(null, block);
+                }
+            } //双击回调
             _.each(this.lines, function(line) {
                 line.dbclick_Event(changeState); //绑定事件
             })
@@ -701,7 +705,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             })
             return this;
         }, //拖拽事件
-        bind_popover: function() {
+        bind_popover: function(popover_fn) {
             this.hasPopover = true;
             var _this = this;
             //弹出框内容
@@ -756,43 +760,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         $(ele).siblings("[data-toggle]").on("mouseleave", function() {
                             $(ele).popover('hide');
                         });
-
-                        /*  弹出框事件  */
-                        var changeData = function(valtext) {
-                            if(valtext){
-                                valtext.trim();
-                                if (valtext == '') {
-                                    data.value = undefined;
-                                    data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
-                                } else {
-                                    var val=0;
-                                    if (data.blockType == 'gradient')
-                                        val=parseFloat(valtext);
-                                    else
-                                        val = parseInt(valtext);
-                                    data.value = val;
-                                    if (val > 0) {
-                                        data.label = valtext;
-                                    } else if (val == 0)
-                                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                                    else if (val < 0)
-                                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
-                                }
-                                //修改值或状态
-                                _this.curBlock.updateState(data);
-                            }
-                        }
                         var previousValue=null;
                         var timer=null;
                         /*  输入框值改变事件  */
-                        $('#' + popId + ' .pumpvalue').on('change', function() {
-                                if (_this.curBlock != null && _this.curBlock.block != null) {
-                                    changeData(this.value); //更新当前块
-                                    $(this).val(data.value); //this.value =data.value;
-                                    //_this.removeHandles(); //关闭选中状态
-                                    _this.updateHandles(); //更新手柄
-                                }
-                            }) //值改变事件
+                        $('#' + popId + ' .pumpvalue')
+                            // .on('change', function() {
+                            //     if (_this.curBlock != null && _this.curBlock.block != null) {
+                            //         changeData(this.value); //更新当前块
+                            //         $(this).val(data.value); //this.value =data.value;
+                            //         //_this.removeHandles(); //关闭选中状态
+                            //         _this.updateHandles(); //更新手柄
+                            //     }
+                            // }) //值改变事件
                             .on('keyup', function() {
                                 var ele=this;
                                 var searchText = ele.value.trim();
@@ -800,10 +779,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                     if (timer) clearTimeout(timer)
                                     timer = setTimeout(function () {
                                         if (_this.curBlock != null && _this.curBlock.block != null) {
-                                            changeData(searchText); //更新当前块
+                                            _this.changeBlockData(searchText,_this.curBlock,data); //更新当前块
                                             $(ele).val(data.value); //this.value =data.value;
                                             //_this.removeHandles(); //关闭选中状态
                                             _this.updateHandles(); //更新手柄
+                                            if (typeof popover_fn == 'function') { //回调函数
+                                                popover_fn.call(null, data.value);
+                                            }
                                         }
                                     }, 500);
                                     previousValue = searchText;
@@ -893,6 +875,37 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.hoverLine.hideLine();
             return this;
         },
+        changeBlockData :  function(valtext,block,outData) {
+            var _this=this;
+            if (valtext) {
+                valtext.trim();
+                var data=block.blockData;
+                if (valtext == '') {
+                    data.value = undefined;
+                    data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
+                } else {
+                    var val = 0;
+                    if (data.blockType == 'gradient')
+                        val = parseFloat(valtext);
+                    else
+                        val = parseInt(valtext);
+                    data.value = val;
+                    if (val > 0) {
+                        data.label = valtext;
+                    } else if (val == 0)
+                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                    else if (val < 0)
+                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
+                }
+                if(outData){
+                    outData.value=data.value;
+                    outData.label=data.label;
+                }
+                
+                //修改值或状态
+                block.updateState(data);
+            }
+        },
         getSvg: function() {
             return this.svg;
         },
@@ -961,11 +974,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this.drawHoverLine();
             this.drawAsix();
             if (this.hasChecked)
-                this.bind_check();
+                this.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn);
             if (this.hasDBclick)
-                this.bind_dbclick();
+                this.bind_dbclick(this.option.dbclick_fn);
             if (this.hasPopover)
-                this.bind_popover();
+                this.bind_popover(this.option.popover_fn);
             if (this.hasDrag)
                 this.bind_drag();
             return this;
@@ -1138,19 +1151,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     if(v.unitText==undefined)
                         v.unitText=line.unitText||'';
 
-                    if (this.option.xStartTime){
-                        if(v.time<this.option.xStartTime){
+                    if (_this.option.xStartTime){
+                        if(v.time<_this.option.xStartTime){
                             var next=line.values[index+1];
-                            if(next&&next.time<this.option.xStartTime){
+                            if(next&&next.time<_this.option.xStartTime){
                                 return;
                             }
                             else{
-                                v.time=this.option.xStartTime;
+                                v.time=_this.option.xStartTime;
                             }
                         }
                     }
-                    if (this.option.xEndTime&&v.time>this.option.xEndTime){
-                        v.time=this.option.xEndTime;
+                    if (_this.option.xEndTime&&v.time>_this.option.xEndTime){
+                        v.time=_this.option.xEndTime;
                         values.push(v);
                         return false;
                     }
@@ -1286,65 +1299,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 // Rename points property
                 line.points = merged_values;
                 delete line.values;
-                // if(_this.option.xStartTime)
-                //     _this.describe.startTime = _this.option.xStartTime;
-                // if(_this.option.xEndTime)
-                //     _this.describe.endTime = _this.option.xEndTime;
-
-                // var i=0;
-                // while(i<line.points.length){
-                //     var isDel=false;
-                //      var point = line.points[i];
-                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime){
-                //             _.remove(line.points, point);
-                //             isDel=true;
-                //         }
-                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) 
-                //             _this.describe.startTime = point.time;
-                           
-
-                //         if (_this.option.xEndTime && point.time >= _this.option.xEndTime){
-                //             _.remove(line.points, point);
-                //             isDel=true;
-                //         }
-                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) 
-                //             _this.describe.endTime = point.time;
-                //         if(!isDel)
-                //             i++;
-                // }
-
-                // _.each(line.points,function(point){
-                //     if(point){
-                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime)
-                //             _.remove(line.points, point);
-                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
-                //             _this.describe.startTime = point.time;
-                //         }
-
-                //         if (_this.option.xEndTime && point.time > _this.option.xEndTime)
-                //             _.remove(line.points, point);
-                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
-                //             _this.describe.endTime = point.time;
-                //         }
-                //     }
-                // })
-
-                // for (var i in line.points) {
-                //     var point = line.points[i];
-                //     if (_this.option.xStartTime && point.time < _this.option.xStartTime)
-                //         _.remove(line.points, line.points[i]);
-                //     else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
-                //         _this.describe.startTime = point.time;
-                //     }
-
-
-                //     if (_this.option.xEndTime && point.time > _this.option.xEndTime)
-                //         _.remove(line.points, line.points[i]);
-                //     else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
-                //         _this.describe.endTime = point.time;
-                //     }
-                // }
-
             })
             // To statistic the values
             _this.describe.barCount = _this.timelines.length;
@@ -1387,7 +1341,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
-                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick(this.option.dbclick_fn).bind_popover(this.option.popover_fn);
             if(this.option.drag)//是否可拖拽
                 this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
@@ -1420,6 +1374,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.area.bind_popover();
             return this;
         },//绑定修改的弹框
+        changeBlockData:function(valtext,block){
+            this.area.changeBlockData(valtext,block);
+            return this;
+        },//修改块的状态/值
         getxScale: function() {
             var xScale=this.area.getxScale();
             return xScale;
@@ -2226,7 +2184,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (data.value > data.maxValue) { //最大限制
                     data.value = data.maxValue;
                 }
-                data.label = data.value.toString();
+                //根据值更新label
+                if (data.value > 0) 
+                    data.label = data.value.toString();
+                else if (data.value == 0)
+                    data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
+                else if (data.value < 0)
+                    data.label = _this.stateClass.CLASS_FAULT_STATE.text;
                 this.block.attr('class', function(d, i) { //.datum(data)
                     return _this.formatClass(d);
                 })
@@ -2939,7 +2903,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     data.value = data.minValue;
                 if (data.value > data.maxValue) //最大限制
                     data.value = data.maxValue;
-                data.label = data.value.toString();
+                //根据值更新label
+                if (data.value > 0) 
+                    data.label = data.value.toString();
+                else if (data.value == 0)
+                    data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
+                else if (data.value < 0)
+                    data.label = _this.stateClass.CLASS_FAULT_STATE.text;
+                //data.label = data.value.toString();
                 this.block.attr('class', function(d, i) {
                     return _this.formatClass(d);
                 })
@@ -3626,7 +3597,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return _this.formatClass(d);
                 })
 
-                //判断两边状态十分合并
+                //判断两边状态是否合并
                 if (this.rightBlock != null&&this.rightBlock.blockData!=null) {
                     if (this.blockData.label.trim() == this.rightBlock.blockData.label.trim()) { //状态一致，合并
                         var addWidth = parseFloat(this.rightBlock.block.attr('width')); //计算增加的宽度

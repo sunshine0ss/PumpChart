@@ -152,19 +152,19 @@
                     if(v.unitText==undefined)
                         v.unitText=line.unitText||'';
 
-                    if (this.option.xStartTime){
-                        if(v.time<this.option.xStartTime){
+                    if (_this.option.xStartTime){
+                        if(v.time<_this.option.xStartTime){
                             var next=line.values[index+1];
-                            if(next&&next.time<this.option.xStartTime){
+                            if(next&&next.time<_this.option.xStartTime){
                                 return;
                             }
                             else{
-                                v.time=this.option.xStartTime;
+                                v.time=_this.option.xStartTime;
                             }
                         }
                     }
-                    if (this.option.xEndTime&&v.time>this.option.xEndTime){
-                        v.time=this.option.xEndTime;
+                    if (_this.option.xEndTime&&v.time>_this.option.xEndTime){
+                        v.time=_this.option.xEndTime;
                         values.push(v);
                         return false;
                     }
@@ -300,65 +300,6 @@
                 // Rename points property
                 line.points = merged_values;
                 delete line.values;
-                // if(_this.option.xStartTime)
-                //     _this.describe.startTime = _this.option.xStartTime;
-                // if(_this.option.xEndTime)
-                //     _this.describe.endTime = _this.option.xEndTime;
-
-                // var i=0;
-                // while(i<line.points.length){
-                //     var isDel=false;
-                //      var point = line.points[i];
-                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime){
-                //             _.remove(line.points, point);
-                //             isDel=true;
-                //         }
-                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) 
-                //             _this.describe.startTime = point.time;
-                           
-
-                //         if (_this.option.xEndTime && point.time >= _this.option.xEndTime){
-                //             _.remove(line.points, point);
-                //             isDel=true;
-                //         }
-                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) 
-                //             _this.describe.endTime = point.time;
-                //         if(!isDel)
-                //             i++;
-                // }
-
-                // _.each(line.points,function(point){
-                //     if(point){
-                //         if (_this.option.xStartTime && point.time < _this.option.xStartTime)
-                //             _.remove(line.points, point);
-                //         else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
-                //             _this.describe.startTime = point.time;
-                //         }
-
-                //         if (_this.option.xEndTime && point.time > _this.option.xEndTime)
-                //             _.remove(line.points, point);
-                //         else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
-                //             _this.describe.endTime = point.time;
-                //         }
-                //     }
-                // })
-
-                // for (var i in line.points) {
-                //     var point = line.points[i];
-                //     if (_this.option.xStartTime && point.time < _this.option.xStartTime)
-                //         _.remove(line.points, line.points[i]);
-                //     else if (_this.describe.startTime === null || point.time <= _this.describe.startTime) {
-                //         _this.describe.startTime = point.time;
-                //     }
-
-
-                //     if (_this.option.xEndTime && point.time > _this.option.xEndTime)
-                //         _.remove(line.points, line.points[i]);
-                //     else if (_this.describe.endTime === null || point.time >= _this.describe.endTime) {
-                //         _this.describe.endTime = point.time;
-                //     }
-                // }
-
             })
             // To statistic the values
             _this.describe.barCount = _this.timelines.length;
@@ -401,7 +342,7 @@
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)//是否可编辑
-                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick(this.option.dbclick_fn).bind_popover(this.option.popover_fn);
             if(this.option.drag)//是否可拖拽
                 this.area.bind_drag();
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
@@ -434,6 +375,10 @@
             this.area.bind_popover();
             return this;
         },//绑定修改的弹框
+        changeBlockData:function(valtext,block){
+            this.area.changeBlockData(valtext,block);
+            return this;
+        },//修改块的状态/值
         getxScale: function() {
             var xScale=this.area.getxScale();
             return xScale;

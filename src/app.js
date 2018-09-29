@@ -23,6 +23,11 @@ var click_fn=function(block){
 
     $('#startTime').val(startTime);
     $('#endTime').val(endTime);
+    $('#value').val(block.blockData.value);
+    var min=block.line_data.minValue;
+    var max=block.line_data.maxValue;
+    $('#value').attr('min',min);
+    $('#value').attr('max',max);
 }
 var startHandleDragEnd_fn=function(handle){
     var x1=curBlock.blockData.x;
@@ -34,7 +39,9 @@ var endHandleDragEnd_fn=function(handle){
     var endTime=moment(xScale.invert(x2)).format('HH:mm');
     $('#endTime').val(endTime);
 }
-
+var popover_fn=function(value){
+    $('#value').val(value);
+}
 var option = {
     padding: {
         top: 20,
@@ -46,12 +53,14 @@ var option = {
     edit: true,//是否编辑
     drag:true,//是否拖拽
     //isContinue:false,//是否延续状态,默认延续
-    xStartTime:new Date('2017-04-18 10:00:00'),//x轴开始时间,默认0点开始
-    xEndTime:new Date('2017-04-18 20:00:00'),//y轴开始时间,默认0点结束
-    xInterval:30,//显示的时间间隔。根据数据和宽度不定显示
+    // xStartTime:new Date('2017-04-18 10:00:00'),//x轴开始时间,默认0点开始
+    // xEndTime:new Date('2017-04-18 20:00:00'),//y轴开始时间,默认0点结束
+    //xInterval:30,//显示的时间间隔。根据数据和宽度不定显示
     click_fn:click_fn,//block块点击事件
     startHandleDragEnd_fn:startHandleDragEnd_fn,//开始手柄拖动事件
-    endHandleDragEnd_fn:endHandleDragEnd_fn//结束手柄拖动事件
+    endHandleDragEnd_fn:endHandleDragEnd_fn,//结束手柄拖动事件
+    //dbclick_fn:dbclick_fn,//鼠标双击事件
+    popover_fn:popover_fn//弹出框值改变事件
 }
 //默认配置
   // var default_option = {
@@ -675,11 +684,23 @@ var pumpChart = new pumpChart('#chart', option);
 pumpChart.draw(objects1);
 // chart.draw(objects1,dicState);
 
+
 $("#inputBtn").on('click', function() {
     pumpChart.getData();
 })
 
 var editChart=function(){
+    var val=$('#value').val();
+    var min=$('#value').attr('min');
+    var max=$('#value').attr('max');
+    if(min&&val<min){//判断是否有上下限
+        val=min;
+        $('#value').val(val);
+    }
+    else if(max&&val>max){
+        val=max;
+        $('#value').val(val);
+    }
     var startTime=startData+' '+$('#startTime').val();//必须拼成“YYYY-MM-DD HH:mm:ss”
     var endTime=endData+' '+$('#endTime').val();//判断为00:00时，取（开始时间+一天）的整0点
     var startX=xScale(moment(startTime));
@@ -691,6 +712,8 @@ var editChart=function(){
     
     curBlock.changeLeft();//修改左边块
     curBlock.changeRight();//修改右边块
+
+    pumpChart.changeBlockData(val,curBlock);//修改块的状态/值
 }//修改泵图块
 
 // var objs = [{
