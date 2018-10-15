@@ -373,13 +373,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             })
             return this;
         }, //绘制曲线
-        drawLegend: function() {
+        drawLegend: function(legendBtn_fn) {
             var _this = this;
             var width = this.params.size.width - this.option.padding.right;
 
             var click_event = function(ele) {
                 var type = $(ele).text();
                 if (type == '取消') {
+                    if (typeof legendBtn_fn == 'function')  //回调函数
+                        legendBtn_fn.call(null,ele,type);
                     _this.refresh();
                 } else {
                     if (_this.curBlock != null && _this.curBlock.block != null) {
@@ -401,6 +403,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         //删除选中状态
                         _this.removeHandles();
                     }
+                    if (typeof legendBtn_fn == 'function')  //回调函数
+                        legendBtn_fn.call(null,ele,type);
                 }
             }
             this.chartLegend = new legend(this.element);
@@ -608,7 +612,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             })
             return this;
         }, //鼠标双击，更改状态
-        bind_drag: function() {
+        bind_drag: function(dragStart_fn,dragging_fn,dragEnd_fn) {
             this.hasDrag = true;
             var _this = this;
             var curDragBlock=null;
@@ -764,14 +768,17 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         var timer=null;
                         /*  输入框值改变事件  */
                         $('#' + popId + ' .pumpvalue')
-                            // .on('change', function() {
-                            //     if (_this.curBlock != null && _this.curBlock.block != null) {
-                            //         changeData(this.value); //更新当前块
-                            //         $(this).val(data.value); //this.value =data.value;
-                            //         //_this.removeHandles(); //关闭选中状态
-                            //         _this.updateHandles(); //更新手柄
-                            //     }
-                            // }) //值改变事件
+                            .on('change', function() {
+                                 if (_this.curBlock != null && _this.curBlock.block != null) {
+                                    _this.changeBlockData(this.value,_this.curBlock,data) //更新当前块
+                                    $(this).val(data.value); //this.value =data.value;
+                                    //_this.removeHandles(); //关闭选中状态
+                                    _this.updateHandles(); //更新手柄
+                                    if (typeof popover_fn == 'function') { //回调函数
+                                        popover_fn.call(null, data.value);
+                                    }
+                                 }
+                             }) //值改变事件
                             .on('keyup', function() {
                                 var ele=this;
                                 var searchText = ele.value.trim();
@@ -801,6 +808,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                     $(ele).popover('hide'); //关掉弹出框
                                     _this.removeHandles(); //关闭选中状态
                                     //_this.updateHandles();//更新手柄
+
+                                    if (typeof popover_fn == 'function') { //回调函数
+                                        popover_fn.call(null, data.value);
+                                    }
                                 }
                             })
                             /*  打开按钮点击事件  */
@@ -812,6 +823,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
                                 //_this.updateHandles();//更新手柄
+                                if (typeof popover_fn == 'function') { //回调函数
+                                    popover_fn.call(null, data.value);
+                                }
                             }
                         })
                     }) //点击事件
@@ -885,25 +899,28 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
                 } else {
                     var val = 0;
-                    if (data.blockType == 'gradient')
-                        val = parseFloat(valtext);
-                    else
+                    if (data.blockType == 'state')
                         val = parseInt(valtext);
+                    else
+                        val = parseFloat(valtext);
                     data.value = val;
-                    if (val > 0) {
-                        data.label = valtext;
-                    } else if (val == 0)
-                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                    else if (val < 0)
-                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
-                }
-                if(outData){
-                    outData.value=data.value;
-                    outData.label=data.label;
+                    // if (val > 0) {
+                    //     if (data.blockType == 'state')
+                    //         data.label = _this.dicState.CLASS_OPEN_STATE.text;
+                    //     else
+                    //         data.label = valtext;
+                    // } else if (val == 0)
+                    //     data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                    // else if (val < 0)
+                    //     data.label = _this.dicState.CLASS_FAULT_STATE.text;
                 }
                 
                 //修改值或状态
                 block.updateState(data);
+                if(outData){
+                    outData.value=block.blockData.value;
+                    outData.label=block.blockData.label;
+                }
             }
         },
         getSvg: function() {
@@ -1016,9 +1033,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
         xStartTime:null,//x轴开始时间
         xEndTime:null,//y轴开始时间
         xInterval:15,//x轴时间间隔,单位：分
+        legendBtn_fn:null,//图例操作按钮点击事件
         click_fn:null,//block块点击事件
+        dbclick_fn:null,//双击事件
+        popover_fn:null,//弹框改变事件
         startHandleDragEnd_fn:null,//开始手柄拖动事件
-        endHandleDragEnd_fn:null//结束手柄拖动事件
+        endHandleDragEnd_fn:null,//结束手柄拖动事件
+        dragStart_fn:null,//拖动开始事件
+        dragging_fn:null,//拖动中事件
+        dragEnd_fn:null//拖动结束事件
     }
     // Defines consts
     var MODE_DAY = 'Day';
@@ -1175,20 +1198,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     return a.time - b.time;
                 });
 
+                var lastTime=null;
                 // Merges the points with same value.
                 var merged_values = [sorted_values[0]];
+                if (sorted_values.length == 1)
+                    lastTime = moment(sorted_values[0].time).startOf('day').add(1, 'day');
                 for (var i = 1, j = sorted_values.length; i < j; i++) {
                     if (sorted_values[i].value !== sorted_values[i - 1].value) {
                         merged_values.push(sorted_values[i]);
                     }
-                    else{
+                    if (i == sorted_values.length - 1) {
                         //跨天的数据处理
                         if (sorted_values[i].time.getDate() !== sorted_values[i - 1].time.getDate()) {
-                            if(sorted_values[i].value == sorted_values[i - 1].value){
-                                _.remove(merged_values,merged_values[i]);
+                            if(sorted_values[i].value !== sorted_values[i - 1].value){
+                                merged_values.push(sorted_values[i]);
                             }
-                            merged_values.push(sorted_values[i]);
                         }  
+                        lastTime = moment(sorted_values[i].time).startOf('day').add(1, 'day');
                     }
                     // if(i>2&&sorted_values[i - 1].value == sorted_values[i - 2].value){
                     //     var last=merged_values.length-2;
@@ -1198,23 +1224,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                 }
 
                 // Make sure that the pump curve at least 2 points
-                if (merged_values.length == 1) {
-                    var time = new Date(merged_values[0].time);
-                    time.setDate(time.getDate() + 1);
-                    time.setHours(0);
-                    time.setMinutes(0);
-                    time.setSeconds(0);
-                    if(_this.option.xEndTime)
-                        time =_this.option.xEndTime
+                // if (merged_values.length == 1) {
+                //     var time = new Date(merged_values[0].time);
+                //     time.setDate(time.getDate() + 1);
+                //     time.setHours(0);
+                //     time.setMinutes(0);
+                //     time.setSeconds(0);
+                //     if(_this.option.xEndTime)
+                //         time =_this.option.xEndTime
 
-                    var point = {
-                        time: time,
-                        value: null,
-                        label: dicState.CLASS_INDEFINITE_STATE.text,
-                        unitText:line.unitText||''
-                    }
-                    merged_values.push(point);
-                }
+                //     var point = {
+                //         time: time,
+                //         value: null,
+                //         label: dicState.CLASS_INDEFINITE_STATE.text,
+                //         unitText:line.unitText||''
+                //     }
+                //     merged_values.push(point);
+                // }
 
                 for (var i = 0, j = merged_values.length; i < j; i++) {
                     var v = merged_values[i];
@@ -1256,30 +1282,29 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
                     _this.describe.startTime = firstTime;
 
                     var last = getLast(merged_values);
-                    var lastTime=last.time;
                     if(_this.option.xEndTime)
                         lastTime=_this.option.xEndTime;
-                    else if(last.time.getHours() !== 0 ||
-                        last.time.getMinutes() !== 0){
+                    // else if(last.time.getHours() !== 0 ||
+                    //     last.time.getMinutes() !== 0){
                         // TODO: to process the timeline if the last point is not 23:59 or 0:00 in next day
-                        lastTime = new Date(last.time);
-                        lastTime.setDate(lastTime.getDate() + 1);
-                        lastTime.setHours(0);
-                        lastTime.setMinutes(0);
-                        lastTime.setSeconds(0);
-                    }
-
+                        
+                        // lastTime.setDate(lastTime.getDate() + 1);
+                        // lastTime.setHours(0);
+                        // lastTime.setMinutes(0);
+                        // lastTime.setSeconds(0);
+                    // }
+                    lastTime = new Date(lastTime);
                     
                     if (last.time<lastTime) {
                         if(!_this.option.isContinue){//如果不延续，则吧最后一个数据改成不定
                             last.value=null;
                             last.label= dicState.CLASS_INDEFINITE_STATE.text;
                         }
-                        var lastIndex=merged_values.length-1;
-                        if(merged_values[lastIndex - 1].value == merged_values[lastIndex].value){
-                            _.remove(merged_values,merged_values[lastIndex]);
-                            last=getLast(merged_values);
-                        }//删除重复数据
+                        // var lastIndex=merged_values.length-1;
+                        // if(merged_values[lastIndex - 1].value == merged_values[lastIndex].value){
+                        //     _.remove(merged_values,merged_values[lastIndex]);
+                        //     last=getLast(merged_values);
+                        // }//删除重复数据
 
                         var point = {
                             time: lastTime,
@@ -1311,7 +1336,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.element.html('');
             this.area=new drawArea(this.option,this.element,this.describe,refreshSize);
             if(this.option.showLegend)//是否画编辑按钮
-                this.area.drawLegend();
+                this.area.drawLegend(this.option.legendBtn_fn);
             this.area.draw().drawChart(this.timelines).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
@@ -1319,7 +1344,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             if(this.option.showHover)//是否显示鼠标悬浮提示
                 this.area.drawHoverLine();
             if(this.option.edit)
-                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick().bind_popover();
+                this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick(this.option.dbclick_fn).bind_popover(this.option.popover_fn);
+            if(this.option.drag)//是否可拖拽
+                this.area.bind_drag(this.option.dragStart_fn,this.option.dragging_fn,this.option.dragEnd_fn);
             return this;   
         },//刷新并绘制
         draw: function(data,stateClass) {
@@ -1333,7 +1360,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.element.html('');
             this.area=new drawArea(this.option,this.element,this.describe);//绘制绘图区
             if(this.option.showLegend)//是否画编辑按钮
-                this.area.drawLegend();
+                this.area.drawLegend(this.option.legendBtn_fn);
             this.area.draw().drawChart(this.timelines,dicState).drawAsix();//绘制曲线
 
             if(this.option.showCurrent)//是否显示当前提示线
@@ -1343,11 +1370,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             if(this.option.edit)//是否可编辑
                 this.area.bind_check(this.option.click_fn,this.option.startHandleDragEnd_fn,this.option.endHandleDragEnd_fn).bind_dbclick(this.option.dbclick_fn).bind_popover(this.option.popover_fn);
             if(this.option.drag)//是否可拖拽
-                this.area.bind_drag();
+                this.area.bind_drag(this.option.dragStart_fn,this.option.dragging_fn,this.option.dragEnd_fn);
             return this;   //.drawCurrentLine().drawHoverLine().bind_check().bind_dbclick().bind_popover();
         },//根据数据绘制
-        drawLegend:function(){
-            this.area.drawLegend();
+        drawLegend:function(legendBtn_fn){
+            this.option.legendBtn_fn=legendBtn_fn;
+            this.area.drawLegend(this.option.legendBtn_fn);
             return this;
         },//图例,增删改 按钮
         drawCurrentLine:function(){
@@ -1358,20 +1386,28 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;﻿!(__WEBPACK_A
             this.area.drawHoverLine();
             return this;
         },//鼠标移动显示的时间线
-        bind_check:function(){
-            this.area.bind_check();
+        bind_check:function(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn){
+            this.option.click_fn=click_fn;
+            this.option.startHandleDragEnd_fn=startHandleDragEnd_fn;
+            this.option.endHandleDragEnd_fn=endHandleDragEnd_fn;
+            this.area.bind_check(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn);
             return this;
         },//绑定鼠标点击事件
-        bind_dbclick:function(){
-            this.area.bind_dbclick();
+        bind_dbclick:function(dbclick_fn){
+            this.option.dbclick_fn=dbclick_fn;
+            this.area.bind_dbclick(dbclick_fn);
             return this;
         },//绑定鼠标双击事件
-        bind_drag:function(){
-            this.area.bind_drag();
+        bind_drag:function(dragStart_fn,dragging_fn,dragEnd_fn){
+            this.option.dragStart_fn=dragStart_fn;
+            this.option.dragging_fn=dragging_fn;
+            this.option.dragEnd_fn=dragEnd_fn;
+            this.area.bind_drag(dragStart_fn,dragging_fn,dragEnd_fn);
             return this;
         },//拖拽事件
-        bind_popover:function(){
-            this.area.bind_popover();
+        bind_popover:function(popover_fn){
+            this.option.popover_fn=popover_fn;
+            this.area.bind_popover(popover_fn);
             return this;
         },//绑定修改的弹框
         changeBlockData:function(valtext,block){
@@ -2185,8 +2221,22 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     data.value = data.maxValue;
                 }
                 //根据值更新label
-                if (data.value > 0) 
-                    data.label = data.value.toString();
+                if (data.value > 0) {
+                    //data.label = data.value.toString();
+                    var value=data.value;
+                    var line=this.line_data
+                    var format=line.format;
+                    var unit=line.unit;
+                    if (!isNullOrUndefine(format)) {//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit ? (unit.unitText || "") : '');
+                    data.label =text;
+                }
                 else if (data.value == 0)
                     data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
                 else if (data.value < 0)
@@ -2904,8 +2954,22 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (data.value > data.maxValue) //最大限制
                     data.value = data.maxValue;
                 //根据值更新label
-                if (data.value > 0) 
-                    data.label = data.value.toString();
+                if (data.value > 0) {
+                    //data.label = data.value.toString();
+                    var value=data.value;
+                    var line=this.line_data
+                    var format=line.format;
+                    var unit=line.unit;
+                    if (!isNullOrUndefine(format)) {//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit ? (unit.unitText || "") : '');
+                    data.label =text;
+                }
                 else if (data.value == 0)
                     data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
                 else if (data.value < 0)
@@ -3593,6 +3657,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         updateState: function(data) {
             if(this.block!= null){//判断是否被删除 
                 var _this=this;
+                if (data.value === 0) data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
+                else if (data.value > 0) data.label = _this.stateClass.CLASS_OPEN_STATE.text;
+                else if (data.value < 0) data.label = _this.stateClass.CLASS_FAULT_STATE.text;
                 this.block.attr('class', function(d, i) {
                     return _this.formatClass(d);
                 })

@@ -305,6 +305,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
         updateState: function(data) {
             if(this.block!= null){//判断是否被删除 
                 var _this=this;
+                if (data.value === 0) data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
+                else if (data.value > 0) data.label = _this.stateClass.CLASS_OPEN_STATE.text;
+                else if (data.value < 0) data.label = _this.stateClass.CLASS_FAULT_STATE.text;
                 this.block.attr('class', function(d, i) {
                     return _this.formatClass(d);
                 })

@@ -334,8 +334,22 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 if (data.value > data.maxValue) //最大限制
                     data.value = data.maxValue;
                 //根据值更新label
-                if (data.value > 0) 
-                    data.label = data.value.toString();
+                if (data.value > 0) {
+                    //data.label = data.value.toString();
+                    var value=data.value;
+                    var line=this.line_data
+                    var format=line.format;
+                    var unit=line.unit;
+                    if (!isNullOrUndefine(format)) {//判断是个格式转换
+                        if (format.indexOf('.') != -1) {
+                            var startIndex = format.indexOf('.') + 1;
+                            format = format.substring(startIndex).length;
+                            value = parseFloat(value).toFixed(format);
+                        }
+                    }
+                    text = value.toString() + ' ' + (unit ? (unit.unitText || "") : '');
+                    data.label =text;
+                }
                 else if (data.value == 0)
                     data.label = _this.stateClass.CLASS_CLOSE_STATE.text;
                 else if (data.value < 0)

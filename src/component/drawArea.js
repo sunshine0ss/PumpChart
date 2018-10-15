@@ -167,13 +167,15 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             })
             return this;
         }, //绘制曲线
-        drawLegend: function() {
+        drawLegend: function(legendBtn_fn) {
             var _this = this;
             var width = this.params.size.width - this.option.padding.right;
 
             var click_event = function(ele) {
                 var type = $(ele).text();
                 if (type == '取消') {
+                    if (typeof legendBtn_fn == 'function')  //回调函数
+                        legendBtn_fn.call(null,ele,type);
                     _this.refresh();
                 } else {
                     if (_this.curBlock != null && _this.curBlock.block != null) {
@@ -183,7 +185,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         } else if (type == '删除') {
                             //删除前一条覆盖当前
                             var width = parseFloat(_this.curBlock.block.attr('width'));
-                            _this.curBlock.leftBlock.addWidth(width);
+                            if(_this.curBlock.leftBlock!=null)
+                                _this.curBlock.leftBlock.addWidth(width);
                             _this.curBlock.remove();
 
                             //删除后一条往前覆盖
@@ -195,6 +198,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         //删除选中状态
                         _this.removeHandles();
                     }
+                    if (typeof legendBtn_fn == 'function')  //回调函数
+                        legendBtn_fn.call(null,ele,type);
                 }
             }
             this.chartLegend = new legend(this.element);
@@ -402,7 +407,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             })
             return this;
         }, //鼠标双击，更改状态
-        bind_drag: function() {
+        bind_drag: function(dragStart_fn,dragging_fn,dragEnd_fn) {
             this.hasDrag = true;
             var _this = this;
             var curDragBlock=null;
@@ -558,14 +563,17 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         var timer=null;
                         /*  输入框值改变事件  */
                         $('#' + popId + ' .pumpvalue')
-                            // .on('change', function() {
-                            //     if (_this.curBlock != null && _this.curBlock.block != null) {
-                            //         changeData(this.value); //更新当前块
-                            //         $(this).val(data.value); //this.value =data.value;
-                            //         //_this.removeHandles(); //关闭选中状态
-                            //         _this.updateHandles(); //更新手柄
-                            //     }
-                            // }) //值改变事件
+                            .on('change', function() {
+                                 if (_this.curBlock != null && _this.curBlock.block != null) {
+                                    _this.changeBlockData(this.value,_this.curBlock,data) //更新当前块
+                                    $(this).val(data.value); //this.value =data.value;
+                                    //_this.removeHandles(); //关闭选中状态
+                                    _this.updateHandles(); //更新手柄
+                                    if (typeof popover_fn == 'function') { //回调函数
+                                        popover_fn.call(null, data.value);
+                                    }
+                                 }
+                             }) //值改变事件
                             .on('keyup', function() {
                                 var ele=this;
                                 var searchText = ele.value.trim();
@@ -595,6 +603,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                     $(ele).popover('hide'); //关掉弹出框
                                     _this.removeHandles(); //关闭选中状态
                                     //_this.updateHandles();//更新手柄
+
+                                    if (typeof popover_fn == 'function') { //回调函数
+                                        popover_fn.call(null, data.value);
+                                    }
                                 }
                             })
                             /*  打开按钮点击事件  */
@@ -606,6 +618,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                 $(ele).popover('hide'); //关掉弹出框
                                 _this.removeHandles(); //关闭选中状态
                                 //_this.updateHandles();//更新手柄
+                                if (typeof popover_fn == 'function') { //回调函数
+                                    popover_fn.call(null, data.value);
+                                }
                             }
                         })
                     }) //点击事件
@@ -679,25 +694,28 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     data.label = _this.dicState.CLASS_INDEFINITE_STATE.text;
                 } else {
                     var val = 0;
-                    if (data.blockType == 'gradient')
-                        val = parseFloat(valtext);
-                    else
+                    if (data.blockType == 'state')
                         val = parseInt(valtext);
+                    else
+                        val = parseFloat(valtext);
                     data.value = val;
-                    if (val > 0) {
-                        data.label = valtext;
-                    } else if (val == 0)
-                        data.label = _this.dicState.CLASS_CLOSE_STATE.text;
-                    else if (val < 0)
-                        data.label = _this.dicState.CLASS_FAULT_STATE.text;
-                }
-                if(outData){
-                    outData.value=data.value;
-                    outData.label=data.label;
+                    // if (val > 0) {
+                    //     if (data.blockType == 'state')
+                    //         data.label = _this.dicState.CLASS_OPEN_STATE.text;
+                    //     else
+                    //         data.label = valtext;
+                    // } else if (val == 0)
+                    //     data.label = _this.dicState.CLASS_CLOSE_STATE.text;
+                    // else if (val < 0)
+                    //     data.label = _this.dicState.CLASS_FAULT_STATE.text;
                 }
                 
                 //修改值或状态
                 block.updateState(data);
+                if(outData){
+                    outData.value=block.blockData.value;
+                    outData.label=block.blockData.label;
+                }
             }
         },
         getSvg: function() {
