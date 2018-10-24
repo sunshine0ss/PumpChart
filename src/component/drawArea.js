@@ -433,10 +433,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 
                 tempLine.drawLine(lineData, curLine.stateClass).drag_Event(null,drag,dragEnd);
                
+                if (typeof dragStart_fn == 'function') { //回调函数
+                    dragStart_fn.call(null, block);
+                }
             } //右键点击新建
             var drag = function(x, y) {
                 if (_this.curBlock != null)
                     _this.removeHandles();
+                if (typeof dragging_fn == 'function') { //回调函数
+                    dragging_fn.call(null, block);
+                }
             } //拖动中回调
 
             var dragEnd = function(x, y, block) {
@@ -498,6 +504,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     _this.currentLine.currentLine.raise(); //当前时间的分割线置顶
                 if(_this.hoverLine)
                     _this.hoverLine.currentLine.raise(); //鼠标移动的提示线置顶
+                
+                if (typeof dragEnd_fn == 'function') { //回调函数
+                    dragEnd_fn.call(null, block);
+                }
             } //拖动结束回调
             _.each(this.lines, function(line) {
                 line.drag_Event(dragStart,drag, dragEnd); //绑定事件
