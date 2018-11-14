@@ -181,7 +181,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     if (_this.curBlock != null && _this.curBlock.block != null) {
                         if (type == '新增') {
                             _this.curBlock.insertCentre();
-                            _this.bind_popover();
+                            _this.bind_popover(_this.option.popover_fn);
                         } else if (type == '删除') {
                             //删除前一条覆盖当前
                             var width = parseFloat(_this.curBlock.block.attr('width'));
@@ -206,6 +206,11 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             this.chartLegend.draw(width).drawCancelBtn(BTN_FLOAT, click_event).drawDeleteBtn(BTN_FLOAT, click_event).drawAddBtn(BTN_FLOAT, click_event);
             return this;
         }, //图例,增删改 按钮
+        addLine:function(line){
+            var pLine = new pumpLine(this.svg, this.xScale, this.yScale, this.option, this.describe);
+            pLine.drawLine(line, this.dicState);
+            return pLine;
+        },
         bind_check: function(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn) {
             var _this = this;
             this.hasChecked = true;
@@ -225,7 +230,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                         _this.curBlock = null;
                         //删除选中状态
                         _this.removeHandles();
-                    } else {
+                    } 
+                    else {
                         if (parseFloat(_this.curBlock.block.attr('width')) < HANDLE_WIDTH + 1) { //如果当前的快的宽度小于手柄宽度删除当前块
                             var x = parseFloat(_this.curBlock.block.attr('width')) + parseFloat(_this.curBlock.block.attr('x'));
                             _this.curBlock.update(x, null, 0); //修改当前快的位置和宽度
@@ -236,6 +242,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             _this.removeHandles();
                         }
                     }
+                _this.bind_popover(_this.option.popover_fn);//绑定弹出框
 
                 if (typeof startHandleDragEnd_fn == 'function') { //回调函数
                     startHandleDragEnd_fn.call(null,_this.startHandle);
@@ -280,7 +287,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                             _this.endHandle.setMinX(minX);
                     }
                 }
-
+                _this.bind_popover(_this.option.popover_fn);//绑定弹出框
                 if (typeof endHandleDragEnd_fn == 'function') { //回调函数
                     endHandleDragEnd_fn.call(null,_this.endHandle);
                 }
@@ -398,6 +405,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             var changeState = function(i, rects, block) {
                 _this.updateHandles();
 
+                _this.bind_popover(_this.option.popover_fn);//绑定弹出框
                 if (typeof dbclick_fn == 'function') { //回调函数
                     dbclick_fn.call(null, block);
                 }
@@ -495,7 +503,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                     })
                     var oldX=tempLine.blocks[0].blockData.x;
                     curDragBlock.update(oldX,0);
-                    _this.bind_popover();//绑定弹出框
+                    _this.bind_popover(_this.option.popover_fn);//绑定弹出框
                 }  
                 tempLine.remove();//删除临时line
                 if(_this.dAxis&&_this.dAxis.axis_y)
@@ -617,6 +625,8 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                     if (typeof popover_fn == 'function') { //回调函数
                                         popover_fn.call(null, data.value);
                                     }
+                                    _this.bind_popover(_this.option.popover_fn);//绑定弹出框
+                                    this.remove();
                                 }
                             })
                             /*  打开按钮点击事件  */
@@ -630,7 +640,9 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                                 //_this.updateHandles();//更新手柄
                                 if (typeof popover_fn == 'function') { //回调函数
                                     popover_fn.call(null, data.value);
-                                }
+                                } 
+                                _this.bind_popover(_this.option.popover_fn);//绑定弹出框
+                                this.remove();
                             }
                         })
                     }) //点击事件
@@ -722,7 +734,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
                 
                 //修改值或状态
                 block.updateState(data);
-                if(outData){
+                if(block&&block.blockData&&outData){
                     outData.value=block.blockData.value;
                     outData.label=block.blockData.label;
                 }
@@ -802,7 +814,7 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'axis', 'pumpLine', 'timeLine', 'han
             if (this.hasPopover)
                 this.bind_popover(this.option.popover_fn);
             if (this.hasDrag)
-                this.bind_drag();
+                this.bind_drag(this.option.dragStart_fn,this.option.dragging_fn,this.option.dragEnd_fn);
             return this;
         }, //刷新
         getData: function() {

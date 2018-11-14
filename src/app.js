@@ -689,6 +689,48 @@ $("#inputBtn").on('click', function() {
     pumpChart.getData();
 })
 
+var dragEvt = function(curDragBlock, startTime, endTime) {
+     var newX1 = xScale(moment(startTime));
+     var newX2 = xScale(moment(endTime));
+     var width = newX2 - newX1;
+
+     var leftBlockX1 = 0;
+     var rightBlockX2 = 0;
+     if (curDragBlock.leftBlock != null && curDragBlock.leftBlock.blockData)
+         leftBlockX1 = curDragBlock.leftBlock.blockData.pos.x1;
+     if (curDragBlock.rightBlock != null && curDragBlock.rightBlock.blockData)
+         rightBlockX2 = curDragBlock.rightBlock.blockData.pos.x2;
+     if (leftBlockX1 <= newX1 && newX2 <= rightBlockX2)
+         return true;
+     else {
+         var curLine = _.cloneDeep(curDragBlock.block_Line);
+         var lineData = curLine.line_data;
+         lineData.points = [];
+         var cloneData=_.cloneDeep(curDragBlock.blockData);
+         lineData.points.push(cloneData);
+         tempLine = pumpChart.area.addLine(lineData);
+         //tempLine.drawLine(lineData);
+
+         var block = tempLine.blocks[0];
+         block.update(newX1, 0, width);
+         _.each(curDragBlock.block_Line.blocks, function(lineBlock) {
+             if (lineBlock != curDragBlock && lineBlock.inBox(newX1, 0)) {
+                 if (block.block) {
+                     //拖动的块的前一块覆盖空白
+                     var addwidth = curDragBlock.blockData.width;
+                     curDragBlock.leftBlock.addWidth(addwidth);
+                     curDragBlock.remove();
+                 }
+                 lineBlock.insertBlock(block, newX1);
+                 return false;
+             }
+         })
+         tempLine.remove();
+         return false;
+     }
+ }
+
+
 var editChart=function(){
     var val=$('#value').val();
     var min=$('#value').attr('min');
@@ -705,19 +747,54 @@ var editChart=function(){
     var endTime=startData+' '+$('#endTime').val();
     if($('#endTime').val()=="00:00")//判断为00:00时，取（开始时间+一天）的整0点
         endTime=moment(endTime).add(1,'day').format('YYYY-MM-DD');
-    var startX=xScale(moment(startTime));
-    var endX=xScale(moment(endTime));//xScale（）必须传时间格式
-    // startHandle.updatePos(startX);//修改手柄位置
-    // endHandle.updatePos(endX);//修改手柄位置
-    var width=endX-startX;//计算宽度
-    curBlock.update(startX, null, width);//修改当前块位置和宽度
-    
-    curBlock.changeLeft();//修改左边块
-    curBlock.changeRight();//修改右边块
 
-    pumpChart.changeBlockData(val,curBlock);//修改块的状态/值
-    pumpChart.area.updateHandles();//修改手柄
+    if (moment(startTime).isBefore(moment(endTime))) {
+        //如果在块范围之内，允许修改
+        if (dragEvt(curBlock, startTime, endTime)) {
+            var startX = xScale(moment(startTime));
+            var endX = xScale(moment(endTime));
+            var width = endX - startX;
+            curBlock.update(startX, null, width); //修改当前块位置和宽度
+
+            curBlock.changeLeft();
+            curBlock.changeRight();
+
+            pumpChart.area.removeHandles(); //删除手柄
+            pumpChart.changeBlockData(val, curBlock); //修改块的状态/值
+
+            $('#startTime').val(null);
+            $('#endTime').val(null);
+            $(elem).css("display", "none");
+
+
+        } else {
+            pumpChart.area.removeHandles(); //删除手柄
+            $('#startTime').val(null);
+            $('#endTime').val(null);
+        }
+    }
+    else{
+        wapPromptService.warning('开始时间不能大于结束时间', "提示");
+    }
+
+    // var startX=xScale(moment(startTime));
+    // var endX=xScale(moment(endTime));//xScale（）必须传时间格式
+    // // startHandle.updatePos(startX);//修改手柄位置
+    // // endHandle.updatePos(endX);//修改手柄位置
+    // var width=endX-startX;//计算宽度
+    // curBlock.update(startX, null, width);//修改当前块位置和宽度
+    
+    // curBlock.changeLeft();//修改左边块
+    // curBlock.changeRight();//修改右边块
+
+    // pumpChart.changeBlockData(val,curBlock);//修改块的状态/值
+    // pumpChart.area.updateHandles();//修改手柄
 }//修改泵图块
+
+
+
+
+
 
 // var objs = [{
 //     "id": 1,

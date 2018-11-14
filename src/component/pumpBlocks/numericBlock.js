@@ -482,9 +482,16 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                     x: x3
                 }
                 var sameBlock = new numericBlock(this.block_Line);
-                sameBlock.draw(data).drawText(data).click_Event(this.callFn).setLeft(newBlock).setRight(rightBlock);
-                if (this.hasDrag)
-                    sameBlock.drag_Event(this.dragStartFn, this.dragFn, this.dragEndFn);
+                sameBlock.draw(data).drawText(data).setLeft(newBlock).setRight(rightBlock);
+                //绑定事件
+                if(this.click_callFn)
+                    sameBlock.click_Event(this.click_callFn);
+                if(this.rightclick_callFn)
+                    sameBlock.rightClick_Event(this.rightclick_callFn);
+                if(this.dbclick_callFn)
+                    sameBlock.dbclick_Event(this.dbclick_callFn);
+                if(this.hasDrag)
+                    sameBlock.drag_Event(this.dragStartFn,this.dragFn,this.dragEndFn);
                 rightBlock.setLeft(sameBlock); //设置当前新建块的右侧快的左侧
                 this.line_data.points.push(data); //添加到数据集合中
                 this.block_Line.blocks.push(sameBlock);

@@ -311,6 +311,10 @@ define(['d3', 'jQuery', 'moment', 'lodash', 'pumpText'], function(d3, jquery, mo
                 this.block.attr('class', function(d, i) {
                     return _this.formatClass(d);
                 })
+                if (data.value == undefined)  //不定状态加弹框
+                    this.block.attr('data-toggle', 'popover');
+                else
+                    $(this.block._groups[0][0]).removeAttr("data-toggle").removeAttr('data-original-title');//删除弹框
 
                 //判断两边状态是否合并
                 if (this.rightBlock != null&&this.rightBlock.blockData!=null) {

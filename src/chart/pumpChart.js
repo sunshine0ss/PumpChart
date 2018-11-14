@@ -370,6 +370,9 @@
             this.area.drawHoverLine();
             return this;
         },//鼠标移动显示的时间线
+        addLine:function(line){
+            return this.area.addLine(line);
+        },
         bind_check:function(click_fn,startHandleDragEnd_fn,endHandleDragEnd_fn){
             this.option.click_fn=click_fn;
             this.option.startHandleDragEnd_fn=startHandleDragEnd_fn;
